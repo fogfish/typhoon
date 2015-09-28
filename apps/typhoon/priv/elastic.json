@@ -1,0 +1,26 @@
+{
+   "n": 100,
+   "t": 60,
+   "seq": 
+   [
+      {
+         "id"  : "urn:http:elastic:post",
+         "req" : "PUT",
+         "url" : "http://docker:9200/kv/test/{.typhoon:int(1000000).}",
+         "head": {"Connection": "keep-alive", "Content-Type": "application/json"},
+         "data": "{\"text\":\"{.typhoon:text(4096).}\"}"
+      },
+      {
+         "id"  : "urn:http:elastic:get",
+         "req" : "GET",
+         "url" : "http://docker:9200/kv/test/{.typhoon:int(1000000).}",
+         "head": {"Connection": "keep-alive"}
+      },
+      {
+         "id"  : "urn:http:elastic:search",
+         "req" : "GET",
+         "url" : "http://docker:9200/_search?q=\"{.typhoon:text(5).}\"",
+         "head": {"Connection": "keep-alive"}
+      }
+   ]
+}
