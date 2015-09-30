@@ -42,12 +42,13 @@ start_link(Vnode, Name, Spec) ->
    pipe:start_link(?MODULE, [Vnode, Name, Spec], []).
 
 init([Vnode, Name, Spec]) ->
+   % erlang:send(self(), tick),
    {ok, handle, 
       #{
          vnode => Vnode,
          name  => Name,
-         spec  => Spec,
-         fd    => pipe:ioctl(typhoon_peer, fd)
+         spec  => Spec
+         % fd    => pipe:ioctl(typhoon_peer, fd)
       }
    }.
 
@@ -80,41 +81,12 @@ handle({handoff, _Vnode}, Tx, State) ->
    {next_state, handle, State};
 
 handle(run, Tx, #{spec := Spec}=State) ->
+   %% @todo: non-blocking spawn
    pipe:ack(Tx, 
       run(pair:x(<<"n">>, Spec), q:new([erlang:node() | erlang:nodes()]), State)
    ),
    {next_state, handle, State};
-
-%%
-%% 
-handle({trace, Urn, T, {tcp, connect, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"tcp">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {ssl, handshake, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ssl">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
    
-handle({trace, Urn, T, {tcp, packet,  X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"pack">>, Urn), [{T, X}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {ssl, packet,  X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"pack">>, Urn), [{T, X}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, ttfb,   X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ttfb">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, ttmr,   X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ttmr">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, status, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, Urn, [{T, X}]) end),
-   {next_state, handle, State};
-
 handle(_Msg, _Tx, State) ->
    {next_state, handle, State}.
 
@@ -129,7 +101,8 @@ handle(_Msg, _Tx, State) ->
 run(0, _Nodes, _State) ->
    ok;
 run(N,  Nodes, #{name :=Name, spec := Spec}=State) ->
-   {ok, _} = supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Name, Spec]),
+   %% @todo: manage status of unit processes (use pts ?) 
+   supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Name, Spec]),
    run(N - 1, q:enq(q:head(Nodes), q:tail(Nodes)), State).
 
 

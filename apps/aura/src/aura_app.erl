@@ -13,29 +13,28 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-{"apps/typhoon/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/typhoon/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+-module(aura_app).
+-behaviour(application).
+-author('dmitry.kolesnikov@zalando.fi').
 
-{"apps/aura/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/aura/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
 
-{"apps/zephyrus/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/zephyrus/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+-export([
+   start/2
+  ,stop/1
+]).
+
+%%
+%%
+start(_Type, _Args) ->
+   {ok,   _} = kmq:queue(auraq, [
+      opts:get(n,   1, aura),
+      opts:get(in, [], aura),
+      opts:get(mq, [], aura)
+   ]),
+   aura_sup:start_link().
+
+%%
+%%
+stop(_State) ->
+   ok.
+

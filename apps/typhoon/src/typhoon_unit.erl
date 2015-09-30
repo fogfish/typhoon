@@ -41,15 +41,17 @@ init([Name, Spec]) ->
    erlang:send(self(), request),
    tempus:timer(tempus:t(s, pair:x(<<"t">>, Spec)), expired),
    random:seed(os:timestamp()),
+   {ok, Udp} = gen_udp:open(0, [{sndbuf, 256 * 1024}]),
    {ok, idle, 
       #{
-         seq => q:new(pair:x(<<"seq">>, Spec)),
-         pid => trace(Name)
+         seq  => q:new(pair:x(<<"seq">>, Spec)),
+         pid  => trace(Name),
+         udp  => Udp
       }
    }.
 
-free(_Reason, _State) ->
-   ok.
+free(_Reason, #{udp := Udp}) ->
+   gen_udp:close(Udp).
 
 %%-----------------------------------------------------------------------------
 %%
@@ -84,20 +86,32 @@ idle(_, _Pipe, State) ->
 
 %%
 %%
-active({http, _, {Code, _Text, _Head, _Env}}, _, #{pid := Pid, urn := Urn}=State) ->
+active({http, _, {Code, _Text, _Head, _Env}}, _, #{udp := Udp, pid := Pid, urn := Urn}=State) ->
    T = os:timestamp(),
    lists:foreach(
-      fun(X) -> 
-         pipe:send(X, {trace, Urn, T, {http, status, Code}})
+      fun(Peer) ->
+         aura:send(Udp, Peer, 
+            aura:encode(Urn, T, {http, status, Code})
+         )
+         % Port = 10020 + random:uniform(10) - 1,
+         % Pack = erlang:term_to_binary({trace, Urn, T, {http, status, Code}}),
+         % gen_udp:send(Udp, X, Port, <<"typhoon:", (base64:encode(Pack))/binary>>)
+         % pipe:send(X, {trace, Urn, T, {http, status, Code}})
       end,
       Pid
    ),
    {next_state, active, State};
 
-active({trace, T, Msg}, _, #{pid := Pid, urn := Urn} = State) ->
+active({trace, T, Msg}, _, #{udp := Udp, pid := Pid, urn := Urn} = State) ->
    lists:foreach(
-      fun(X) -> 
-         pipe:send(X, {trace, Urn, T, Msg})
+      fun(Peer) -> 
+         aura:send(Udp, Peer, 
+            aura:encode(Urn, T, Msg)
+         )
+         % Port = 10020 + random:uniform(10) - 1,
+         % Pack = erlang:term_to_binary({trace, Urn, T, Msg}),
+         % gen_udp:send(Udp, X, Port, <<"typhoon:", (base64:encode(Pack))/binary>>)
+         % % pipe:send(X, {trace, Urn, T, Msg})
       end,
       Pid
    ),
@@ -153,11 +167,29 @@ request(Sock, Id, Mthd, Url, Head, Data) ->
 
 %%
 %% discover trace end-point
+% trace(Name) ->
+%    ambitz:entity(service,
+%       ambitz:whereis(
+%          ambitz:entity(ring, typhoon,
+%             ambitz:entity(Name)
+%          )
+%       )
+%    ).
+
 trace(Name) ->
-   ambitz:entity(service,
-      ambitz:whereis(
-         ambitz:entity(ring, typhoon,
-            ambitz:entity(Name)
+   lists:map(
+      fun(X) ->
+         [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
+         scalar:c(Host)
+      end,
+      ambitz:entity(vnode,
+         ambitz:lookup(
+            ambitz:entity(ring, typhoon,
+               ambitz:entity(Name)
+            )
          )
       )
    ).
+
+
+

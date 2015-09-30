@@ -212,7 +212,8 @@ endif
 ##
 #####################################################################
 run:
-	@erl ${EFLAGS}
+	@ulimit -n 65536 ;\
+	erl ${EFLAGS}
 
 benchmark:
 	@echo "==> benchmark: ${TEST}" ;\

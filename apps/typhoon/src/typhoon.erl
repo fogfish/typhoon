@@ -30,7 +30,8 @@
 %%
 %% data interface
 -export([
-   series/4
+   fd/0
+  ,series/4
   ,series/5
   ,metric/4
   ,status/5
@@ -115,6 +116,13 @@ run(Id) ->
 %%% data interface
 %%%
 %%%----------------------------------------------------------------------------   
+
+%%
+%% file descriptor to time series data-base
+-spec(fd/0 :: () -> chronolog:fd()).
+
+fd() ->
+   pipe:ioctl(typhoon_peer, fd).
 
 %%
 %% read time series values from load scenario, return list of measured values.
