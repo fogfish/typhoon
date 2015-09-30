@@ -8,10 +8,11 @@ The tool simulates a traffic from test cluster towards system-under-test (SUT). 
 
 The tool is built from homogeneous nodes, each node is responsible to execute load scenarios and provides management interface. Nodes join the cluster and built a consistent hashing ring. The ring is used to store load scenario and collect the test results. The cluster uses Erlang distribution and add-on libraries to implement clustering. The traffic is generated on each node once scenario is executed.
 
-The tool is is composed of two Erlang application (layers):
+The tool is is composed of multiple Erlang application:
 
-* _typhoon_ - load simulator Erlang application
-* _zephyrus_ - rest and user interfaces 
+* _typhoon_ - load simulator
+* _aura_ - high-performance persistent queue to exchange sampled data
+* _zephyrus_ - rest api and user interfaces 
 
 
 ## Build

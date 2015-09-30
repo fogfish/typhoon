@@ -37,16 +37,16 @@ start_link(Name, Spec) ->
    pipe:start_link(?MODULE, [Name, Spec], []).
 
 init([Name, Spec]) ->
+   random:seed(os:timestamp()),
    pipe:ioctl_(self(), {trap, true}),
+   {ok, Udp} = gen_udp:open(0, [{sndbuf, 256 * 1024}]),
    erlang:send(self(), request),
    tempus:timer(tempus:t(s, pair:x(<<"t">>, Spec)), expired),
-   random:seed(os:timestamp()),
-   {ok, Udp} = gen_udp:open(0, [{sndbuf, 256 * 1024}]),
    {ok, idle, 
       #{
-         seq  => q:new(pair:x(<<"seq">>, Spec)),
-         pid  => trace(Name),
-         udp  => Udp
+         seq => q:new(pair:x(<<"seq">>, Spec)),
+         pid => trace(Name),
+         udp => Udp
       }
    }.
 
@@ -60,7 +60,7 @@ free(_Reason, #{udp := Udp}) ->
 %%-----------------------------------------------------------------------------
 
 %%
-%%
+%%   
 idle(request, Pipe, #{sock := Sock, seq := Seq} = State) ->
    case erlang:is_process_alive(Sock) of
       false ->
@@ -86,35 +86,12 @@ idle(_, _Pipe, State) ->
 
 %%
 %%
-active({http, _, {Code, _Text, _Head, _Env}}, _, #{udp := Udp, pid := Pid, urn := Urn}=State) ->
-   T = os:timestamp(),
-   lists:foreach(
-      fun(Peer) ->
-         aura:send(Udp, Peer, 
-            aura:encode(Urn, T, {http, status, Code})
-         )
-         % Port = 10020 + random:uniform(10) - 1,
-         % Pack = erlang:term_to_binary({trace, Urn, T, {http, status, Code}}),
-         % gen_udp:send(Udp, X, Port, <<"typhoon:", (base64:encode(Pack))/binary>>)
-         % pipe:send(X, {trace, Urn, T, {http, status, Code}})
-      end,
-      Pid
-   ),
+active({http, _, {Code, _Text, _Head, _Env}}, _, #{urn := Urn}=State) ->
+   enq(aura:encode(Urn, os:timestamp(), {http, status, Code}), State),
    {next_state, active, State};
 
-active({trace, T, Msg}, _, #{udp := Udp, pid := Pid, urn := Urn} = State) ->
-   lists:foreach(
-      fun(Peer) -> 
-         aura:send(Udp, Peer, 
-            aura:encode(Urn, T, Msg)
-         )
-         % Port = 10020 + random:uniform(10) - 1,
-         % Pack = erlang:term_to_binary({trace, Urn, T, Msg}),
-         % gen_udp:send(Udp, X, Port, <<"typhoon:", (base64:encode(Pack))/binary>>)
-         % % pipe:send(X, {trace, Urn, T, Msg})
-      end,
-      Pid
-   ),
+active({trace, T, Msg}, _, #{urn := Urn} = State) ->
+   enq(aura:encode(Urn, T, Msg), State),
    {next_state, active, State};
 
 active({http, _, eof}, _, State) ->
@@ -166,16 +143,7 @@ request(Sock, Id, Mthd, Url, Head, Data) ->
    uri:new(Id).
 
 %%
-%% discover trace end-point
-% trace(Name) ->
-%    ambitz:entity(service,
-%       ambitz:whereis(
-%          ambitz:entity(ring, typhoon,
-%             ambitz:entity(Name)
-%          )
-%       )
-%    ).
-
+%% discover destination nodes for sampled data
 trace(Name) ->
    lists:map(
       fun(X) ->
@@ -191,5 +159,15 @@ trace(Name) ->
       )
    ).
 
+%%
+%% enqueue sample data
+enq(Pack, #{udp := Udp, pid := Peers}) ->
+   lists:foreach(
+      fun(Peer) -> 
+         aura:send(Udp, Peer, Pack)
+      end,
+      Peers
+   ).
+   
 
 

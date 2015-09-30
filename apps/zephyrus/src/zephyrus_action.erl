@@ -14,8 +14,8 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   rest api - execute scenario
--module(zephyrus_run).
+%%   rest api - execute scenario action
+-module(zephyrus_action).
 -author('dmitry.kolesnikov@zalando.fi').
 
 -export([
@@ -38,5 +38,10 @@ content_provided(_Req) ->
 %%
 'GET'(_, {_Url, _Head, Env}) ->
    Id = pair:x(<<"id">>, Env),
-   typhoon:run(Id),
-   {302, [{'Location', <<$/, Id/binary>>}], <<>>}.
+   case pair:x(<<"action">>, Env) of
+      <<"spawn">> ->
+         _  = typhoon:run(Id),
+         {302, [{'Location', <<$/, Id/binary>>}], <<>>};
+      <<"ping">> ->
+         {200, jsx:encode(typhoon:unit(Id))}
+   end.

@@ -26,6 +26,7 @@
   ,lookup/1
   ,remove/1
   ,run/1
+  ,unit/1
 ]).
 %%
 %% data interface
@@ -109,6 +110,23 @@ run(Id) ->
       )
    ),
    pipe:call(lists:nth(random:uniform(length(Pids)), Pids), run).
+
+%%
+%% return number of active load units
+-spec(unit/1 :: (id()) -> integer()).
+
+unit(Id) ->
+   lists:sum(
+      lists:map(
+         fun(X) -> pipe:ioctl(X, n) end,
+         ambitz:entity(service,
+            ambitz:whereis(
+               ambitz:entity(ring, typhoon, ambitz:entity(Id))
+            )
+         )
+      )
+   ).
+
 
 
 %%%----------------------------------------------------------------------------   

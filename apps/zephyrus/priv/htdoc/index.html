@@ -174,7 +174,16 @@ h2
 <script src="http://d3js.org/d3.v2.js?2.9.1"></script>
 <script src="http://square.github.com/cubism/cubism.v1.js?1.0.0"></script>
 <body>
-<h1>Load analysis: <span id="title"></span><div id="pause" class="button">pause</div><div id="run" class="button">run</div></h1>
+
+<div>
+<h1>System stress and Load testing
+   <div id="pause" class="button">pause</div>
+   <div id="run" class="button">run</div>
+   <div class="button">active: <span id="unit">0</span></div>
+</h1>
+<h3 id="title"></h3>
+</div>
+
 <div class="text">
 The tool shows insight information about currently executed load scenarios. The high level view shows successful throughput (request per second) using green colors. Click on each load graph to expand details such as total throughput, http status code, tcp connect latency, ssl handshake latency, time to first byte (ttfb), time to meaningful response (ttmr), average packet size and amount of packets per second.  
 </div>
@@ -219,7 +228,10 @@ var cuba = function(context, host) {
             + "?chronolog" + metric + "&chronon=" + step / 1000, 
             function(data) {
                if (!data) return callback(new Error("unable to load data"));
-               callback(null, data.map(function(x){return x[1]}));
+               var list = data.map(function(x){return x[1]});
+               var last = list.pop();
+               list.push(last > 0 ? last : ~~d3.mean(list));
+               callback(null, list);
             });
          }, title);
    };
@@ -278,7 +290,7 @@ d3.select("#pause").on("click",
 d3.select("#run").on("click",
    function()
    {
-      d3.json("/run/" + ns, function(data){ console.log(data); })
+      d3.json("/scenario/" + ns + "/spawn", function(data){ })
    }
 );
 
@@ -322,6 +334,22 @@ d3.json("/scenario/" + ns,
       expand("" + data[0])
    }
 )
+
+function ping()
+{
+   return function()
+   {
+      d3.json("/scenario/" + ns + "/ping",
+         function(data)
+         {
+            d3.select("#unit").text(data)
+         }
+      ) ;
+      d3.timer(ping(), 1000);
+      return true;
+   }
+}
+d3.timer(ping(), 1000);
 
 //
 // expand
