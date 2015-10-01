@@ -23,6 +23,7 @@
          kernel
         ,stdlib
         ,lager
+        ,pts
         ,ambit
         ,ssl
         ,knet

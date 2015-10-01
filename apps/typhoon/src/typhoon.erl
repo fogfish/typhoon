@@ -26,11 +26,13 @@
   ,lookup/1
   ,remove/1
   ,run/1
+  ,unit/1
 ]).
 %%
 %% data interface
 -export([
-   series/4
+   fd/0
+  ,series/4
   ,series/5
   ,metric/4
   ,status/5
@@ -109,12 +111,36 @@ run(Id) ->
    ),
    pipe:call(lists:nth(random:uniform(length(Pids)), Pids), run).
 
+%%
+%% return number of active load units
+-spec(unit/1 :: (id()) -> integer()).
+
+unit(Id) ->
+   lists:sum(
+      lists:map(
+         fun(X) -> pipe:ioctl(X, n) end,
+         ambitz:entity(service,
+            ambitz:whereis(
+               ambitz:entity(ring, typhoon, ambitz:entity(Id))
+            )
+         )
+      )
+   ).
+
+
 
 %%%----------------------------------------------------------------------------   
 %%%
 %%% data interface
 %%%
 %%%----------------------------------------------------------------------------   
+
+%%
+%% file descriptor to time series data-base
+-spec(fd/0 :: () -> chronolog:fd()).
+
+fd() ->
+   pipe:ioctl(typhoon_peer, fd).
 
 %%
 %% read time series values from load scenario, return list of measured values.

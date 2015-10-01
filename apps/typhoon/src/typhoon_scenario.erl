@@ -47,15 +47,15 @@ init([Vnode, Name, Spec]) ->
          vnode => Vnode,
          name  => Name,
          spec  => Spec,
-         fd    => pipe:ioctl(typhoon_peer, fd)
+         n     => 0
       }
    }.
 
 free(_, _) ->
    ok.
 
-ioctl(_, _) ->
-   throw(not_implemented).
+ioctl(n, #{n := N}) ->
+   N.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -79,41 +79,16 @@ handle({handoff, _Vnode}, Tx, State) ->
    pipe:ack(Tx, ok),
    {next_state, handle, State};
 
-handle(run, Tx, #{spec := Spec}=State) ->
-   pipe:ack(Tx, 
-      run(pair:x(<<"n">>, Spec), q:new([erlang:node() | erlang:nodes()]), State)
+handle(run, Tx, #{n := N0}=State) ->
+   N1 = run(
+      q:new([erlang:node() | erlang:nodes()]), 
+      State
    ),
-   {next_state, handle, State};
+   pipe:ack(Tx, {ok, N1}),
+   {next_state, handle, State#{n => N0 + N1}};
 
-%%
-%% 
-handle({trace, Urn, T, {tcp, connect, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"tcp">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {ssl, handshake, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ssl">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-   
-handle({trace, Urn, T, {tcp, packet,  X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"pack">>, Urn), [{T, X}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {ssl, packet,  X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"pack">>, Urn), [{T, X}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, ttfb,   X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ttfb">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, ttmr,   X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, uri:schema(<<"ttmr">>, Urn), [{T, tempus:u(X)}]) end),
-   {next_state, handle, State};
-
-handle({trace, Urn, T, {http, status, X}}, _, #{fd := FD} = State) ->
-   spawn(fun() -> chronolog:append(FD, Urn, [{T, X}]) end),
-   {next_state, handle, State};
+handle({'DOWN', _Ref, _Type, _Pid, _Reason}, _, #{n := N} = State) ->
+   {next_state, handle, State#{n := N - 1}};
 
 handle(_Msg, _Tx, State) ->
    {next_state, handle, State}.
@@ -126,11 +101,21 @@ handle(_Msg, _Tx, State) ->
 
 %%
 %% run test case on cluster
-run(0, _Nodes, _State) ->
-   ok;
-run(N,  Nodes, #{name :=Name, spec := Spec}=State) ->
-   {ok, _} = supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Name, Spec]),
-   run(N - 1, q:enq(q:head(Nodes), q:tail(Nodes)), State).
+run(Nodes, #{spec := Spec} = State) ->
+   run(pair:x(<<"n">>, Spec), 0, Nodes, State).
+
+run(0, K, _Nodes, _State) ->
+   K;
+run(N, K, Nodes, #{name :=Name, spec := Spec}=State) ->
+   case 
+      supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Name, Spec]) 
+   of
+      {ok, Pid} ->
+         erlang:monitor(process, Pid),
+         run(N - 1, K + 1, q:enq(q:head(Nodes), q:tail(Nodes)), State);
+      {error,_} ->
+         run(N - 1, K, q:enq(q:head(Nodes), q:tail(Nodes)), State)
+   end.
 
 
 

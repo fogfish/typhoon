@@ -13,30 +13,28 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-%% @doc
-%%   rest api - execute scenario
--module(zephyrus_run).
+-module(aura_app).
+-behaviour(application).
 -author('dmitry.kolesnikov@zalando.fi').
 
+
 -export([
-   allowed_methods/1,
-   content_provided/1, 
-   'GET'/2
+   start/2
+  ,stop/1
 ]).
 
 %%
 %%
-allowed_methods(_Req) ->
-   ['GET'].
+start(_Type, _Args) ->
+   {ok,   _} = kmq:queue(auraq, [
+      opts:get(n,   1, aura),
+      opts:get(in, [], aura),
+      opts:get(mq, [], aura)
+   ]),
+   aura_sup:start_link().
 
 %%
 %%
-content_provided(_Req) ->
-   [{'*', '*'}].
+stop(_State) ->
+   ok.
 
-%%
-%%
-'GET'(_, {_Url, _Head, Env}) ->
-   Id = pair:x(<<"id">>, Env),
-   typhoon:run(Id),
-   {302, [{'Location', <<$/, Id/binary>>}], <<>>}.

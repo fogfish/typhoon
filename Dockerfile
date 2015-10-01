@@ -13,29 +13,32 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 ##
+FROM centos
 
-## Name of the node
--name typhoon@127.0.0.1
+ENV   ARCH  x86_64
+ENV   PLAT  Linux
 
-## Cookie for distributed erlang
--setcookie typhoon
+##
+## install dependencies
+RUN \
+   yum -y install \
+      tar  \
+      git  \
+      make
 
-## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
-## (Disabled by default..use with caution!)
--heart
--smp
+##
+## install application
+COPY typhoon-current.${ARCH}.${PLAT}.bundle /tmp/typhoon.bundle
 
-## Enable kernel poll and a few async threads
-+K true
-+A 160
-+P 10000000
+RUN \
+   sh /tmp/typhoon.bundle && \
+   rm /tmp/typhoon.bundle 
 
-## limit number of port, firewall requires empd 4369 port
--kernel inet_dist_listen_min 32100
--kernel inet_dist_listen_max 32199
+ENV PATH $PATH:/usr/local/typhoon/bin/
 
-## Increase number of concurrent ports/sockets
-##-env ERL_MAX_PORTS 4096
+EXPOSE 8080
+EXPOSE 4369
+EXPOSE 32100
 
-## Tweak GC to run more often
-##-env ERL_FULLSWEEP_AFTER 10
+CMD /etc/init.d/typhoon start
+

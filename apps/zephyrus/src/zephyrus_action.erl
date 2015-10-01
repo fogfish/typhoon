@@ -13,29 +13,35 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-{"apps/typhoon/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/typhoon/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%% @doc
+%%   rest api - execute scenario action
+-module(zephyrus_action).
+-author('dmitry.kolesnikov@zalando.fi').
 
-{"apps/aura/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/aura/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+-export([
+   allowed_methods/1,
+   content_provided/1, 
+   'GET'/2
+]).
 
-{"apps/zephyrus/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/zephyrus/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%%
+%%
+allowed_methods(_Req) ->
+   ['GET'].
+
+%%
+%%
+content_provided(_Req) ->
+   [{'*', '*'}].
+
+%%
+%%
+'GET'(_, {_Url, _Head, Env}) ->
+   Id = pair:x(<<"id">>, Env),
+   case pair:x(<<"action">>, Env) of
+      <<"spawn">> ->
+         _  = typhoon:run(Id),
+         {302, [{'Location', <<$/, Id/binary>>}], <<>>};
+      <<"ping">> ->
+         {200, jsx:encode(typhoon:unit(Id))}
+   end.

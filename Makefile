@@ -27,11 +27,11 @@ HEAD?= $(shell git rev-parse --short HEAD)
 TAG  = ${HEAD}.${ARCH}.${PLAT}
 TEST?= ${APP}
 S3   =
-GIT ?= 
-VMI  = 
+GIT ?= https://github.com/zalando
+VMI  = app/erlang:latest 
 NET ?= lo0
-USER =
-PASS =
+USER = 
+PASS?=
 
 ## root path to benchmark framework
 BB     = ../basho_bench
@@ -65,7 +65,7 @@ ifeq ($(wildcard rel/reltool.config),)
 	TAR =
 	PKG =
 else
-   IID  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\([^-]*\).*\"}./\1/p')
+	IID  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\([^-]*\).*\"}./\1/p')
 	REL  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\(.*\)\"}./\1/p')
 	VSN  = $(shell echo ${REL} | sed -n 's/.*-\(.*\)/\1/p')
 ifeq (${VSN},)
@@ -160,7 +160,7 @@ ${TAR}:
    	docker cp $$I:/tmp/${APP}/${TAR} . 1> /dev/null 2>&1 ;\
 	done ;\
 	docker kill $$I ;\
-	docker rm $$I
+	docker rm $$I 
 
 endif
 endif
@@ -172,6 +172,8 @@ pkg: rel/deploy.sh ${TAR}
 	printf  "${BUNDLE_FREE}" >> ${PKG} ; \
 	cat  ${TAR}              >> ${PKG} ; \
 	chmod ugo+x  ${PKG}                ; \
+	rm -f ${IID}-current.${ARCH}.${PLAT}.bundle ; \
+	ln -s ${PKG} ${IID}-current.${ARCH}.${PLAT}.bundle ; \
 	echo "==> bundle: ${PKG}"
 
 ## copy 'package' to s3
@@ -212,7 +214,8 @@ endif
 ##
 #####################################################################
 run:
-	@erl ${EFLAGS}
+	@ulimit -n 65536 ;\
+	erl ${EFLAGS}
 
 benchmark:
 	@echo "==> benchmark: ${TEST}" ;\

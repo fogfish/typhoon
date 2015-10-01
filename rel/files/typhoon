@@ -22,6 +22,7 @@ CALLER_DIR=$PWD
 
 RUNNER_BASE_DIR=${RUNNER_SCRIPT_DIR%/*}
 RUNNER_ETC_DIR=$RUNNER_BASE_DIR/etc
+USE_DIR=$RUNNER_BASE_DIR
 # Note the trailing slash on $PIPE_DIR/
 PIPE_DIR=/tmp/$RUNNER_BASE_DIR/
 RUNNER_USER=
@@ -40,40 +41,46 @@ fi
 
 # Identify the script name
 SCRIPT=`basename $0`
+SYSDIR=/etc
 
 # Parse out release and erts info
 START_ERL=`cat $RUNNER_BASE_DIR/releases/start_erl.data`
 ERTS_VSN=${START_ERL% *}
 APP_VSN=${START_ERL#* }
 
-# Use $CWD/vm.args if exists, otherwise releases/APP_VSN/vm.args, or
-# else etc/vm.args
-if [ -e "$CALLER_DIR/vm.args" ]; then
-    VMARGS_PATH=$CALLER_DIR/vm.args
-    USE_DIR=$CALLER_DIR
+# Lookup VM args
+#    /etc/APP/vm.args
+#    ROOT/releases/VSN/vm.args
+#    ROOT/etc/APP/vm.args
+if [ -e "$SYSDIR/$SCRIPT/vm.args" ] ;
+then
+   VMARGS_PATH="$SYSDIR/$SCRIPT/vm.args"
 else
-    USE_DIR=$RUNNER_BASE_DIR
-    if [ -e "$RUNNER_BASE_DIR/releases/$APP_VSN/vm.args" ]; then
-        VMARGS_PATH="$RUNNER_BASE_DIR/releases/$APP_VSN/vm.args"
-    else
-        VMARGS_PATH="$RUNNER_ETC_DIR/vm.args"
-    fi
+   if [ -e "$RUNNER_BASE_DIR/releases/$APP_VSN/vm.args" ]; then
+      VMARGS_PATH="$RUNNER_BASE_DIR/releases/$APP_VSN/vm.args"
+   else
+      VMARGS_PATH="$RUNNER_ETC_DIR/vm.args"
+   fi
+fi
+
+# Lookup APP config
+#    /etc/APP/app.config
+#    ROOT/release/VSN/sys.config
+#    ROOT/etc/APP/app.config
+if [ -e "$SYSDIR/$SCRIPT/app.config" ] ;
+then
+   CONFIG_PATH="$SYSDIR/$SCRIPT/app.config"
+else
+   if [ -e "$RUNNER_BASE_DIR/releases/$APP_VSN/sys.config" ]; then
+      CONFIG_PATH="$RUNNER_BASE_DIR/releases/$APP_VSN/sys.config"
+   else
+      CONFIG_PATH="$RUNNER_ETC_DIR/app.config"
+   fi
 fi
 
 RUNNER_LOG_DIR=$USE_DIR/log
 # Make sure log directory exists
 mkdir -p $RUNNER_LOG_DIR
-
-# Use releases/VSN/sys.config if it exists otherwise use etc/app.config
-if [ -e "$USE_DIR/sys.config" ]; then
-    CONFIG_PATH="$USE_DIR/sys.config"
-else
-    if [ -e "$RUNNER_BASE_DIR/releases/$APP_VSN/sys.config" ]; then
-        CONFIG_PATH="$RUNNER_BASE_DIR/releases/$APP_VSN/sys.config"
-    else
-        CONFIG_PATH="$RUNNER_ETC_DIR/app.config"
-    fi
-fi
 
 # Extract the target node name from node.args
 NAME_ARG=`egrep '^\-s?name' $VMARGS_PATH`

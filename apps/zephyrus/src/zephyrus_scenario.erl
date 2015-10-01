@@ -50,7 +50,7 @@ content_accepted(_Req) ->
             undefined ->
                not_found;
 
-            {typhoon_case, start_link, [_Name, Spec]} ->
+            {typhoon_scenario, start_link, [_Name, Spec]} ->
                {ok, jsx:encode(Spec)}
          end
    end.
