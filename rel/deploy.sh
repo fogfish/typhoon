@@ -33,9 +33,14 @@ sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
 ## build service wrapper
 if [ ! -a /etc/init.d/${APP} ] ; 
 then
-echo -e "#!/bin/bash\nexport HOME=/root\n${PREFIX}/${APP}-${VSN}/bin/${APP}.docker \$1" >  /etc/init.d/${APP}
+echo -e "#!/bin/bash\nexport HOME=/root\nsh ${PREFIX}/${APP}/bin/${APP}.docker \$1" >  /etc/init.d/${APP}
 chmod ugo+x /etc/init.d/${APP}
 fi
+
+##
+## make alias
+rm -f /usr/local/${APP}
+ln -s /usr/local/${APP}-${VSN} /usr/local/${APP}
 
 ##
 ## deploy config
