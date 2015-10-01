@@ -290,7 +290,7 @@ d3.select("#pause").on("click",
 d3.select("#run").on("click",
    function()
    {
-      d3.json("/scenario/" + ns + "/spawn", function(data){ })
+      d3.text("/scenario/" + ns + "/spawn", function(data){ })
    }
 );
 

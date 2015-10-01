@@ -27,11 +27,11 @@ HEAD?= $(shell git rev-parse --short HEAD)
 TAG  = ${HEAD}.${ARCH}.${PLAT}
 TEST?= ${APP}
 S3   =
-GIT ?= 
-VMI  = 
+GIT ?= ssh://github.com/fogfish
+VMI  = app/erlang:latest 
 NET ?= lo0
-USER =
-PASS =
+USER = git
+PASS?=
 
 ## root path to benchmark framework
 BB     = ../basho_bench
@@ -65,7 +65,7 @@ ifeq ($(wildcard rel/reltool.config),)
 	TAR =
 	PKG =
 else
-   IID  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\([^-]*\).*\"}./\1/p')
+	IID  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\([^-]*\).*\"}./\1/p')
 	REL  = $(shell cat rel/reltool.config | sed -n 's/{target_dir,.*\"\(.*\)\"}./\1/p')
 	VSN  = $(shell echo ${REL} | sed -n 's/.*-\(.*\)/\1/p')
 ifeq (${VSN},)
