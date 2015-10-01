@@ -39,6 +39,7 @@ ENV PATH $PATH:/usr/local/typhoon/bin/
 EXPOSE 8080
 EXPOSE 4369
 EXPOSE 32100
+EXPOSE 20100-20109
 
 CMD /etc/init.d/typhoon start
 
