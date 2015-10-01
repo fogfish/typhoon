@@ -23,10 +23,16 @@
 ## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
 ## (Disabled by default..use with caution!)
 -heart
+-smp
 
 ## Enable kernel poll and a few async threads
 +K true
 +A 160
++P 10000000
+
+## limit number of port, firewall requires empd 4369 port
+-kernel inet_dist_listen_min 32100
+-kernel inet_dist_listen_max 32199
 
 ## Increase number of concurrent ports/sockets
 ##-env ERL_MAX_PORTS 4096
