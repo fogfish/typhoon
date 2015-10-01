@@ -1,4 +1,3 @@
-#!/bin/bash
 ##
 ##   Copyright 2015 Zalando SE
 ##
@@ -14,17 +13,32 @@
 ##   See the License for the specific language governing permissions and
 ##   limitations under the License.
 ##
-set -u
-set -e
+FROM centos
+
+ENV   ARCH  x86_64
+ENV   PLAT  Linux
 
 ##
-## config file
-FILE=/etc/typhoon/vm.args
-echo "==> config ${FILE}"
+## install dependencies
+RUN \
+   yum -y install \
+      tar  \
+      git  \
+      make
 
-HOST=$(curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/local-ipv4 || echo "127.0.0.1")
-NODE=`sed -n -e "s/-name \(.*\)@.*/\1/p" ${FILE}`
-sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
+##
+## install application
+COPY typhoon-current.${ARCH}.${PLAT}.bundle /tmp/typhoon.bundle
 
-/usr/local/typhoon/bin/typhoon start
-tail -F /usr/local/typhoon/log/console.log
+RUN \
+   sh /tmp/typhoon.bundle && \
+   rm /tmp/typhoon.bundle 
+
+ENV PATH $PATH:/usr/local/typhoon/bin/
+
+EXPOSE 8080
+EXPOSE 4369
+EXPOSE 32100
+
+CMD /etc/init.d/typhoon start
+

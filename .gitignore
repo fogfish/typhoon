@@ -12,6 +12,7 @@ ebin/
 deps/
 log/
 .eunit/
+*.bundle
 rel/typhoon*/
 rebar
 .rebar/
