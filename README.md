@@ -39,6 +39,8 @@ utility and implement html interface to visualize measurements. The load scenari
 
 Use browser to inspect the progress of the executed test ```http://localhost:8080/:id``` once test specification is defined to the cluster.
 
+![User interface screenshot](screenshot.png)
+
 ### define load scenario
 
 ```
