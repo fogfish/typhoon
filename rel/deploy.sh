@@ -45,3 +45,6 @@ test ! -e /etc/${APP}/vm.args && cp ${REL}/releases/${VSN}/vm.args /etc/${APP}/v
 
 set +u
 set +e
+
+## EOF
+
