@@ -180,6 +180,7 @@ h2
    <div id="pause" class="button">pause</div>
    <div id="run" class="button">run</div>
    <div class="button">active: <span id="unit">0</span></div>
+   <div class="button">nodes: <span id="seed">0</span></div>
 </h1>
 <h3 id="title"></h3>
 </div>
@@ -350,6 +351,22 @@ function ping()
    }
 }
 d3.timer(ping(), 1000);
+
+function seed()
+{
+   return function()
+   {
+      d3.json("/scenario/" + ns + "/seed",
+         function(data)
+         {
+            d3.select("#seed").text(data.length)
+         }
+      ) ;
+      d3.timer(seed(), 1000);
+      return true;
+   }
+}
+d3.timer(seed(), 1000);
 
 //
 // expand

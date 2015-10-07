@@ -43,5 +43,8 @@ content_provided(_Req) ->
          _  = typhoon:run(Id),
          {302, [{'Location', <<$/, Id/binary>>}], <<>>};
       <<"ping">> ->
-         {200, jsx:encode(typhoon:unit(Id))}
+         {200, jsx:encode(typhoon:unit(Id))};
+      <<"seed">> ->
+         Seed = [erlang:node() | erlang:nodes()], 
+         {200, jsx:encode([scalar:s(X) || X <- Seed])}
    end.

@@ -27,4 +27,4 @@ NODE=`sed -n -e "s/-name \(.*\)@.*/\1/p" ${FILE}`
 sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
 
 /usr/local/typhoon/bin/typhoon start
-tail -F /usr/local/typhoon/log/console.log
+tail -F /usr/local/typhoon/log/access.log
