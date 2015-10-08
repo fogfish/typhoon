@@ -49,6 +49,7 @@ SenzaComponents:
          - Ref: StupsTyphoonRole
       AssociatePublicIpAddress: false 
       TaupageConfig:
+         root: true
          application_version: "{{Arguments.ImageVersion}}"
          runtime: Docker
          source: "registry.opensource.zalan.do/zeus/typhoon:{{Arguments.ImageVersion}}"
