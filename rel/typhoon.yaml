@@ -57,16 +57,16 @@ SenzaComponents:
             8080: 8080
             4369: 4369
             32100: 32100
-            20100: 20100
-            20101: 20101
-            20102: 20102
-            20103: 20103
-            20104: 20104
-            20105: 20105
-            20106: 20106
-            20107: 20107
-            20108: 20108
-            20109: 20109
+            20100/udp: 20100/udp
+            20101/udp: 20101/udp
+            20102/udp: 20102/udp
+            20103/udp: 20103/udp
+            20104/udp: 20104/udp
+            20105/udp: 20105/udp
+            20106/udp: 20106/udp
+            20107/udp: 20107/udp
+            20108/udp: 20108/udp
+            20109/udp: 20109/udp
 
 Resources:
    StupsTyphoonSg:
@@ -77,6 +77,22 @@ Resources:
          -  IpProtocol: tcp 
             FromPort: 22
             ToPort: 22
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 8080
+            ToPort: 8080
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 4369
+            ToPort: 4369
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 32100
+            ToPort: 32199
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: udp
+            FromPort: 20100
+            ToPort: 20109
             CidrIp: 0.0.0.0/0
 
    StupsTyphoonRole:
