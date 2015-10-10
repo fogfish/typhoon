@@ -52,6 +52,7 @@ SenzaComponents:
          root: true
          application_version: "{{Arguments.ImageVersion}}"
          runtime: Docker
+         networking: host
          source: "registry.opensource.zalan.do/zeus/typhoon:{{Arguments.ImageVersion}}"
          ports:
             8080: 8080
