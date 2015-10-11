@@ -1,0 +1,118 @@
+##
+##   Copyright 2015 Zalando SE
+##
+##   Licensed under the Apache License, Version 2.0 (the "License");
+##   you may not use this file except in compliance with the License.
+##   You may obtain a copy of the License at
+##
+##       http://www.apache.org/licenses/LICENSE-2.0
+##
+##   Unless required by applicable law or agreed to in writing, software
+##   distributed under the License is distributed on an "AS IS" BASIS,
+##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##   See the License for the specific language governing permissions and
+##   limitations under the License.
+##
+## @doc
+##   aws deployment template for stups.io
+SenzaInfo:
+   StackName: typhoon
+   Parameters:
+      - ImageVersion:
+         Description: "Docker image version of typhoon."
+      - AZ:
+         Description: "Availability Zone"
+         Default: a
+      - EC2:
+         Description: "AWS Instance type"
+         Default: "t2.small"
+      - Cluster:
+         Description: "Initial cluster size"
+         Default: "3"
+
+SenzaComponents:
+   - Configuration:
+      Type: Senza::StupsAutoConfiguration
+
+   - TyphoonCluster:
+      Type: Senza::TaupageAutoScalingGroup
+      InstanceType: "{{Arguments.EC2}}"
+      AutoScaling:
+         Minimum: "{{Arguments.Cluster}}"
+         Maximum: "{{Arguments.Cluster}}"
+         MetricType: CPU
+      SecurityGroups:
+         - Fn::GetAtt:
+            - StupsTyphoonSg
+            - GroupId
+      IamRoles:
+         - Ref: StupsTyphoonRole
+      AssociatePublicIpAddress: false 
+      TaupageConfig:
+         root: true
+         application_version: "{{Arguments.ImageVersion}}"
+         runtime: Docker
+         networking: host
+         source: "registry.opensource.zalan.do/zeus/typhoon:{{Arguments.ImageVersion}}"
+         ports:
+            8080: 8080
+            4369: 4369
+            32100: 32100
+            20100/udp: 20100/udp
+            20101/udp: 20101/udp
+            20102/udp: 20102/udp
+            20103/udp: 20103/udp
+            20104/udp: 20104/udp
+            20105/udp: 20105/udp
+            20106/udp: 20106/udp
+            20107/udp: 20107/udp
+            20108/udp: 20108/udp
+            20109/udp: 20109/udp
+
+Resources:
+   StupsTyphoonSg:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+         GroupDescription: Typhoon node ports
+         SecurityGroupIngress:
+         -  IpProtocol: tcp 
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 8080
+            ToPort: 8080
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 4369
+            ToPort: 4369
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: tcp
+            FromPort: 32100
+            ToPort: 32199
+            CidrIp: 0.0.0.0/0
+         -  IpProtocol: udp
+            FromPort: 20100
+            ToPort: 20109
+            CidrIp: 0.0.0.0/0
+
+   StupsTyphoonRole:
+      Type: AWS::IAM::Role
+      Properties:
+         AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+            -  Effect: Allow
+               Principal:
+                  Service: ec2.amazonaws.com
+               Action: sts:AssumeRole
+         Path: /
+         Policies:
+           -   PolicyName: AmazonEC2Describe
+               PolicyDocument:
+                  Version: "2012-10-17"
+                  Statement:
+                  -  Effect: Allow
+                     Action: ec2:Describe*
+                     Resource: "*"
+

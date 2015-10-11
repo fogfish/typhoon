@@ -37,6 +37,7 @@ start_link() ->
    pipe:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
+   {ok, _} = clot:seed(),
    [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
    File = filename:join([opts:val(vardir, typhoon), Node]),
    {ok, FD} = chronolog:new([persistent, {file, File}]),

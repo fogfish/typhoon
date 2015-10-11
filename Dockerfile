@@ -24,7 +24,17 @@ RUN \
    yum -y install \
       tar  \
       git  \
-      make
+      make \
+      unzip
+
+##
+## install aws cli tools
+RUN \
+   curl https://s3.amazonaws.com/aws-cli/awscli-bundle.zip -o awscli-bundle.zip && \
+   unzip awscli-bundle.zip && \
+   ./awscli-bundle/install -i /usr/local/aws -b /usr/local/bin/aws && \
+   rm awscli-bundle.zip && \
+   rm -Rf awscli-bundle
 
 ##
 ## install application
@@ -39,7 +49,16 @@ ENV PATH $PATH:/usr/local/typhoon/bin/
 EXPOSE 8080
 EXPOSE 4369
 EXPOSE 32100
-EXPOSE 20100-20109
+EXPOSE 20100/udp
+EXPOSE 20101/udp
+EXPOSE 20102/udp
+EXPOSE 20103/udp
+EXPOSE 20104/udp
+EXPOSE 20105/udp
+EXPOSE 20106/udp
+EXPOSE 20107/udp
+EXPOSE 20108/udp
+EXPOSE 20109/udp
 
 CMD /etc/init.d/typhoon start
 
