@@ -56,15 +56,40 @@ handle(run, _, State) ->
          erlang:send_after(5000, self(), run),
          {next_state, handle, State};
       List ->
-         [erlang:send(self(), aura:decode(X)) || X <- List],
-         erlang:send(self(), run),
-         {next_state, handle, State}
+         {next_state, handle, 
+            State#{
+               tx => [pipe:cast(self(), aura:decode(X)) || X <- List]
+            }
+         }
    end;
    
-handle({{urn, _, _} = Urn, T, X}, _, #{fd := FD} = State) ->
+handle({{urn, _, _} = Urn, T, X}, Pipe, #{fd := FD} = State) ->
    spawn(
       fun() ->
-         chronolog:append(FD, Urn, [{T, X}])
+         chronolog:append(FD, Urn, [{T, X}]),
+         pipe:ack(Pipe, ok)
       end
    ),
-   {next_state, handle, State}.
+   {next_state, handle, State};
+
+handle({Tx, ok}, _Pipe, #{tx := List0} = State) ->
+   case lists:delete(Tx, List0) of
+      [] ->
+         erlang:send(self(), run),
+         {next_state, handle, maps:remove(tx, State)};
+      List1 ->
+         {next_state, handle, State#{tx => List1}}
+   end.
+         
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% private
+%%%
+%%%----------------------------------------------------------------------------   
+   
+
+
+
+   
+
