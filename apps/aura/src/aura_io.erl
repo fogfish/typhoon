@@ -67,7 +67,8 @@ handle({{urn, _, _} = Urn, T, X}, Pipe, #{fd := FD} = State) ->
    spawn(
       fun() ->
          chronolog:append(FD, Urn, [{T, X}]),
-         pipe:ack(Pipe, ok)
+         pipe:ack(Pipe, ok),
+         clue:inc({aura, io})
       end
    ),
    {next_state, handle, State};

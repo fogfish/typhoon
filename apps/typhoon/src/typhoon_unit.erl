@@ -66,6 +66,7 @@ idle(request, Pipe, #{sock := Sock, seq := Seq} = State) ->
       false ->
          idle(request, Pipe, maps:remove(sock, State));
       true  ->
+         clue:inc({typhoon, req}),
          {next_state, active, 
             State#{
                urn => request(Sock, q:head(Seq)),
@@ -148,7 +149,8 @@ trace(Name) ->
    lists:map(
       fun(X) ->
          [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
-         scalar:c(Host)
+         {ok, IP}  = inet_parse:address(scalar:c(Host)),
+         IP
       end,
       ambitz:entity(vnode,
          ambitz:lookup(
