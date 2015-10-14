@@ -229,10 +229,7 @@ var cuba = function(context, host) {
             + "?chronolog" + metric + "&chronon=" + step / 1000, 
             function(data) {
                if (!data) return callback(new Error("unable to load data"));
-               var list = data.map(function(x){return x[1]});
-               var last = list.pop();
-               list.push(last > 0 ? last : ~~d3.mean(list));
-               callback(null, list);
+               callback(null, data.map(function(x){return x[1]}))
             });
          }, title);
    };
@@ -266,10 +263,10 @@ var scolors = [
 
 var running = true;
 var context = cubism.context()
-    .step(1 * 1000)
+    .step(1 * 1000)          // 1 second per value
     .size(800)
-    .serverDelay(1000)
-    .clientDelay(0)
+    .serverDelay(60 * 1000)  // time to collect and process metrics by server
+    .clientDelay( 5 * 1000)
     .start();
 
 d3.select("#pause").on("click", 

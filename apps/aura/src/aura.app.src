@@ -16,7 +16,7 @@
 {application, aura,
    [
       {description, "datagram i/o layer"},
-      {vsn,         "0.0.0"},
+      {vsn,         "0.1.0"},
       {modules,     []},
       {registered,  []},
       {applications,[

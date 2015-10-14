@@ -26,6 +26,7 @@
 %%
 %%
 start(_Type, _Args) ->
+   clue:define(meter, {typhoon, req}, 600000),
    typhoon_sup:start_link(). 
 
 %%

@@ -31,6 +31,7 @@ start(_Type, _Args) ->
       opts:get(in, [], aura),
       opts:get(mq, [], aura)
    ]),
+   clue:define(meter, {aura, io}, 600000),
    aura_sup:start_link().
 
 %%
