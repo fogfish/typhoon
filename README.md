@@ -10,7 +10,7 @@ The tool simulates a traffic from test cluster towards system-under-test (SUT). 
 
 ## build
 
-The project requires Erlang/OTP development environment [here](docs/erlang.md) and essential development tool sets. The project provides binary files for Linux x86_64 and MacOS 10.10.x platforms.
+The project requires Erlang/OTP development environment [check here instructions](docs/erlang.md) and essential development tool sets such as `git`, `make`, etc. The project provides binary files for Linux x86_64 and MacOS 10.10.x platforms (see releases).
 
 Use following commands to compile and make distributable package for your platform. The output is self-deployable bundle package ```typhoon-{vsn}+{head}.{arch}.{plat}.bundle```
 
@@ -25,7 +25,6 @@ It is possible to assemble cross platform packages on MacOS. However it requires
    make
    make pkg PLAT=Linux 
 ```
-
 
 ## configuration
 
@@ -71,14 +70,14 @@ curl -XGET \
    http://localhost:8080/scenario/:id/spawn
 ```
 
-## Known issues
+## known issues
 
 * The current version is optimized for http(s) protocol only, support for other protocols and protocol plug-in interface is planned for future releases
 
 * Scenario files are stored in-memory. However cluster manages 3 replicas.
 
 * The access to the tool shall not be exposed to public networks.
- 
+
 
 # License
 
