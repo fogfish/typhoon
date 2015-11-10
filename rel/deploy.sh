@@ -23,30 +23,40 @@ set -u
 set -e
 
 ##
-## changes node name
-FILE=${REL}/releases/${VSN}/vm.args
-HOST=$(curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/local-ipv4 || echo "127.0.0.1")
-NODE=`sed -n -e "s/-name \(.*\)@.*/\1/p" ${FILE}`
-sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
-
-##
-## build service wrapper
-if [ ! -a /etc/init.d/${APP} ] ; 
-then
-echo -e "#!/bin/bash\nexport HOME=/root\nsh ${PREFIX}/${APP}/bin/${APP}.docker \$1" >  /etc/init.d/${APP}
-chmod ugo+x /etc/init.d/${APP}
-fi
-
-##
-## make alias
+## make alias to current version
 rm -f /usr/local/${APP}
 ln -s /usr/local/${APP}-${VSN} /usr/local/${APP}
 
 ##
+## configure application 
+if [[ $(uname -s) == "Linux" ]] ;
+then 
+   FILE=${REL}/releases/${VSN}/vm.args
+   HOST=$(curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/local-ipv4 || echo "127.0.0.1")
+   NODE=`sed -n -e "s/-name \(.*\)@.*/\1/p" ${FILE}`
+   sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
+fi
+
+##
+## build service wrapper
+if [[ $(uname -s) == "Linux" ]] ;
+then
+   ## @todo: hard-coded assumption that node runs inside docker container
+   if [ ! -a /etc/init.d/${APP} ] ; 
+   then
+      echo -e "#!/bin/bash\nexport HOME=/root\nsh ${PREFIX}/${APP}/bin/${APP}.docker \$1" >  /etc/init.d/${APP}
+      chmod ugo+x /etc/init.d/${APP}
+   fi
+fi
+
+##
 ## deploy config
-test ! -d /etc/${APP} && mkdir -p /etc/${APP}
-test ! -e /etc/${APP}/app.config && cp ${REL}/releases/${VSN}/sys.config /etc/${APP}/app.config
-test ! -e /etc/${APP}/vm.args && cp ${REL}/releases/${VSN}/vm.args /etc/${APP}/vm.args
+if [[ $(id -u) -ne 0 ]] ; 
+then
+   test ! -d /etc/${APP} && mkdir -p /etc/${APP}
+   test ! -e /etc/${APP}/app.config && cp ${REL}/releases/${VSN}/sys.config /etc/${APP}/app.config
+   test ! -e /etc/${APP}/vm.args && cp ${REL}/releases/${VSN}/vm.args /etc/${APP}/vm.args
+fi
 
 set +u
 set +e
