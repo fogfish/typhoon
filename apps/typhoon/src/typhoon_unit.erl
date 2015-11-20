@@ -19,6 +19,8 @@
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-include("typhoon.hrl").
+
 -export([
    start_link/2
   ,init/1
@@ -44,7 +46,7 @@ init([Name, Spec]) ->
    tempus:timer(tempus:t(s, pair:x(<<"t">>, Spec)), expired),
    {ok, idle, 
       #{
-         seq => q:new(pair:x(<<"seq">>, Spec)),
+         seq => q:new( compile(Spec) ),
          pid => trace(Name),
          udp => Udp
       }
@@ -67,12 +69,22 @@ idle(request, Pipe, #{sock := Sock, seq := Seq} = State) ->
          idle(request, Pipe, maps:remove(sock, State));
       true  ->
          clue:inc({typhoon, req}),
-         {next_state, active, 
-            State#{
-               urn => request(Sock, q:head(Seq)),
-               seq => q:enq(q:head(Seq), q:tail(Seq))
-            }
-         }
+         case request(Sock, q:head(Seq)) of
+            {active, Urn} ->
+               {next_state, active, 
+                  State#{
+                     urn => Urn,
+                     seq => q:enq(q:head(Seq), q:tail(Seq))
+                  }
+               };
+            {request, _} ->
+               erlang:send(self(), request),
+               {next_state, idle, 
+                  State#{
+                     seq => q:enq(q:head(Seq), q:tail(Seq))
+                  }
+               }
+         end
    end;
          
 idle(request, Pipe, #{seq := Seq}=State) ->
@@ -116,32 +128,33 @@ active(_, _Pipe, State) ->
 
 %%
 %% create socket
-socket(Req) ->
-   knet:socket(uri:new(pair:x(<<"url">>, Req)), [{trace, self()}]).
+socket(#{url := Furl}) ->
+   Uri = uri:new( scalar:s(Furl(?CONFIG_SCRIPT_ALLOWED)) ),
+   knet:socket(Uri, [{trace, self()}]).
 
 %%
 %%
-request(Sock, Req) ->
-   request(Sock, 
-      pair:x(<<"id">>,   Req)
-     ,pair:x(<<"req">>,  Req)
-     ,pair:x(<<"url">>,  Req)
-     ,pair:x(<<"head">>, Req)
-     ,pair:x(<<"data">>, Req)
-   ).
-
-
-request(Sock, Id, Mthd, Url, Head, undefined) ->
-   Uri = uri:new(scalar:s(swirl:r(scalar:c(Url), []))),
-   pipe:send(Sock, {scalar:a(Mthd), Uri, Head}),
-   uri:new(Id);
-
-request(Sock, Id, Mthd, Url, Head, Data) ->
-   Uri = uri:new(scalar:s(swirl:r(scalar:c(Url), []))),
-   pipe:send(Sock, {scalar:a(Mthd), Uri, [{'Transfer-Encoding', <<"chunked">>}|Head]}),
-   pipe:send(Sock, scalar:s(swirl:r(scalar:c(Data), []))),
+request(Sock, #{id := Id, req := Mthd, url := Furl, head := Head, data := Fdata}) ->
+   Uri = uri:new( scalar:s(Furl(?CONFIG_SCRIPT_ALLOWED)) ),
+   pipe:send(Sock, {Mthd, Uri, [{'Transfer-Encoding', <<"chunked">>}|Head]}),
+   pipe:send(Sock, scalar:s(Fdata(?CONFIG_SCRIPT_ALLOWED))),
    pipe:send(Sock, eof),
-   uri:new(Id).
+   {active, uri:new(Id)};
+
+request(Sock, #{id := Id, req := Mthd, url := Furl, head := Head}=R) ->
+   Uri = uri:new( scalar:s(Furl(?CONFIG_SCRIPT_ALLOWED)) ),
+   pipe:send(Sock, {Mthd, Uri, Head}),
+   {active, uri:new(Id)};
+
+request(_Sock, #{sleep := T})
+ when is_integer(T) ->
+   timer:sleep(T),
+   {request, undefined};
+
+request(_Sock, #{sleep := T})
+ when is_function(T) ->
+   timer:sleep(scalar:i(T(?CONFIG_SCRIPT_ALLOWED))),
+   {request, undefined}.
 
 %%
 %% discover destination nodes for sampled data
@@ -171,5 +184,52 @@ enq(Pack, #{udp := Udp, pid := Peers}) ->
       Peers
    ).
    
+%%
+%% compile json specification to executable object's
+compile(Spec) ->
+   [compile(X, Spec) || X <- pair:x(<<"seq">>, Spec)].
 
+compile(Req, Spec) ->
+   compile(pair:x(<<"@context">>, Req), pair:x(<<"@type">>, Req), Req, Spec).
 
+compile(?CONFIG_SCHEMA_HTTP, Mthd, Req, Spec)
+ when Mthd =:= <<"GET">> orelse Mthd =:= <<"DELETE">> ->
+   #{
+      id   => pair:x(<<"@id">>, Req),
+      req  => scalar:a(Mthd),
+      url  => compile_url(pair:x(<<"url">>, Req), Spec),
+      head => compile_head(pair:x(<<"head">>, Req), Spec)
+   };
+
+compile(?CONFIG_SCHEMA_HTTP, Mthd, Req, Spec)
+ when Mthd =:= <<"PUT">> orelse Mthd =:= <<"POST">> ->
+   #{
+      id   => pair:x(<<"@id">>, Req),
+      req  => scalar:a(Mthd),
+      url  => compile_url(pair:x(<<"url">>, Req), Spec),
+      head => compile_head(pair:x(<<"head">>, Req), Spec),
+      data => compile_data(pair:x(<<"data">>, Req), Spec)
+   };
+
+compile(?CONFIG_SCHEMA_ACTION, <<"sleep">>, Req, _Spec) ->
+   case pair:x(<<"t">>, Req) of
+      X when is_integer(X) ->
+         #{sleep => X};
+      X when is_binary(X) ->
+         Fun = swirl:f(X),
+         #{sleep => Fun(undefined)}
+   end.
+
+compile_url(Suffix, Spec) ->
+   Base = pair:lookup(<<"base">>, <<>>, Spec),
+   Fun  = swirl:f(<<Base/binary, Suffix/binary>>),
+   Fun(undefined).
+
+compile_data(Data, _Spec) ->
+   Fun = swirl:f(Data),
+   Fun(undefined).
+   
+compile_head(undefined, Spec) ->
+   compile_head([], Spec);
+compile_head(Head, Spec) ->
+   pair:lookup(<<"head">>, [], Spec) ++ Head.

@@ -1,26 +1,29 @@
 {
-   "n": 100,
-   "t": 60,
+   "n": 10,
+   "t": 600,
+   "base": "http://docker:9200",
+   "head": {"Connection": "keep-alive"},
    "seq": 
    [
       {
-         "id"  : "urn:http:elastic:post",
-         "req" : "PUT",
-         "url" : "http://docker:9200/kv/test/{.typhoon:int(1000000).}",
-         "head": {"Connection": "keep-alive", "Content-Type": "application/json"},
-         "data": "{\"text\":\"{.typhoon:text(4096).}\"}"
+         "@context": "http://typhoon.zalan.do/schema/http",
+         "@type"   : "PUT",
+         "@id"     : "urn:http:elastic:put",
+         "url"     : "/kv/test/{.typhoon:int(1000000).}",
+         "head"    : {"Content-Type": "application/json"},
+         "data"    : "{\"text\":\"{.typhoon:text(4096).}\"}"
       },
       {
-         "id"  : "urn:http:elastic:get",
-         "req" : "GET",
-         "url" : "http://docker:9200/kv/test/{.typhoon:int(1000000).}",
-         "head": {"Connection": "keep-alive"}
+         "@context": "http://typhoon.zalan.do/schema/http",
+         "@type"   : "GET",
+         "@id"     : "urn:http:elastic:get",
+         "url"     : "/kv/test/{.typhoon:int(1000000).}"
       },
       {
-         "id"  : "urn:http:elastic:search",
-         "req" : "GET",
-         "url" : "http://docker:9200/_search?q=\"{.typhoon:text(5).}\"",
-         "head": {"Connection": "keep-alive"}
+         "@context": "http://typhoon.zalan.do/schema/http",
+         "@type"   : "GET",
+         "@id"     : "urn:http:elastic:search",
+         "url"     : "http://docker:9200/_search?q=\"{.typhoon:text(5).}\""
       }
    ]
 }

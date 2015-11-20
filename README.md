@@ -76,8 +76,6 @@ curl -XGET \
 
 * Scenario files are stored in-memory. However cluster manages 3 replicas.
 
-* The access to the tool shall not be exposed to public networks.
-
 
 # License
 

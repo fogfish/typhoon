@@ -315,7 +315,9 @@ context.on("focus",
 d3.json("/scenario/" + ns, 
    function(data)
    {
-      var url  = data.seq.map(function(x){return x.id});
+      var url  = data.seq
+         .filter(function(x){return x['@context'] == "http://typhoon.zalan.do/schema/http"})
+         .map(function(x){return x['@id']});
       var data = url.map(function(x){return cuba(context).series("" + x, x, "&status=200")});
 
       d3.select("#case").selectAll(".horizon")
