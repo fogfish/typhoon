@@ -211,7 +211,7 @@ int(N) ->
 -spec(pareto/2 :: (float(), integer()) -> binary()).
 
 pareto(A, N) ->
-   scalar:s(rand:pareto(A, N)).
+   scalar:s(pdf:pareto(A, N)).
 
 %%
 %% generate random ASCII payload of given length, 
@@ -226,7 +226,7 @@ ascii(N) ->
    ).
 
 ascii() ->
-   stream:seed(0,
+   stream:unfold(
       fun(Seed) ->
          Head = case random:uniform(3) of
             1 -> $0 + (random:uniform(10) - 1);
@@ -234,7 +234,8 @@ ascii() ->
             3 -> $A + (random:uniform($Z - $A) - 1)
          end,
          {Head, Seed}
-      end
+      end,
+      0
    ).
 
 %%
@@ -249,14 +250,15 @@ text(N) ->
    ).
 
 text() ->
-   stream:seed(0,
+   stream:unfold(
       fun(Seed) ->
-         Head = case rand:pareto(0.4, 27) of
+         Head = case pdf:pareto(0.4, 27) of
             1 -> $ ;
             X -> $a + X - 1
          end,
          {Head, Seed}
-      end
+      end,
+      0
    ).
 
 

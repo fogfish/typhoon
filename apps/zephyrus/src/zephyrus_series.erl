@@ -40,11 +40,16 @@ content_accepted(_Req) ->
 
 %%
 'GET'(_, {Url, _Head, Env}) ->
+try
    Stream = stream:map(
       fun({T, X}) -> [tempus:s(T), lists:max(X)] end,
       chronolog:join([carrier(Url, Env), series(Url, Env)])
    ),
-   {ok, jsx:encode(stream:list(Stream))}.
+   {ok, jsx:encode(stream:list(Stream))}
+catch _:R ->
+   lager:error("~p ~p~n", [R, erlang:get_stacktrace()]), 
+   {ok, jsx:encode([])}
+end.
 
 %%
 %% build a series stream
@@ -72,7 +77,7 @@ series(Url, Env) ->
       {Ref, List} ->
          stream:build(List)
    after 60000 ->
-      exit(aaa)
+      exit(timeout)
    end.
    
 %%
@@ -81,13 +86,17 @@ carrier(Url, Env) ->
    Chronon = chronon(Url),
    A       = t(pair:x(<<"from">>, Env), Chronon),
    B       = t(pair:x(<<"to">>,   Env), Chronon),
-   stream:seed(A,
-      fun
-      (X) when X < B ->
-         {{X,0}, tempus:add(X, tempus:t(s, Chronon))};
-      (X) ->
-         {eos, {X,0}}
-      end
+   stream:takewhile(
+      fun(X) -> X =/= eos end,
+      stream:unfold(
+         fun
+         (X) when X < B ->
+            {{X,0}, tempus:add(X, tempus:t(s, Chronon))};
+         (X) ->
+            {eos, {X,0}}
+         end,
+         A
+      )
    ).
 
 %%
