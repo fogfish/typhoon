@@ -10,6 +10,7 @@
    },
    "seq": [
       {
+         "@id"   : "urn:http:localhost:a",
          "url"   : "/a",
          "method": "GET",
          "header": {"X-Header": "xvalue"}

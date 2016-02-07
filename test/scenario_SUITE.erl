@@ -77,7 +77,7 @@ end_per_group(_, _Config) ->
 context(Config) ->
    Spec = json(context, Config),
    Scenario = scenario:compile(Spec),
-   {[],  _} = scenario:eval(Scenario).
+   {<<>>, [], _} = scenario:eval(Scenario).
 
 
 http_get(Config) ->
@@ -86,7 +86,7 @@ http_get(Config) ->
 
    10   = scenario:n(Scenario),  
    600  = scenario:t(Scenario),  
-   {[Http, eof],   _} = scenario:eval(Scenario),
+   {<<"urn:http:localhost:a">>, [Http, eof], _} = scenario:eval(Scenario),
 
    {'GET', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
@@ -100,7 +100,7 @@ http_post(Config) ->
    Scenario = scenario:compile(Spec),
    10   = scenario:n(Scenario),  
    600  = scenario:t(Scenario),  
-   {[Http, Chunk, eof],   _} = scenario:eval(Scenario),
+   {<<"urn:http:localhost:a">>, [Http, Chunk, eof], _} = scenario:eval(Scenario),
 
    {'POST', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
@@ -114,7 +114,7 @@ http_post(Config) ->
 http_eval(Config) ->
    Spec = json(http_eval, Config),
    Scenario = scenario:compile(Spec),
-   {[Http, Chunk, eof],   _} = scenario:eval(Scenario),
+   {<<"urn:http:localhost:a">>, [Http, Chunk, eof], _} = scenario:eval(Scenario),
 
    {'POST', Url, Head} = Http,
    [Int, Ascii, Uid] = uri:segments(Url),

@@ -68,22 +68,22 @@ t(#{t := T}) ->
 
 %%
 %% evaluates request to list of communication primitives
--spec eval(fun((_) -> ok), scenario()) -> {[_], scenario()}.
+-spec eval(fun((_) -> ok), scenario()) -> {binary(), [_], scenario()}.
 
 eval(#{seq :=  {}} = Scenario) ->
    % evaluate empty scenario
-   {[], Scenario};
+   {<<>>, [], Scenario};
 
 eval(#{seq := Seq} = Scenario) ->
    eval(q:head(Seq), 
       Scenario#{seq => q:enq(q:head(Seq), q:tail(Seq))}
    ).
 
-eval(Unit, Scenario) ->
+eval(#{id := Id} = Unit, Scenario) ->
    List = lists:flatten([
       http_head(Unit), http_payload(Unit), http_eof(Unit)
    ]),
-   {List, Scenario}.
+   {Id, List, Scenario}.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -171,11 +171,12 @@ text() ->
 %%
 %% compile request
 compile_req(Spec, Unit) ->
+   Id = lens:get(lens:pair(<<"@id">>), Unit),
    compile_thinktime(Spec, Unit,
       compile_payload(Spec, Unit,
          compile_uri(Spec, Unit, 
             compile_header(Spec, Unit, 
-               compile_method(Spec, Unit, #{})
+               compile_method(Spec, Unit, #{id => Id})
             )
          )
       )

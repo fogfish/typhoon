@@ -10,6 +10,7 @@
    },
    "seq": [
       {
+         "@id"   : "urn:http:localhost:a",
          "url"   : "/{.scenario:ascii(2).}/{.scenario:uid().}",
          "method": "POST",
          "header": {"X-Header": "{.scenario:ascii(10).}"},
