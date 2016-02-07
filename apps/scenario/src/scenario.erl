@@ -21,32 +21,146 @@
 
 -export([
    compile/1,
+   n/1,
+   t/1,
    eval/1
+]).
+-export([
+   uid/0,
+   int/1,
+   pareto/2,
+   ascii/1,
+   text/1
 ]).
 
 %%
--type scenario() :: datum:q().
+-type scenario() :: #{
+   n   => integer(),
+   t   => integer(),
+   seq => datum:q()
+}.
 
 %%
 %% compile scenario
 -spec compile(_) -> scenario().
 
 compile(Spec) ->
-   q:new([compile_req(Spec, Req) 
-      || Req <- lens:get(lens:pair(<<"seq">>), Spec)]).
+   ?CONTEXT = lens:get(lens:pair(<<"@context">>), Spec),
+   N   = lens:get(lens:pair(<<"n">>, ?CONFIG_N), Spec),
+   T   = lens:get(lens:pair(<<"t">>, ?CONFIG_T), Spec),
+   Seq = q:new([compile_req(Spec, Req) 
+      || Req <- lens:get(lens:pair(<<"seq">>), Spec)]),
+   #{n => N, t => T, seq => Seq}.
+
+%%
+%% number of processes
+-spec n(scenario()) -> integer().
+
+n(#{n := N}) ->
+   N.
+
+%%
+%% time to execute scenario
+-spec t(scenario()) -> integer().
+
+t(#{t := T}) ->
+   T.
 
 %%
 %% evaluates request to list of communication primitives
 -spec eval(fun((_) -> ok), scenario()) -> {[_], scenario()}.
 
-eval(Scenario) ->
-   eval(q:head(Scenario), q:enq(q:head(Scenario), q:tail(Scenario))).
+eval(#{seq :=  {}} = Scenario) ->
+   % evaluate empty scenario
+   {[], Scenario};
+
+eval(#{seq := Seq} = Scenario) ->
+   eval(q:head(Seq), 
+      Scenario#{seq => q:enq(q:head(Seq), q:tail(Seq))}
+   ).
 
 eval(Unit, Scenario) ->
    List = lists:flatten([
       http_head(Unit), http_payload(Unit), http_eof(Unit)
    ]),
    {List, Scenario}.
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% script interface
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% generate globally unique sequential (k-order) identity
+-spec uid() -> binary().
+
+uid() ->
+   bits:btoh( uid:encode(uid:g()) ).
+
+%%
+%% generate uniformly distributed integer
+-spec int(integer()) -> binary().
+
+int(N) ->
+   scalar:s(random:uniform(N)).
+
+%%
+%% generate random integer using Pareto distribution
+-spec pareto(float(), integer()) -> binary().
+
+pareto(A, N) ->
+   scalar:s(pdf:pareto(A, N)).
+
+%%
+%% generate random ASCII payload of given length, 
+%% characters are uniformly distributed
+-spec ascii(integer()) -> binary().
+
+ascii(N) ->
+   scalar:s(
+      stream:list(
+         stream:take(N, ascii())
+      )
+   ).
+
+ascii() ->
+   stream:unfold(
+      fun(Seed) ->
+         Head = case random:uniform(3) of
+            1 -> $0 + (random:uniform(10) - 1);
+            2 -> $a + (random:uniform($z - $a) - 1);
+            3 -> $A + (random:uniform($Z - $A) - 1)
+         end,
+         {Head, Seed}
+      end,
+      0
+   ).
+
+%%
+%% generate random text using Pareto distributions
+-spec text(integer()) -> binary().
+
+text(N) ->
+   scalar:s(
+      stream:list(
+         stream:take(N, text())
+      )
+   ).
+
+text() ->
+   stream:unfold(
+      fun(Seed) ->
+         Head = case pdf:pareto(0.4, 27) of
+            1 -> $ ;
+            X -> $a + X - 1
+         end,
+         {Head, Seed}
+      end,
+      0
+   ).
+
+
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -88,7 +202,14 @@ compile_payload(_Spec, Unit, Req) ->
 compile_header(Spec, Unit, Req) ->
    Base = lens:get(lens:pair(<<"header">>, []), Spec),
    Head = lens:get(lens:pair(<<"header">>, []), Unit),
-   Req#{header => Base ++ Head}.
+   Http = lists:map(
+      fun({Key, Val}) ->
+         Fun = swirl:f(Val),
+         {Key, Fun(undefined)}
+      end,
+      Base ++ Head
+   ),
+   Req#{header => Http}.
 
 %%
 compile_method(_Spec, Unit, Req) ->
@@ -111,11 +232,14 @@ compile_thinktime(_Spec, Unit, Req) ->
 %%
 %%
 http_head(#{method := Mthd, uri := Uri, header := Head}) ->
+   %% @todo: chunked transfer-encoding is hard-coded, 
+   %%        make it configurable through scenario file
+   Header = [{Key, Val(?CONFIG_SCRIPT_ALLOWED)} || {Key, Val} <- Head],
    [
       {
          Mthd, 
          uri:new(scalar:s( Uri(?CONFIG_SCRIPT_ALLOWED) )), 
-         [{'Transfer-Encoding', <<"chunked">>}|Head]
+         [{'Transfer-Encoding', <<"chunked">>}|Header]
       }
    ].
 

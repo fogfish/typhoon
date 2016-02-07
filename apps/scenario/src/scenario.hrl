@@ -15,11 +15,23 @@
 %%
 
 %%
+%% scenario context
+-define(CONTEXT, <<"http://github.com/zalando/typhoon/schema/scenario/1.0">>).
+
+%%
+%% default concurrency
+-define(CONFIG_N,       1).
+
+%%
+%% default execution time
+-define(CONFIG_T,      60).
+
+%%
 %% functions allowed by script
 -define(CONFIG_SCRIPT_ALLOWED, 
    #{'@eval' => 
       #{
-         'typhoon' => [
+         'scenario' => [
             {uid,    true}
            ,{int,    true}
            ,{pareto, true}
