@@ -1,69 +1,54 @@
 {
+   "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+
    "n": 1,
-   "t": 60,
-   "base": "http://localhost:8888",
-   "head": {"Connection": "keep-alive"},
+   "t": 60000,
+   "url": "http://localhost:8888",
+   "header": {"Connection": "keep-alive"},
    "seq": 
    [
       {
-         "@context": "http://typhoon.zalan.do/schema/http",
-         "@type"   : "GET",
          "@id"     : "urn:http:httpbin.org",
+         "method"  : "GET",
          "url"     : "/"
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/action",
-         "@type"   : "sleep",
-         "t"       : 20
+         "@id"     : "urn:thinktime:1",
+         "@type"   : "thinktime",
+         "t"       : 500
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/http",
-         "@type"   : "GET",
          "@id"     : "urn:http:httpbin.org:ip",
+         "method"  : "GET",
          "url"     : "/ip"
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/action",
-         "@type"   : "sleep",
-         "t"       : "{.typhoon:int(100).}"
-      },
-
-      {
-         "@context": "http://typhoon.zalan.do/schema/http",
-         "@type"   : "GET",
          "@id"     : "urn:http:httpbin.org:headers",
+         "method"  : "GET",
          "url"     : "/headers"
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/action",
-         "@type"   : "sleep",
-         "t"       : 20
-      },
-
-      {
-         "@context": "http://typhoon.zalan.do/schema/http",
-         "@type"   : "GET",
          "@id"     : "urn:http:httpbin.org:get",
+         "method"  : "GET",
          "url"     : "/get"
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/action",
-         "@type"   : "sleep",
-         "t"       : "{.typhoon:int(100).}"
+         "@id"     : "urn:thinktime:2",
+         "@type"   : "thinktime",
+         "t"       : "{.scenario:pareto(0.2, 5000).}"
       },
 
       {
-         "@context": "http://typhoon.zalan.do/schema/http",
-         "@type"   : "POST",
          "@id"     : "urn:http:httpbin.org:post",
+         "method"  : "POST",
          "url"     : "/post",
-         "head"    : {"Content-Type": "text/plain"},
-         "data"    : "{.typhoon:ascii(1024).}"
+         "header"  : {"Content-Type": "text/plain", "Transfer-Encoding": "chunked"},
+         "payload" : "{.scenario:ascii(1024).}"
       }
    ]
 }

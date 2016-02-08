@@ -1,7 +1,7 @@
 {
    "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
    "n": 10,
-   "t": 600,
+   "t": 1000,
    "url": "http://localhost:8888",
    "header": 
    {

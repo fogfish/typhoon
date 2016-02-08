@@ -77,36 +77,39 @@ end_per_group(_, _Config) ->
 context(Config) ->
    Spec = json(context, Config),
    Scenario = scenario:compile(Spec),
-   {<<>>, [], _} = scenario:eval(Scenario).
+   {#{}, _} = scenario:eval(Scenario).
 
 
 http_get(Config) ->
    Spec = json(http_get, Config),
    Scenario = scenario:compile(Spec),
 
-   10   = scenario:n(Scenario),  
-   600  = scenario:t(Scenario),  
-   {<<"urn:http:localhost:a">>, [Http, eof], _} = scenario:eval(Scenario),
+   10 = scenario:n(Scenario),  
+   {0, 1, 0} = scenario:t(Scenario),  
+   {Req,  _} = scenario:eval(Scenario),
+
+   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, eof]} = Req,
 
    {'GET', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
-   <<"typhoon/0.0.0">> = lens:get(lens:pair(<<"User-Agent">>), Head),   
-   <<"*/*">> = lens:get(lens:pair(<<"Accept">>), Head),   
-   <<"xvalue">> = lens:get(lens:pair(<<"X-Header">>), Head).
+   <<"typhoon/0.0.0">> = lens:get(lens:pair('User-Agent'), Head),   
+   <<"*/*">> = lens:get(lens:pair('Accept'), Head),   
+   <<"xvalue">> = lens:get(lens:pair('X-Header'), Head).
 
 
 http_post(Config) ->
    Spec = json(http_post, Config),
    Scenario = scenario:compile(Spec),
-   10   = scenario:n(Scenario),  
-   600  = scenario:t(Scenario),  
-   {<<"urn:http:localhost:a">>, [Http, Chunk, eof], _} = scenario:eval(Scenario),
+   10 = scenario:n(Scenario),  
+   {0, 1, 0} = scenario:t(Scenario),  
+   {Req,  _} = scenario:eval(Scenario),
 
+   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, Chunk, eof]} = Req,
    {'POST', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
-   <<"typhoon/0.0.0">> = lens:get(lens:pair(<<"User-Agent">>), Head),   
-   <<"*/*">> = lens:get(lens:pair(<<"Accept">>), Head),   
-   <<"xvalue">> = lens:get(lens:pair(<<"X-Header">>), Head),
+   <<"typhoon/0.0.0">> = lens:get(lens:pair('User-Agent'), Head),   
+   <<"*/*">> = lens:get(lens:pair('Accept'), Head),   
+   <<"xvalue">> = lens:get(lens:pair('X-Header'), Head),
 
    <<"0123456789">> = Chunk.
 
@@ -114,18 +117,19 @@ http_post(Config) ->
 http_eval(Config) ->
    Spec = json(http_eval, Config),
    Scenario = scenario:compile(Spec),
-   {<<"urn:http:localhost:a">>, [Http, Chunk, eof], _} = scenario:eval(Scenario),
+   {Req, _} = scenario:eval(Scenario),
 
+   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, Chunk, eof]} = Req,
    {'POST', Url, Head} = Http,
    [Int, Ascii, Uid] = uri:segments(Url),
    true  = is_integer( scalar:i(Int) ),
    Ascii = << <<X:8>> || <<X:8>> <= Ascii, is_ascii(X) >>,
    Uid   = << <<X:8>> || <<X:8>> <= Uid, is_hex(X) >>,
 
-   <<"typhoon/", Vsn/binary>> = lens:get(lens:pair(<<"User-Agent">>), Head), 
+   <<"typhoon/", Vsn/binary>> = lens:get(lens:pair('User-Agent'), Head), 
    true  = is_integer( scalar:i(Int) ),
   
-   Value = lens:get(lens:pair(<<"X-Header">>), Head),
+   Value = lens:get(lens:pair('X-Header'), Head),
    Value = << <<X:8>> || <<X:8>> <= Value, is_ascii(X) >>.
    
 

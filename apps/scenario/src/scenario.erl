@@ -47,7 +47,7 @@
 compile(Spec) ->
    ?CONTEXT = lens:get(lens:pair(<<"@context">>), Spec),
    N   = lens:get(lens:pair(<<"n">>, ?CONFIG_N), Spec),
-   T   = lens:get(lens:pair(<<"t">>, ?CONFIG_T), Spec),
+   T   = tempus:t(m, lens:get(lens:pair(<<"t">>, ?CONFIG_T), Spec)),
    Seq = q:new([compile_req(Spec, Req) 
       || Req <- lens:get(lens:pair(<<"seq">>), Spec)]),
    #{n => N, t => T, seq => Seq}.
@@ -61,10 +61,11 @@ n(#{n := N}) ->
 
 %%
 %% time to execute scenario
--spec t(scenario()) -> integer().
+-spec t(scenario()) -> tempus:t().
 
 t(#{t := T}) ->
    T.
+
 
 %%
 %% evaluates request to list of communication primitives
@@ -72,18 +73,21 @@ t(#{t := T}) ->
 
 eval(#{seq :=  {}} = Scenario) ->
    % evaluate empty scenario
-   {<<>>, [], Scenario};
+   {#{}, Scenario};
 
 eval(#{seq := Seq} = Scenario) ->
    eval(q:head(Seq), 
       Scenario#{seq => q:enq(q:head(Seq), q:tail(Seq))}
    ).
 
-eval(#{id := Id} = Unit, Scenario) ->
+eval(#{id := Urn, thinktime := T}, Scenario) ->
+   {#{type => thinktime, urn => Urn, t => scalar:i(T(?CONFIG_SCRIPT_ALLOWED))}, Scenario};
+
+eval(#{id := Urn} = Unit, Scenario) ->
    List = lists:flatten([
       http_head(Unit), http_payload(Unit), http_eof(Unit)
    ]),
-   {Id, List, Scenario}.
+   {#{type => protocol,  urn => Urn, packet => List}, Scenario}.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -172,15 +176,18 @@ text() ->
 %% compile request
 compile_req(Spec, Unit) ->
    Id = lens:get(lens:pair(<<"@id">>), Unit),
-   compile_thinktime(Spec, Unit,
-      compile_payload(Spec, Unit,
-         compile_uri(Spec, Unit, 
-            compile_header(Spec, Unit, 
-               compile_method(Spec, Unit, #{id => Id})
+   case lens:get(lens:pair(<<"@type">>, <<"http">>), Unit) of
+      <<"http">>  ->
+         compile_payload(Spec, Unit,
+            compile_uri(Spec, Unit, 
+               compile_header(Spec, Unit, 
+                  compile_method(Spec, Unit, #{id => Id})
+               )
             )
-         )
-      )
-   ).
+         );
+      <<"thinktime">> = Type ->
+         compile_thinktime(Spec, Unit, #{id => Id})
+   end.
    
 %%
 compile_uri(Spec, Unit, Req) ->
@@ -219,28 +226,25 @@ compile_method(_Spec, Unit, Req) ->
 
 %%
 compile_thinktime(_Spec, Unit, Req) ->
-   case lens:get(lens:pair(<<"thinktime">>, undefined), Unit) of
+   case lens:get(lens:pair(<<"t">>, undefined), Unit) of
       undefined ->
          Req;
       T when is_integer(T) ->
          Req#{thinktime => fun(_) -> T end};
       T when is_binary(T) ->
          Fun = swirl:f(T),
-         Req#{payload => Fun(undefined)}
+         Req#{thinktime => Fun(undefined)}
    end.
-
 
 %%
 %%
 http_head(#{method := Mthd, uri := Uri, header := Head}) ->
-   %% @todo: chunked transfer-encoding is hard-coded, 
-   %%        make it configurable through scenario file
-   Header = [{Key, Val(?CONFIG_SCRIPT_ALLOWED)} || {Key, Val} <- Head],
    [
       {
          Mthd, 
          uri:new(scalar:s( Uri(?CONFIG_SCRIPT_ALLOWED) )), 
-         [{'Transfer-Encoding', <<"chunked">>}|Header]
+         %% @todo: header files are forced to atom due to htstream issue.
+         [{scalar:atom(Key), Val(?CONFIG_SCRIPT_ALLOWED)} || {Key, Val} <- Head]
       }
    ].
 
