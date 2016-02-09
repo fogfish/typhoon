@@ -58,7 +58,7 @@ handle(run, _, State) ->
       List ->
          {next_state, handle, 
             State#{
-               tx => [pipe:cast(self(), aura:decode(X)) || X <- List]
+               tx => [pipe:cast(self(), aura_protocol:decode(X)) || X <- List]
             }
          }
    end;
