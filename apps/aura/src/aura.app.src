@@ -15,14 +15,16 @@
 %%
 {application, aura,
    [
-      {description, "datagram i/o layer"},
+      {description, "telemetry i/o and storage layer"},
       {vsn,         "0.1.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
          kernel
         ,stdlib
+        ,chronolog
         ,kmq
+        ,clue
       ]},
       {mod, {aura_app, []}},
       {env, []}

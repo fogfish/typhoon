@@ -38,24 +38,24 @@ start_link() ->
 
 init([]) ->
    {ok, _} = clot:seed(),
-   [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
-   File = filename:join([opts:val(vardir, typhoon), Node]),
-   {ok, FD} = chronolog:new([
-      persistent,
-      %% eleveldb options 
-      {file, File},
-      {write_buffer_size, 16 * 1024 * 1024},
-      {total_leveldb_mem_percent,       40},
-      {eleveldb_threads,                32},
-      {sync, false},
-      %% read/write thought cache
-      {cache, [
-         {n,      4},
-         {ttl,    3600},
-         {memory, 100 * 1024 * 1024}
-      ]}
-   ]),
-   {ok, handle, #{fd => FD}}.
+   % [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
+   % File = filename:join([opts:val(vardir, typhoon), Node]),
+   % {ok, FD} = chronolog:new([
+   %    persistent,
+   %    %% eleveldb options 
+   %    {file, File},
+   %    {write_buffer_size, 16 * 1024 * 1024},
+   %    {total_leveldb_mem_percent,       40},
+   %    {eleveldb_threads,                32},
+   %    {sync, false},
+   %    %% read/write thought cache
+   %    {cache, [
+   %       {n,      4},
+   %       {ttl,    3600},
+   %       {memory, 100 * 1024 * 1024}
+   %    ]}
+   % ]),
+   {ok, handle, #{fd => aura:fd()}}.
 
 free(_, _) ->
    ok.

@@ -175,7 +175,7 @@ text() ->
 %%
 %% compile request
 compile_req(Spec, Unit) ->
-   Id = lens:get(lens:pair(<<"@id">>), Unit),
+   Id = uri:new( lens:get(lens:pair(<<"@id">>), Unit) ),
    case lens:get(lens:pair(<<"@type">>, <<"http">>), Unit) of
       <<"http">>  ->
          compile_payload(Spec, Unit,

@@ -42,20 +42,18 @@ init([Name, Spec]) ->
    random:seed(os:timestamp()),
    Scenario = scenario:compile(Spec),
    pipe:ioctl_(self(), {trap, true}),
-   %% @todo: make singleton udp socket
-   {ok, Udp} = gen_udp:open(0, [{sndbuf, 256 * 1024}]),
    erlang:send(self(), request),
    tempus:timer(scenario:t(Scenario), expired),
    {ok, idle, 
       #{
-         scenario => Scenario,
-         % pid => trace(Name),
-         udp => Udp
+         scenario  => Scenario,
+         telemetry => aura:socket(), 
+         peer      => trace(Name)
       }
    }.
 
-free(_Reason, #{udp := Udp}) ->
-   gen_udp:close(Udp).
+free(_Reason, _) ->
+   ok.
 
 %%-----------------------------------------------------------------------------
 %%
@@ -84,12 +82,12 @@ idle(_, _Pipe, State) ->
 
 %%
 %%
-active({http, _, {Code, _Text, _Head, _Env}}, _, #{urn := Urn}=State) ->
-   % enq(aura:encode(Urn, os:timestamp(), {http, status, Code}), State),
+active({http, _, {Code, _Text, _Head, _Env}}, _, State) ->
+   telemetry(os:timestamp(), {http, status, Code}, State),
    {next_state, active, State};
 
-active({trace, T, Msg}, _, #{urn := Urn} = State) ->
-   % enq(aura:encode(Urn, T, Msg), State),
+active({trace, T, Msg}, _, State) ->
+   telemetry(T, Msg, State),
    {next_state, active, State};
 
 active({http, _, eof}, _, State) ->
@@ -123,9 +121,7 @@ socket(Url, #{sock := Sock} = State) ->
    end;
 
 socket(Url, _State) ->
-   % knet:socket(Url, [{trace, self()}]).
-   knet:socket(Url, []).
-
+   knet:socket(Url, [{trace, self()}]).
 
 %%
 %%
@@ -146,102 +142,25 @@ request(#{type := protocol,  urn := Urn, packet := List}, State) ->
    {active, State#{urn => Urn, sock => Sock}}.
 
 
-% request(Sock, #{id := Id, req := Mthd, url := Furl, head := Head, data := Fdata}) ->
-%    Uri = uri:new( scalar:s(Furl(?CONFIG_SCRIPT_ALLOWED)) ),
-%    pipe:send(Sock, {Mthd, Uri, [{'Transfer-Encoding', <<"chunked">>}|Head]}),
-%    pipe:send(Sock, scalar:s(Fdata(?CONFIG_SCRIPT_ALLOWED))),
-%    pipe:send(Sock, eof),
-%    {active, uri:new(Id)};
-
-% request(Sock, #{id := Id, req := Mthd, url := Furl, head := Head}=R) ->
-%    Uri = uri:new( scalar:s(Furl(?CONFIG_SCRIPT_ALLOWED)) ),
-%    pipe:send(Sock, {Mthd, Uri, Head}),
-%    {active, uri:new(Id)};
-
-% request(_Sock, #{sleep := T})
-%  when is_integer(T) ->
-%    timer:sleep(T),
-%    {request, undefined};
-
-% request(_Sock, #{sleep := T})
-%  when is_function(T) ->
-%    timer:sleep(scalar:i(T(?CONFIG_SCRIPT_ALLOWED))),
-%    {request, undefined}.
-
 %%
 %% discover destination nodes for sampled data
 trace(Name) ->
+   {ok, Entity} = ambitz:lookup(
+      ambitz:entity(ring, typhoon, 
+         ambitz:entity(Name)
+      )
+   ),
    lists:map(
       fun(X) ->
+         %% @todo: it would fail if cluster uses FQDN
          [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
          {ok, IP}  = inet_parse:address(scalar:c(Host)),
          IP
       end,
-      ambitz:entity(vnode,
-         ambitz:lookup(
-            ambitz:entity(ring, typhoon,
-               ambitz:entity(Name)
-            )
-         )
-      )
+      ambitz:entity(vnode, Entity)
    ).
 
 %%
-%% enqueue sample data
-enq(Pack, #{udp := Udp, pid := Peers}) ->
-   lists:foreach(
-      fun(Peer) -> 
-         aura:send(Udp, Peer, Pack)
-      end,
-      Peers
-   ).
-   
-% %%
-% %% compile json specification to executable object's
-% compile(Spec) ->
-%    [compile(X, Spec) || X <- pair:x(<<"seq">>, Spec)].
-
-% compile(Req, Spec) ->
-%    compile(pair:x(<<"@context">>, Req), pair:x(<<"@type">>, Req), Req, Spec).
-
-% compile(?CONFIG_SCHEMA_HTTP, Mthd, Req, Spec)
-%  when Mthd =:= <<"GET">> orelse Mthd =:= <<"DELETE">> ->
-%    #{
-%       id   => pair:x(<<"@id">>, Req),
-%       req  => scalar:a(Mthd),
-%       url  => compile_url(pair:x(<<"url">>, Req), Spec),
-%       head => compile_head(pair:x(<<"head">>, Req), Spec)
-%    };
-
-% compile(?CONFIG_SCHEMA_HTTP, Mthd, Req, Spec)
-%  when Mthd =:= <<"PUT">> orelse Mthd =:= <<"POST">> ->
-%    #{
-%       id   => pair:x(<<"@id">>, Req),
-%       req  => scalar:a(Mthd),
-%       url  => compile_url(pair:x(<<"url">>, Req), Spec),
-%       head => compile_head(pair:x(<<"head">>, Req), Spec),
-%       data => compile_data(pair:x(<<"data">>, Req), Spec)
-%    };
-
-% compile(?CONFIG_SCHEMA_ACTION, <<"sleep">>, Req, _Spec) ->
-%    case pair:x(<<"t">>, Req) of
-%       X when is_integer(X) ->
-%          #{sleep => X};
-%       X when is_binary(X) ->
-%          Fun = swirl:f(X),
-%          #{sleep => Fun(undefined)}
-%    end.
-
-% compile_url(Suffix, Spec) ->
-%    Base = pair:lookup(<<"base">>, <<>>, Spec),
-%    Fun  = swirl:f(<<Base/binary, Suffix/binary>>),
-%    Fun(undefined).
-
-% compile_data(Data, _Spec) ->
-%    Fun = swirl:f(Data),
-%    Fun(undefined).
-   
-% compile_head(undefined, Spec) ->
-%    compile_head([], Spec);
-% compile_head(Head, Spec) ->
-%    pair:lookup(<<"head">>, [], Spec) ++ Head.
+%%
+telemetry(T, Value, #{urn := Urn, peer := Peers, telemetry := Sock}) ->
+   aura:send(Sock, Peers, {Urn, T, Value}).

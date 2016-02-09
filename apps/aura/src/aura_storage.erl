@@ -13,7 +13,9 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
--module(aura_io).
+%% @doc
+%%   
+-module(aura_storage).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -32,17 +34,35 @@
 %%%----------------------------------------------------------------------------   
 
 start_link() ->
-   pipe:start_link(?MODULE, [], []).
+   pipe:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-   erlang:send(self(), run),
-   {ok, handle, #{fd => typhoon:fd()}}.
+   [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
+   File = filename:join([opts:val(vardir, aura), Node]),
+   {ok, FD} = chronolog:new([
+      persistent,
+
+      %% eleveldb options 
+      {file, File},
+      {write_buffer_size, 16 * 1024 * 1024},
+      {total_leveldb_mem_percent,       40},
+      {eleveldb_threads,                32},
+      {sync, false},
+
+      %% read/write thought cache
+      {cache, [
+         {n,      4},
+         {ttl,    3600},
+         {memory, 100 * 1024 * 1024}
+      ]}
+   ]),
+   {ok, handle, #{fd => FD}}.
 
 free(_, _) ->
    ok.
 
-ioctl(_, _) ->
-   throw(not_implemented).
+ioctl(fd, #{fd := FD}) ->
+   FD.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -50,47 +70,13 @@ ioctl(_, _) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle(run, _, State) ->
-   case kmq:deq(auraq, 10) of
-      [] ->
-         erlang:send_after(5000, self(), run),
-         {next_state, handle, State};
-      List ->
-         {next_state, handle, 
-            State#{
-               tx => [pipe:cast(self(), aura:decode(X)) || X <- List]
-            }
-         }
-   end;
-   
-handle({{urn, _, _} = Urn, T, X}, Pipe, #{fd := FD} = State) ->
-   spawn(
-      fun() ->
-         chronolog:append(FD, Urn, [{T, X}]),
-         pipe:ack(Pipe, ok),
-         clue:inc({aura, io})
-      end
-   ),
-   {next_state, handle, State};
+handle(_, _, State) ->
+   {next_state, handle, State}.
 
-handle({Tx, ok}, _Pipe, #{tx := List0} = State) ->
-   case lists:delete(Tx, List0) of
-      [] ->
-         erlang:send(self(), run),
-         {next_state, handle, maps:remove(tx, State)};
-      List1 ->
-         {next_state, handle, State#{tx => List1}}
-   end.
-         
 
 %%%----------------------------------------------------------------------------   
 %%%
 %%% private
 %%%
 %%%----------------------------------------------------------------------------   
-   
-
-
-
-   
 

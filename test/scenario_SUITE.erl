@@ -88,7 +88,8 @@ http_get(Config) ->
    {0, 1, 0} = scenario:t(Scenario),  
    {Req,  _} = scenario:eval(Scenario),
 
-   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, eof]} = Req,
+   #{type := protocol, packet := [Http, eof]} = Req,
+   %% @todo: make lens based validator (check id)
 
    {'GET', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
@@ -104,7 +105,7 @@ http_post(Config) ->
    {0, 1, 0} = scenario:t(Scenario),  
    {Req,  _} = scenario:eval(Scenario),
 
-   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, Chunk, eof]} = Req,
+   #{type := protocol, packet := [Http, Chunk, eof]} = Req,
    {'POST', Url, Head} = Http,
    <<"http://localhost:8888/a">> = uri:s(Url),
    <<"typhoon/0.0.0">> = lens:get(lens:pair('User-Agent'), Head),   
@@ -119,7 +120,7 @@ http_eval(Config) ->
    Scenario = scenario:compile(Spec),
    {Req, _} = scenario:eval(Scenario),
 
-   #{type := protocol, urn := <<"urn:http:localhost:a">>, packet := [Http, Chunk, eof]} = Req,
+   #{type := protocol, packet := [Http, Chunk, eof]} = Req,
    {'POST', Url, Head} = Http,
    [Int, Ascii, Uid] = uri:segments(Url),
    true  = is_integer( scalar:i(Int) ),
