@@ -1,12 +1,79 @@
 # typhoon
 
-distributed system stress and load testing tool.
+Typhoon is distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and application latencies. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
+      
+The typhoon is operable as standalone application and scalable up to dozens of individual nodes hosted in cloud environment. The incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
 
-The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of system performance and scalability, while spawning huge number of concurrent sessions.      
+The tool provides REST interface to build, define and spawn workload scenarios; collect the telemetry and visualize results. 
 
-## architecture
 
+
+
+## inspiration
+
+The tool is a continuation of scalability and latency analysis efforts driven by tech companies within the mobile application domain. For example Nokia's contribution to latency analysis on cellular networks... Google's proposals on web protocol enchantment and evolutions...  
+
+It uses Erlang as runtime environment due to massive scalability and soft real-time properties (accuracy on measurements) . It recommended itself as indispensable technology in similar solution Tsung suitable to test scalability and performance of IP based applications.
+
+Typhoon focuses on **visualization**, **protocol metric** analysis and **usability**. The time-series data visualization crisis is well depicted [here](https://bost.ocks.org/mike/cubism/intro/#0), the usage of proposed solution by cubism.js improves readability and analysis of latencies experienced by SUT. The design of distributed systems requires deep-dive understanding of latencies introduced by infrastructure, protocol and application. Typhoon captures and visualize them allowing to solve a series of decision problem concerning both short-term and long-term arrangements: short term decisions include for example the determination of optimal software configuration, the number of servers, the number of concurrent connections; long term decisions include for example decisions concerning the development and extension of data and service architecture, choice of technology, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
+
+
+
+
+## getting started
+
+
+### getting typhoon
+tbd
+
+
+### running typhoon
+tdb
+
+
+### deploying typhoon
+tbd
+
+
+### running local typhoon cluster
+
+The project development requires Erlang/OTP development environment [see the instructions here](docs/erlang.md) and essential toolkit such as `git`, `make`, etc.
+
+tbd
+
+
+### continue to...
+
+* specification of [workload scenario](docs/unit.md)
+* explore [rest interface](docs/rest.md)
+
+
+
+
+
+## project details
+
+### architecture
 [See specification](docs/arch.md)
+
+
+
+## contributing
+See [contribution guideline](docs/contribution.md) for details on PR submission.
+
+
+
+## bugs
+See [bug reporting](docs/bugs.md) for guidelines on raising issues. 
+
+
+
+## contacts
+
+* email: dmitry.kolesnikov@zalando.fi
+* bugs: [here](https://github.com/zalando/typhoon/issues) 
+
+<!-- 
 
 ## build
 
@@ -75,7 +142,7 @@ curl -XGET \
 * The current version is optimized for http(s) protocol only, support for other protocols and protocol plug-in interface is planned for future releases
 
 * Scenario files are stored in-memory. However cluster manages 3 replicas.
-
+ -->
 
 # License
 
