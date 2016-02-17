@@ -1,0 +1,432 @@
+swagger: "2.0"
+info:
+   version: 0.0.2
+   title: typhoon rest interface
+   license:
+      name: "Apache License, Version 2.0"
+   description: |
+      Typhoon is distributed system stress and load testing tool. The tool simulates a traffic 
+      from test cluster towards system-under-test (SUT). The purposes of tool is validation of 
+      system performance and scalability, while spawning huge number of concurrent sessions.
+      The tool provides out-of-box cross-platform solution to investigate latency at protocol 
+      and application domains. It approximates Network delay, Round Trip Time, TLS Handshake, 
+      Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by
+      approximating packet metrics and estimates application performance.
+      
+      The tool provides REST interface to build, define and spawn workload scenarios; collect
+      the telemetry and visualize results. 
+      
+      The typhoon is operatable as standalone application and scalable up to dozens of indivudual
+      nodes hosted in cloud environment. The incremental scalability and decentralization are key
+      principles used to define the architecture. The peer-to-peer clustering based on consistent
+      hashing is a key technology to assembles and orchistrates load toward SUT. It helps the
+      system to deal with possible network failures and provide hight availability for
+      syntetic load and telemetry collections (the optimistic technique to replicate data has
+      been employed by the design). As drawback the conflict resolution is lifted to clients. 
+      The rest interface define primitive to deal with consistency for scenarion management 
+      use-cases. Conflicts of harvested telemetry are resolved automatically by the tool.
+
+##
+##
+schemes:
+   ## out-of-box application container configuration supports only http.
+   ## https is either enabled using load-balancer or customizing application configuration.
+   - http
+
+host: undefined
+
+basePath: /
+
+consumes:
+   - application/json
+produces:
+   - application/json
+
+
+##
+##
+paths:
+
+   ##
+   ## scenario dashboard
+   /{id} :
+      get:
+         summary: |
+            the dashboard is single page application that uses rest interface to visualize
+            telemetry. The dashboard is available only to workload scenarios published 
+            ealier (using curl command-line)   
+
+         parameters:
+            - $ref: '#/parameters/id'
+
+         produces:
+            - text/html
+
+         responses:
+            200:
+               description: |
+                  return dashboard application 
+
+            404:
+               description: |
+                  the workload scenarion is not exists
+
+
+   ##
+   ## scenario management
+   /scenario/{id} :
+
+      ##
+      ## /scenario/{id}
+      put:
+         summary: |
+            Simple write operation to workload scenario that is uniquely identified by a key.
+            The json object is written and asynchronoysly replicated to N nodes in the cluster.
+            Use w parameters to define the quorum requirements of write request.  
+
+         parameters:
+            -  $ref: '#/parameters/id'
+            -  $ref: '#/parameters/w'
+
+            -  name: scenario
+               in: body
+               schema:
+                  $ref: '#/definitions/scenario'
+
+         responses:
+            201:
+               description: |
+                  The workload scenario is uploaded to the cluster.
+
+               schema:
+                  $ref: '#/definitions/status'
+
+            303:
+               description: |
+                  The quorum requirements of request is not achievable, replicas are not agreeing 
+                  on the resource status. The resource redirects user-agent using Location header 
+                  to another resource, which facilitates validation and conflict resolution 
+                  (e.g. wait for eventual consistency or revoke the resource).
+
+            412:
+               description: |
+                  Requested operation cannot be completed, the runtime environment is not capable 
+                  to meet client requirements.
+
+      ##
+      ## /scenario/{id}
+      get:
+         summary: |
+            Simple read operation of workload scenario that is uniquely identified by a key.
+            The json object is returned. Use r parameters to define the quorum requirements 
+            of read request.
+
+         parameters:
+            -  $ref: '#/parameters/id'
+            -  $ref: '#/parameters/r'
+
+         responses:
+            200:
+               description: |
+                  The scenario definition (see doc/scenario.md)
+               
+               schema:
+                  $ref: '#/definitions/scenario'
+
+            303:
+               description: |
+                  The quorum requirements of request is not achievable, replicas are not agreeing 
+                  on the resource status. The resource redirects user-agent using Location header 
+                  to another resource, which facilitates validation and conflict resolution 
+                  (e.g. wait for eventual consistency or revoke the resource).
+
+            404:
+               description: |
+                  The scenario object is not found.
+
+            412:
+               description: |
+                  Requested operation cannot be completed, the runtime environment is not capable 
+                  to meet client requirements.
+
+
+      ##
+      ## /scenario/{id}
+      delete:
+         summary: |
+            Simple evict operation to workload scenario that is uniquely identified by a key.
+            The json object is removed from N cluster replicas. The remove operation is 
+            asynchronoysly replicated to N nodes in the cluster. Use w parameters to define 
+            the quorum requirements of write request. 
+
+         parameters:
+            -  $ref: '#/parameters/id'
+            -  $ref: '#/parameters/w'
+
+         responses:
+            200:
+               description: |
+                  The workload scenario is removed from the cluster.
+
+               schema:
+                  $ref: '#/definitions/status'
+
+            303:
+               description: |
+                  The quorum requirements of request is not achievable, replicas are not agreeing 
+                  on the resource status. The resource redirects user-agent using Location header 
+                  to another resource, which facilitates validation and conflict resolution 
+                  (e.g. wait for eventual consistency or revoke the resource).
+
+            404:
+               description: |
+                  The scenario object is not found.
+
+            412:
+               description: |
+                  Requested operation cannot be completed, the runtime environment is not capable 
+                  to meet client requirements.
+
+
+   ##
+   ## scenario actions - 
+   /scenario/{id}/spawn :
+      get:
+         summary: |
+            The operation spawns N concurrent stress test sessions. The behaviour of session and number
+            of sessions is defined by workload scenarion. The operation can be repeated multiple times.
+            Each request spawns a new batch of concurrent sessions.   
+
+         parameters:
+            - $ref: '#/parameters/id'
+
+         responses:
+            202:
+               description: |
+                  The spawn request is successfully accepted for asynchronous processing. 
+
+   ##
+   ## scenario actions -
+   /scenario/{id}/ping :
+      get:
+         summary: |
+            The operation checks the status of workload scenario and return number of active
+            workload sessions.
+
+         parameters:
+            - $ref: '#/parameters/id'
+
+         responses:
+            200:
+               description: |
+                  The operation is completed successfully.
+               
+               schema:
+                  type: integer
+                  description: the number of active stress test session
+
+
+   ##
+   ## scenario read telemetry - time series measurement
+   /scenario/{id}/series/{urn}/{kpi}/{from}/{to} :
+      get:
+         summary: |
+            read telemetry of key-performance-indicator (kpi) for given request within 
+            defined scenarion. The telemetry is returned as time-series data on the time
+            interval.
+
+         parameters:
+            - $ref: '#/parameters/id'
+            - $ref: '#/parameters/urn'
+            - $ref: '#/parameters/kpi'
+            - $ref: '#/parameters/from'
+            - $ref: '#/parameters/to'
+            - $ref: '#/parameters/chronon'
+
+         responses:
+            200:
+               description: |
+                  return time-series data
+               
+               schema:
+                  type: array
+                  items:
+                     $ref: '#/definitions/tuple'
+
+
+   ##
+   ##
+   /health/peer :
+      get:
+         summary: |
+            check the status of the cluster peers.
+
+         responses:
+            200:
+               description: |
+                  return list of online peers
+               
+               schema:
+                  type: array
+                  items: 
+                     $ref: '#/definitions/peer'
+
+            500:
+               description: |
+                  cluster or node is not available
+
+##
+##
+definitions:
+
+   ##
+   ##
+   scenario:
+      type: object
+      description: |
+         The document defines the workload scenario (see docs/scenario.md)
+
+      properties:
+         '@context':
+            type: string
+            description: equals to `http://github.com/zalando/typhoon/schema/scenario/1.0`
+
+   ##
+   ##
+   status:
+      type: object
+      description: |
+         The status of scenario operation
+
+      properties:
+         primary:
+            type: integer
+            description: number of primary nodes accepted the request
+
+         handoff:
+            type: integer
+            description: number of handoff nodes accepted the request
+
+   ##
+   ##
+   peer:
+      type: string
+      description: |
+         name of the cluster peer
+
+   ##
+   ##
+   tuple:
+      type: array
+      items:
+         type: integer
+      description: |
+         The telemetry tuple contains unix timestamp in seconds and value `[1455729247,0]`
+
+##
+##
+parameters:
+
+   ##
+   ##
+   id:
+      name: id
+      in:   path
+      type: string
+      required: true
+      description: |
+         identity of workload scenario, defined by developer of stress test.
+
+   ##
+   ##
+   urn:
+      name: urn
+      in:   path
+      type: string
+      required: true
+      description: |
+         the identity of telemetry produced by request(s) of workload scenario. Typhoon supports 
+         following classes of telemetry:
+         
+          * urn:http:xxx - http status code produced by stress test.
+          * urn:ttmr:xxx - time to meaningful response 
+          * urn:ttfb:xxx - time to first byte
+          * urn:pack:xxx - size of received packet(s) 
+          * urn:ssl:xxx  - ssl handshake latency
+          * urn:tcp:xxx  - tcp connection latency
+         
+         For example scenation.json file defined a request with identity `urn:http:httpbin.org`.
+         The tool collects and persists all other metrics underhood. The client can obtain these 
+         measurments using `urn:ttmr:httpbin.org`, `urn:ttfb:httpbin.org`, etc.
+
+   ##
+   ##
+   kpi:
+      name: kpi
+      in:   path
+      type: string
+      required: true
+      description: |
+         key-performance-indicator is the aggregation filter applied to raw telemetry:
+         
+          * rps  - amount of sampled data per second (e.g. the filter returns HTTP TPS)   
+          * 200  - http specific, amount of transactions completed with 2xx status code
+          * 300  - http specific, amount of transactions completed with 3xx status code
+          * 400  - http specific, amount of transactions completed with 4xx status code
+          * 500  - http specific, amount of transactions completed with 5xx status code
+          * mean - roll-up multiple sampled values to mean on the aggregation interval
+          * max  - return maximum value on the aggregation interval
+          * p90  - return percentile 90 on the aggregation interval
+          * p95  - return percentile 95 on the aggregation interval
+          * p99  - return percentile 99 on the aggregation interval
+
+   ##
+   ##
+   from:
+      name: from
+      in:   path
+      type: integer
+      required: true
+      description: |
+         start of report time interval (unix timestamp) 
+
+   ##
+   ##
+   to:
+      name: to
+      in:   path
+      type: integer
+      required: true
+      description: |
+         end of report time interval (unix timestamp) 
+
+   ##
+   ##
+   w:
+      name: w
+      in:   query
+      type: integer
+      required: false
+      description: |
+         consistency parameter, number of replica agreed on write operation (default 1).
+
+   ##
+   ##
+   r:
+      name: r
+      in:   query
+      type: integer
+      required: false
+      description: |
+         consistency parameter, number of replica agreed on read operation (default 1).
+
+   ##
+   ##
+   chronon:
+      name: chronon
+      in:   query
+      type: integer
+      required: false
+      description: |
+         size of aggregation interval in seconds (default 1).
+
