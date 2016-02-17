@@ -45,7 +45,7 @@ tbd
 ### continue to...
 
 * specification of [workload scenario](docs/unit.md)
-* explore [rest interface](docs/rest.md)
+* explore [rest interface](docs/restapi.yaml)
 
 
 
