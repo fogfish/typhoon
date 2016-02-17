@@ -1,7 +1,7 @@
 {
    "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
 
-   "n": 1,
+   "n": 10,
    "t": 60000,
    "url": "http://localhost:8888",
    "header": {"Connection": "keep-alive"},
@@ -35,6 +35,18 @@
          "@id"     : "urn:http:httpbin.org:get",
          "method"  : "GET",
          "url"     : "/get"
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:status:404",
+         "method"  : "GET",
+         "url"     : "/status/404"
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:status:500",
+         "method"  : "GET",
+         "url"     : "/status/500"
       },
 
       {

@@ -14,8 +14,8 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   rest api - execute scenario actions
--module(zephyrus_action).
+%%   rest api - 
+-module(zephyrus_dashboard).
 -author('dmitry.kolesnikov@zalando.fi').
 
 -export([
@@ -32,24 +32,30 @@ allowed_methods(_Req) ->
 %%
 %%
 content_provided(_Req) ->
-   [{'application', 'json'}].
-
+   [{'text', 'html'}].
 
 %%
 %%
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   case lens:get(lens:pair(<<"action">>), Env) of
+   case typhoon:lookup(Id, [{r, 1}]) of
+      {error, unity} ->
+         {303, [{'Location', location(Url, Id)}], <<>>};
 
-      %%
-      %% spawn load scenario 
-      <<"spawn">> ->
-         _ = typhoon:run(Id),
-         {202, [{'Location',  uri:s(uri:segments([Id], Url))}], <<>>};
-
-      %%
-      %% ping runing workers (concurrent units producing load)
-      <<"ping">> ->
-         {200, jsx:encode(typhoon:unit(Id))}
-
+      {ok,   Entity} ->
+         case ambitz:entity(service, Entity) of
+            undefined ->
+               404;
+            _         ->
+               % {'Access-Control-Allow-Origin', <<"*">>}
+               file:read_file(
+                  filename:join([code:priv_dir(zephyrus), htdoc, "index.html"])
+               )
+         end
    end.
+
+
+%%
+%% return location header
+location(Url, Id) ->
+   uri:s( uri:segments([scenario, Id], Url) ).

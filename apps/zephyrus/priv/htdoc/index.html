@@ -221,12 +221,12 @@ var cuba = function(context, host) {
    if (!host) host = "";
    var source = {};
 
-   source.series = function(title, ticker, metric) {
+   source.series = function(title, urn, kpi) {
       return context.metric(function(start, stop, step, callback) {
-         d3.json(host + "/series/" + ns + "/" +  ticker
+         d3.json(host + "/scenario/" + ns + "/series/" +  urn + "/" + kpi
             + "/" + start.getTime() / 1000
             + "/" + stop.getTime() / 1000 
-            + "?chronolog" + metric + "&chronon=" + step / 1000, 
+            + "?chronon=" + step / 1000, 
             function(data) {
                if (!data) return callback(new Error("unable to load data"));
                callback(null, data.map(function(x){return x[1]}))
@@ -316,9 +316,9 @@ d3.json("/scenario/" + ns,
    function(data)
    {
       var url  = data.seq
-         .filter(function(x){return x['@context'] == "http://typhoon.zalan.do/schema/http"})
+         .filter(function(x){return x['@type'] == null})
          .map(function(x){return x['@id']});
-      var data = url.map(function(x){return cuba(context).series("" + x, x, "&status=200")});
+      var data = url.map(function(x){return cuba(context).series("" + x, x, "rps")});
 
       d3.select("#case").selectAll(".horizon")
          .data(data)
@@ -330,7 +330,6 @@ d3.json("/scenario/" + ns,
                   context.horizon()
                      .format(d3.format("+,.2d"))
                );
-
       expand("" + data[0])
    }
 )
@@ -344,18 +343,19 @@ function ping()
          {
             d3.select("#unit").text(data)
          }
-      ) ;
+      );
       d3.timer(ping(), 1000);
       return true;
    }
 }
 d3.timer(ping(), 1000);
 
+// TODO: rename function to peer (cluster status management object is needed)
 function seed()
 {
    return function()
    {
-      d3.json("/scenario/" + ns + "/seed",
+      d3.json("/health/peer",
          function(data)
          {
             d3.select("#seed").text(data.length)
@@ -380,16 +380,16 @@ function request(urn)
 {
    primary('#request', 
       [
-         cuba(context).series("rps ", urn, "&metric")
+         cuba(context).series("rps ", urn, "rps")
       ]
    );
    second('#request',
       [
          null,
-         cuba(context).series("http 2xx", urn, "&status=200"),
-         cuba(context).series("http 3xx", urn, "&status=300"),
-         cuba(context).series("http 4xx", urn, "&status=400"),
-         cuba(context).series("http 5xx", urn, "&status=500")
+         cuba(context).series("http 2xx", urn, "200"),
+         cuba(context).series("http 3xx", urn, "300"),
+         cuba(context).series("http 4xx", urn, "400"),
+         cuba(context).series("http 5xx", urn, "500")
       ]
    );
 }
@@ -398,16 +398,16 @@ function tcp(urn)
 {
    primary('#tcp', 
       [
-         cuba(context).series("mean", urn.replace("urn:http", "urn:tcp"))
+         cuba(context).series("mean", urn.replace("urn:http", "urn:tcp"), "mean")
       ]
    );
    second('#tcp', 
       [
          null,
-         cuba(context).series("95%", urn.replace("urn:http", "urn:tcp"), "&filter=pth0.95"),
-         cuba(context).series("99%", urn.replace("urn:http", "urn:tcp"), "&filter=pth0.99"),
-         cuba(context).series("99.9%", urn.replace("urn:http", "urn:tcp"), "&filter=pth0.999"),
-         cuba(context).series("max", urn.replace("urn:http", "urn:tcp"), "&filter=max")
+         cuba(context).series("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
+         cuba(context).series("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
+         cuba(context).series("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
+         cuba(context).series("max", urn.replace("urn:http", "urn:tcp"), "max")
       ]
    );
 }
@@ -417,16 +417,16 @@ function ssl(urn)
 {
    primary('#ssl',
       [
-         cuba(context).series("mean", urn.replace("urn:http", "urn:ssl"))
+         cuba(context).series("mean", urn.replace("urn:http", "urn:ssl"), "mean")
       ]
    );
    second('#ssl',
       [
          null,
-         cuba(context).series("95%", urn.replace("urn:http", "urn:ssl"), "&filter=pth0.95"),
-         cuba(context).series("99%", urn.replace("urn:http", "urn:ssl"), "&filter=pth0.99"),
-         cuba(context).series("99.9%", urn.replace("urn:http", "urn:ssl"), "&filter=pth0.999"),
-         cuba(context).series("max", urn.replace("urn:http", "urn:ssl"), "&filter=max")
+         cuba(context).series("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
+         cuba(context).series("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
+         cuba(context).series("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
+         cuba(context).series("max", urn.replace("urn:http", "urn:ssl"), "max")
       ]
    );
 }
@@ -435,16 +435,16 @@ function ttfb(urn)
 {
    primary('#ttfb',
       [
-         cuba(context).series("mean", urn.replace("urn:http", "urn:ttfb"))
+         cuba(context).series("mean", urn.replace("urn:http", "urn:ttfb"), "mean")
       ]
    );
    second('#ttfb',
       [
          null,
-         cuba(context).series("95%", urn.replace("urn:http", "urn:ttfb"), "&filter=pth0.95"),
-         cuba(context).series("99%", urn.replace("urn:http", "urn:ttfb"), "&filter=pth0.99"),
-         cuba(context).series("99.9%", urn.replace("urn:http", "urn:ttfb"), "&filter=pth0.999"),
-         cuba(context).series("max", urn.replace("urn:http", "urn:ttfb"), "&filter=max")
+         cuba(context).series("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
+         cuba(context).series("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
+         cuba(context).series("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
+         cuba(context).series("max", urn.replace("urn:http", "urn:ttfb"), "max")
       ]
    );
 }
@@ -453,16 +453,16 @@ function ttmr(urn)
 {
    primary('#ttmr',
       [
-         cuba(context).series("mean", urn.replace("urn:http", "urn:ttmr"))
+         cuba(context).series("mean", urn.replace("urn:http", "urn:ttmr"), "mean")
       ]
    );
    second('#ttmr',
       [
          null,
-         cuba(context).series("95%", urn.replace("urn:http", "urn:ttmr"), "&filter=pth0.95"),
-         cuba(context).series("99%", urn.replace("urn:http", "urn:ttmr"), "&filter=pth0.99"),
-         cuba(context).series("99.9%", urn.replace("urn:http", "urn:ttmr"), "&filter=pth0.999"),
-         cuba(context).series("max", urn.replace("urn:http", "urn:ttmr"), "&filter=max")
+         cuba(context).series("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
+         cuba(context).series("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
+         cuba(context).series("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
+         cuba(context).series("max", urn.replace("urn:http", "urn:ttmr"), "max")
       ]
    );
 }
@@ -471,18 +471,18 @@ function packet(urn)
 {
    primary('#pack',
       [
-         cuba(context).series("pps",  urn.replace("urn:http", "urn:pack"), "&metric"),
-         cuba(context).series("size", urn.replace("urn:http", "urn:pack"))
+         cuba(context).series("pps",  urn.replace("urn:http", "urn:pack"), "rps"),
+         cuba(context).series("size", urn.replace("urn:http", "urn:pack"), "mean")
       ]
    );
    second('#pack',
       [
          null,
          null,
-         cuba(context).series("95%", urn.replace("urn:http", "urn:pack"), "&filter=pth0.95"),
-         cuba(context).series("99%", urn.replace("urn:http", "urn:pack"), "&filter=pth0.99"),
-         cuba(context).series("99.9%", urn.replace("urn:http", "urn:pack"), "&filter=pth0.999"),
-         cuba(context).series("max", urn.replace("urn:http", "urn:pack"), "&filter=max")
+         cuba(context).series("90%", urn.replace("urn:http", "urn:pack"), "p90"),
+         cuba(context).series("95%", urn.replace("urn:http", "urn:pack"), "p95"),
+         cuba(context).series("99%", urn.replace("urn:http", "urn:pack"), "p90"),
+         cuba(context).series("max", urn.replace("urn:http", "urn:pack"), "max")
       ]
    );
 }

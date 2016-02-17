@@ -41,37 +41,54 @@ content_accepted(_Req) ->
 
 %%
 %%
-'GET'(_, {_Url, _Head, Env}) ->
-   case typhoon:lookup(pair:x(<<"id">>, Env)) of
-      {error, Reason} ->
-         Reason;
-      Entity ->
+'GET'(_, {Url, _Head, Env}) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   R  = scalar:i(uri:q(<<"r">>, 1, Url)),   
+   case typhoon:lookup(Id, [{r, R}]) of
+      {error, unity} ->
+         {303, [{'Location', uri:s(Url)}], <<>>};
+      
+      {ok,   Entity} ->
          case ambitz:entity(service, Entity) of
             undefined ->
-               not_found;
+               404;
 
-            {typhoon_scenario, start_link, [_Name, Spec]} ->
+            Service   ->
+               Spec = lens:get(lens:t3(), lens:tl(), lens:hd(), Service),
                {ok, jsx:encode(Spec)}
-         end
+         end      
    end.
 
 %%
 %%
-'PUT'(_, {_Url, _Head, Env}, Msg) ->
-   case typhoon:define(pair:x(<<"id">>, Env), jsx:decode(Msg)) of
-      {error, Reason} ->
-         Reason;
-      _Entity ->
-         ok
+'PUT'(_, {Url, _Head, Env}, Msg) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
+   case typhoon:define(Id, jsx:decode(Msg), [{w, W}]) of
+      {error, unity} ->
+         {303, [{'Location', uri:s(Url)}], <<>>};
+
+      {ok,   Entity} ->
+         {201, json(Entity)}
    end.
 
 %%
 %%
-'DELETE'(_, {_Url, _Head, Env}) ->
-   case typhoon:remove(pair:x(<<"id">>, Env)) of
-      {error, Reason} ->
-         Reason;
-      _Entity ->
-         ok
+'DELETE'(_, {Url, _Head, Env}) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
+   case typhoon:remove(Id, [{r, W}, {w, W}]) of
+      {error, unity} ->
+         {303, [{'Location', uri:s(Url)}], <<>>};
+
+      {ok,   Entity} ->
+         {200, json(Entity)}
    end.
+
+%%
+%% return status descriptor
+json(Entity) ->
+   Primary = length([X || X <- ambitz:entity(vnode, Entity), ek:vnode(type, X) =:= primary]),
+   Handoff = length([X || X <- ambitz:entity(vnode, Entity), ek:vnode(type, X) =:= handoff]),
+   jsx:encode([{primary, Primary}, {handoff, Handoff}]).
 

@@ -22,9 +22,9 @@
 %%
 %% management interface
 -export([
-   define/2
-  ,lookup/1
-  ,remove/1
+   define/3
+  ,lookup/2
+  ,remove/2
   ,run/1
   ,unit/1
 ]).
@@ -32,28 +32,20 @@
 %% data interface
 -export([
    fd/0
-  ,series/4
-  ,series/5
-  ,metric/4
-  ,status/5
+  ,stream/2
+  % ,series/4
+  % ,series/5
+  % ,metric/4
+  % ,status/5
 ]).
 
-% %%
-% %% script interface
-% -export([
-%    uid/0
-%   ,int/1
-%   ,pareto/2
-%   ,ascii/1
-%   ,text/1
-% ]).
 
 %%
 %%
 -type(id()     :: binary()).
 -type(json()   :: [{binary(), _}]).
 
--type(filter() :: mean | max | {pth, float()}).
+% -type(filter() :: mean | max | {pth, float()}).
 
 %%
 %% RnD node start
@@ -70,46 +62,49 @@ start() ->
 %% defines load scenario to the cluster, 
 %% takes unique name of test scenario and its specification,
 %% returns cluster descriptor entity
--spec define(id(), json()) -> {ok, ambitz:entity()} | {error, _}.
+-spec define(id(), json(), list()) -> {ok, ambitz:entity()} | {error, _}.
 
-define(Id, Spec) ->
+define(Id, Spec, Opts) ->
    ambitz:spawn(
       ambitz:entity(ring, typhoon, 
          ambitz:entity(service, {typhoon_scenario, start_link, [Id, Spec]},
             ambitz:entity(Id)
          )
-      )
+      ),
+      Opts
    ).
 
 
 %%
 %% lookup load scenario using it's unique name
 %% returns cluster descriptor entity, including scenario specification
--spec lookup(id()) -> {ok, ambitz:entity()} | {error, _}.
+-spec lookup(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
 
-lookup(Id) ->
+lookup(Id, Opts) ->
    ambitz:lookup(
       ambitz:entity(ring, typhoon, 
          ambitz:entity(Id)
-      )
+      ),
+      Opts
    ).
 
 %%
 %% remove load scenario from cluster
--spec remove(id()) -> {ok, ambitz:entity()} | {error, _}.
+-spec remove(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
 
-remove(Id) ->
+remove(Id, Opts) ->
    case    
       ambitz:lookup(
          ambitz:entity(ring, typhoon, 
             ambitz:entity(Id)
-         )
+         ),
+         Opts
       )
    of
       {error, _} = Error ->
          Error;
       {ok, Entity} ->
-         ambitz:free(Entity)
+         ambitz:free(Entity, Opts)
    end.
 
 %%
@@ -121,7 +116,8 @@ run(Id) ->
       ambitz:whereis(
          ambitz:entity(ring, typhoon, 
             ambitz:entity(Id)
-         )
+         ),
+         [{r, 1}]
       )
    of
       {error, _} = Error ->
@@ -133,19 +129,26 @@ run(Id) ->
 
 %%
 %% return number of active load units
--spec(unit/1 :: (id()) -> integer()).
+-spec(unit/1 :: (id()) -> {ok, integer()} | {error, any()}).
 
 unit(Id) ->
-   lists:sum(
-      lists:map(
-         fun(X) -> pipe:ioctl(X, n) end,
-         ambitz:entity(service,
-            ambitz:whereis(
-               ambitz:entity(ring, typhoon, ambitz:entity(Id))
+   case
+      ambitz:whereis(
+         ambitz:entity(ring, typhoon, ambitz:entity(Id)),
+         [{r, 1}]
+      )
+   of
+      {error, _} = Error ->
+         Error;
+      
+      {ok, Entity} ->
+         lists:sum(
+            lists:map(
+               fun(X) -> pipe:ioctl(X, n) end,
+               ambitz:entity(service, Entity)
             )
          )
-      )
-   ).
+   end.
 
 
 
@@ -157,58 +160,76 @@ unit(Id) ->
 
 %%
 %% file descriptor to time series data-base
--spec(fd/0 :: () -> chronolog:fd()).
+-spec fd() -> chronolog:fd().
 
 fd() ->
    pipe:ioctl(typhoon_peer, fd).
 
+
 %%
-%% read time series values from load scenario, return list of measured values.
-%% The function aggregates values on given interval and applies filter.
--spec(series/4 :: (id(), uri:urn(), integer(), chronolog:range()) -> list()).
--spec(series/5 :: (id(), uri:urn(), filter(), integer(), chronolog:range()) -> list()).
+%% takes a generator function and produce telemetry stream
+-spec stream(id(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
+
+stream(Id, Gen) ->
+   case
+      ambitz:lookup(
+         ambitz:entity(ring, typhoon, 
+            ambitz:entity(Id)
+         )
+      )
+   of
+      {error, _} = Error ->
+         Error;
+
+      {ok, Entity} ->
+         Vnode = ambitz:entity(vnode, Entity),
+         Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+         pipe:call({typhoon_peer, Node}, {stream, Gen}, 30000)
+   end.
+
+
+
+% %%
+% %% read time series values from load scenario, return list of measured values.
+% %% The function aggregates values on given interval and applies filter.
+% -spec(series/4 :: (id(), uri:urn(), integer(), chronolog:range()) -> list()).
+% -spec(series/5 :: (id(), uri:urn(), filter(), integer(), chronolog:range()) -> list()).
    
-series(Id, Urn, Chronon, Range) ->
-   series(Id, Urn, mean, Chronon, Range).
+% series(Id, Urn, Chronon, Range) ->
+%    series(Id, Urn, mean, Chronon, Range).
 
-series(Id, Urn, Filter, Chronon, Range) ->
-   Vnode = ambitz:entity(vnode,
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, ambitz:entity(Id))
-      )
-   ),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
-   pipe:cast({typhoon_peer, Node}, {series, Urn, Filter, Chronon, Range}).
+% series(Id, Urn, Filter, Chronon, Range) ->
+%    Vnode = ambitz:entity(vnode,
+%       ambitz:lookup(
+%          ambitz:entity(ring, typhoon, ambitz:entity(Id))
+%       )
+%    ),
+%    Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+%    pipe:cast({typhoon_peer, Node}, {series, Urn, Filter, Chronon, Range}).
 
-%%
-%% read time series value and counts its arrival rate (used for RPS reports)
--spec(metric/4 :: (id(), uri:urn(), integer(), chronolog:range()) -> list()).
+% %%
+% %% read time series value and counts its arrival rate (used for RPS reports)
+% -spec(metric/4 :: (id(), uri:urn(), integer(), chronolog:range()) -> list()).
 
-metric(Id, Urn, Chronon, Range) ->
-   Vnode = ambitz:entity(vnode,
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, ambitz:entity(Id))
-      )
-   ),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
-   pipe:cast({typhoon_peer, Node}, {metric, Urn, Chronon, Range}).
+% metric(Id, Urn, Chronon, Range) ->
+%    Vnode = ambitz:entity(vnode,
+%       ambitz:lookup(
+%          ambitz:entity(ring, typhoon, ambitz:entity(Id))
+%       )
+%    ),
+%    Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+%    pipe:cast({typhoon_peer, Node}, {metric, Urn, Chronon, Range}).
 
-%%
-%% read time series value and counts http status code
--spec(status/5 :: (id(), uri:urn(), integer(), integer(), chronolog:range()) -> list()).
+% %%
+% %% read time series value and counts http status code
+% -spec(status/5 :: (id(), uri:urn(), integer(), integer(), chronolog:range()) -> list()).
 
-status(Id, Urn, Code, Chronon, Range) ->
-   Vnode = ambitz:entity(vnode,
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, ambitz:entity(Id))
-      )
-   ),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
-   pipe:cast({typhoon_peer, Node}, {status, Urn, Code, Chronon, Range}).
+% status(Id, Urn, Code, Chronon, Range) ->
+%    Vnode = ambitz:entity(vnode,
+%       ambitz:lookup(
+%          ambitz:entity(ring, typhoon, ambitz:entity(Id))
+%       )
+%    ),
+%    Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+%    pipe:cast({typhoon_peer, Node}, {status, Urn, Code, Chronon, Range}).
 
-
-
-
-
-
-   

@@ -38,23 +38,6 @@ start_link() ->
 
 init([]) ->
    {ok, _} = clot:seed(),
-   % [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
-   % File = filename:join([opts:val(vardir, typhoon), Node]),
-   % {ok, FD} = chronolog:new([
-   %    persistent,
-   %    %% eleveldb options 
-   %    {file, File},
-   %    {write_buffer_size, 16 * 1024 * 1024},
-   %    {total_leveldb_mem_percent,       40},
-   %    {eleveldb_threads,                32},
-   %    {sync, false},
-   %    %% read/write thought cache
-   %    {cache, [
-   %       {n,      4},
-   %       {ttl,    3600},
-   %       {memory, 100 * 1024 * 1024}
-   %    ]}
-   % ]),
    {ok, handle, #{fd => aura:fd()}}.
 
 free(_, _) ->
@@ -69,29 +52,15 @@ ioctl(fd, #{fd := FD}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle({series, Urn, Filter, Chronon, Range}, Pipe, #{fd := FD} = State) ->
+handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
    spawn(
       fun() ->
-         pipe:ack(Pipe, series(FD, Urn, Filter, Chronon, Range))
+         List = stream:list( Gen(FD) ),
+         pipe:ack(Pipe, {ok, List})
       end
    ),
    {next_state, handle, State};
 
-handle({metric, Urn, Chronon, Range}, Pipe, #{fd := FD} = State) ->
-   spawn(
-      fun() ->
-         pipe:ack(Pipe, metric(FD, Urn, Chronon, Range))
-      end
-   ),
-   {next_state, handle, State};
-
-handle({status, Urn, Code, Chronon, Range}, Pipe, #{fd := FD} = State) ->
-   spawn(
-      fun() ->
-         pipe:ack(Pipe, status(FD, Urn, Code, Chronon, Range))
-      end
-   ),
-   {next_state, handle, State};
 
 handle(_, _, State) ->
    {next_state, handle, State}.
@@ -101,59 +70,4 @@ handle(_, _, State) ->
 %%% private
 %%%
 %%%----------------------------------------------------------------------------   
-
-%%
-%% build a series stream
-series(FD, Urn, mean, Chronon, Range) ->
-   stream:list(
-      chronolog:scan(
-         fun(X) -> lists:sum(X) div length(X) end,
-         Chronon,
-         chronolog:stream(FD, Urn, Range)
-      )
-   );
-
-series(FD, Urn, max, Chronon, Range) ->
-   stream:list(
-      chronolog:scan(
-         fun(X) -> lists:max(X) end,
-         Chronon,
-         chronolog:stream(FD, Urn, Range)
-      )
-   );
-
-series(FD, Urn, {pth, Pth}, Chronon, Range) ->
-   stream:list(
-      chronolog:scan(
-         fun(X) -> lists:nth(round(length(X) * Pth), lists:sort(X)) end,
-         Chronon,
-         chronolog:stream(FD, Urn, Range)
-      )
-   ).
-
-%%
-%% samples per second
-metric(FD, Urn, Chronon, Range) ->
-   stream:list(
-      chronolog:scan(
-         fun(X) -> length(X) / Chronon end,
-         Chronon,
-         chronolog:stream(FD, Urn, Range)
-      )
-   ).
-
-%%
-%% samples per second (with given filter)
-status(FD, Urn, Code, Chronon, Range) ->
-   stream:list(
-      chronolog:scan(
-         fun(X) -> length(X) / Chronon end,
-         Chronon,
-         stream:filter(
-            fun({_, X}) -> X >= Code andalso X < ((Code div 100) + 1) * 100 end,
-            chronolog:stream(FD, Urn, Range)
-         )
-      )
-   ).
-
 

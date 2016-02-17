@@ -14,8 +14,8 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   rest api - execute scenario actions
--module(zephyrus_action).
+%%   rest api - health check
+-module(zephyrus_health).
 -author('dmitry.kolesnikov@zalando.fi').
 
 -export([
@@ -34,22 +34,15 @@ allowed_methods(_Req) ->
 content_provided(_Req) ->
    [{'application', 'json'}].
 
-
 %%
 %%
-'GET'(_, {Url, _Head, Env}) ->
-   Id = lens:get(lens:pair(<<"id">>), Env),
-   case lens:get(lens:pair(<<"action">>), Env) of
+'GET'(_, {_Url, _Head, Env}) ->
+   case lens:get(lens:pair(<<"check">>), Env) of
 
       %%
-      %% spawn load scenario 
-      <<"spawn">> ->
-         _ = typhoon:run(Id),
-         {202, [{'Location',  uri:s(uri:segments([Id], Url))}], <<>>};
-
-      %%
-      %% ping runing workers (concurrent units producing load)
-      <<"ping">> ->
-         {200, jsx:encode(typhoon:unit(Id))}
+      %% active peers 
+      <<"peer">> ->
+         Peer = [erlang:node() | erlang:nodes()], 
+         {200, jsx:encode([scalar:s(X) || X <- Peer])}
 
    end.
