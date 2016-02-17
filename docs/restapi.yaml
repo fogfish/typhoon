@@ -8,22 +8,22 @@ info:
       Typhoon is distributed system stress and load testing tool. The tool simulates a traffic 
       from test cluster towards system-under-test (SUT). The purposes of tool is validation of 
       system performance and scalability, while spawning huge number of concurrent sessions.
-      The tool provides out-of-box cross-platform solution to investigate latency at protocol 
-      and application domains. It approximates Network delay, Round Trip Time, TLS Handshake, 
+      The tool provides out-of-box cross-platform solution to investigate protocol and application
+      latencies. It approximates Network delay, Round Trip Time, TLS Handshake, 
       Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by
       approximating packet metrics and estimates application performance.
       
       The tool provides REST interface to build, define and spawn workload scenarios; collect
       the telemetry and visualize results. 
       
-      The typhoon is operatable as standalone application and scalable up to dozens of indivudual
+      The typhoon is operable as standalone application and scalable up to dozens of individual
       nodes hosted in cloud environment. The incremental scalability and decentralization are key
       principles used to define the architecture. The peer-to-peer clustering based on consistent
-      hashing is a key technology to assembles and orchistrates load toward SUT. It helps the
+      hashing is a key technology to assembles and orchestrates load toward SUT. It helps the
       system to deal with possible network failures and provide hight availability for
-      syntetic load and telemetry collections (the optimistic technique to replicate data has
+      synthetic load and telemetry collections (the optimistic technique to replicate data has
       been employed by the design). As drawback the conflict resolution is lifted to clients. 
-      The rest interface define primitive to deal with consistency for scenarion management 
+      The rest interface define primitive to deal with consistency for scenario management 
       use-cases. Conflicts of harvested telemetry are resolved automatically by the tool.
 
 ##
@@ -54,7 +54,7 @@ paths:
          summary: |
             the dashboard is single page application that uses rest interface to visualize
             telemetry. The dashboard is available only to workload scenarios published 
-            ealier (using curl command-line)   
+            earlier (using curl command-line)   
 
          parameters:
             - $ref: '#/parameters/id'
@@ -69,7 +69,7 @@ paths:
 
             404:
                description: |
-                  the workload scenarion is not exists
+                  the workload scenario is not exists
 
 
    ##
@@ -231,7 +231,7 @@ paths:
    /scenario/{id}/series/{urn}/{kpi}/{from}/{to} :
       get:
          summary: |
-            read telemetry of key-performance-indicator (kpi) for given request within 
+            Read telemetry of key-performance-indicator (kpi) for given request within 
             defined scenarion. The telemetry is returned as time-series data on the time
             interval.
 
@@ -321,7 +321,7 @@ definitions:
       items:
          type: integer
       description: |
-         The telemetry tuple contains unix timestamp in seconds and value `[1455729247,0]`
+         The telemetry tuple contains Unix timestamps in seconds and value `[1455729247,0]`
 
 ##
 ##
@@ -388,7 +388,7 @@ parameters:
       type: integer
       required: true
       description: |
-         start of report time interval (unix timestamp) 
+         start of report time interval (Unix timestamps) 
 
    ##
    ##
@@ -398,7 +398,7 @@ parameters:
       type: integer
       required: true
       description: |
-         end of report time interval (unix timestamp) 
+         end of report time interval (Unix timestamps) 
 
    ##
    ##
@@ -428,5 +428,5 @@ parameters:
       type: integer
       required: false
       description: |
-         size of aggregation interval in seconds (default 1).
+         duration of aggregation interval in seconds (default 1).
 
