@@ -1,38 +1,66 @@
 {
-   "n": 1,
-   "t": 60,
+   "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+
+   "n": 10,
+   "t": 60000,
+   "url": "http://localhost:8888",
+   "header": {"Connection": "keep-alive"},
    "seq": 
    [
       {
-         "id"  : "urn:http:httpbin.org",
-         "req" : "GET",
-         "url" : "http://localhost:8888/",
-         "head": {"Connection": "keep-alive"}
+         "@id"     : "urn:http:httpbin.org",
+         "method"  : "GET",
+         "url"     : "/"
       },
+
       {
-         "id"  : "urn:http:httpbin.org:ip",
-         "req" : "GET",
-         "url" : "http://localhost:8888/ip",
-         "head": {"Connection": "keep-alive"}
+         "@id"     : "urn:thinktime:1",
+         "@type"   : "thinktime",
+         "t"       : 500
       },
+
       {
-         "id"  : "urn:http:httpbin.org:headers",
-         "req" : "GET",
-         "url" : "http://localhost:8888/headers",
-         "head": {"Connection": "keep-alive"}
+         "@id"     : "urn:http:httpbin.org:ip",
+         "method"  : "GET",
+         "url"     : "/ip"
       },
+
       {
-         "id"  : "urn:http:httpbin.org:get",
-         "req" : "GET",
-         "url" : "http://localhost:8888/get",
-         "head": {"Connection": "keep-alive"}
+         "@id"     : "urn:http:httpbin.org:headers",
+         "method"  : "GET",
+         "url"     : "/headers"
       },
+
       {
-         "id"  : "urn:http:httpbin.org:post",
-         "req" : "POST",
-         "url" : "http://localhost:8888/post",
-         "head": {"Connection": "keep-alive", "Content-Type": "text/plain"},
-         "data": "{.typhoon:ascii(1024).}"
+         "@id"     : "urn:http:httpbin.org:get",
+         "method"  : "GET",
+         "url"     : "/get"
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:status:404",
+         "method"  : "GET",
+         "url"     : "/status/404"
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:status:500",
+         "method"  : "GET",
+         "url"     : "/status/500"
+      },
+
+      {
+         "@id"     : "urn:thinktime:2",
+         "@type"   : "thinktime",
+         "t"       : "{.scenario:pareto(0.2, 5000).}"
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:post",
+         "method"  : "POST",
+         "url"     : "/post",
+         "header"  : {"Content-Type": "text/plain", "Transfer-Encoding": "chunked"},
+         "payload" : "{.scenario:ascii(1024).}"
       }
    ]
 }

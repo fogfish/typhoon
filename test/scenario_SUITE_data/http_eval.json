@@ -1,0 +1,20 @@
+{
+   "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+   "n": 10,
+   "t": 600,
+   "url": "http://localhost:8888/{.scenario:pareto(0.2, 10).}",
+   "header": 
+   {
+      "User-Agent": "typhoon/{.scenario:int(10).}",
+      "Accept": "*/*"
+   },
+   "seq": [
+      {
+         "@id"   : "urn:http:localhost:a",
+         "url"   : "/{.scenario:ascii(2).}/{.scenario:uid().}",
+         "method": "POST",
+         "header": {"X-Header": "{.scenario:ascii(10).}"},
+         "payload": "{.scenario:text(128).}"
+      }
+   ]
+}

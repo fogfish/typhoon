@@ -13,7 +13,7 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
--module(aura_io).
+-module(aura_ingress).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -36,7 +36,7 @@ start_link() ->
 
 init([]) ->
    erlang:send(self(), run),
-   {ok, handle, #{fd => typhoon:fd()}}.
+   {ok, handle, #{fd => aura:fd()}}.
 
 free(_, _) ->
    ok.
@@ -58,7 +58,7 @@ handle(run, _, State) ->
       List ->
          {next_state, handle, 
             State#{
-               tx => [pipe:cast(self(), aura:decode(X)) || X <- List]
+               tx => [pipe:cast(self(), aura_protocol:decode(X)) || X <- List]
             }
          }
    end;
@@ -68,7 +68,7 @@ handle({{urn, _, _} = Urn, T, X}, Pipe, #{fd := FD} = State) ->
       fun() ->
          chronolog:append(FD, Urn, [{T, X}]),
          pipe:ack(Pipe, ok),
-         clue:inc({aura, io})
+         clue:inc({aura, ingress})
       end
    ),
    {next_state, handle, State};

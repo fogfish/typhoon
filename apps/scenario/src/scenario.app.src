@@ -1,5 +1,5 @@
 %%
-%%   Copyright 2015 Zalando SE
+%%   Copyright 2016 Zalando SE
 %%
 %%   Licensed under the Apache License, Version 2.0 (the "License");
 %%   you may not use this file except in compliance with the License.
@@ -13,20 +13,17 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-{application, aura,
+{application, scenario,
    [
-      {description, "telemetry i/o and storage layer"},
-      {vsn,         "0.1.0"},
+      {description, "load scenario compiler"},
+      {vsn,         "0.0.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
          kernel
         ,stdlib
-        ,chronolog
-        ,kmq
-        ,clue
+        ,uid
       ]},
-      {mod, {aura_app, []}},
       {env, []}
    ]
 }.  

@@ -14,8 +14,8 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   application peer
--module(typhoon_peer).
+%%   
+-module(aura_storage).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -37,8 +37,26 @@ start_link() ->
    pipe:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-   {ok, _} = clot:seed(),
-   {ok, handle, #{fd => aura:fd()}}.
+   [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
+   File = filename:join([opts:val(vardir, aura), Node]),
+   {ok, FD} = chronolog:new([
+      persistent,
+
+      %% eleveldb options 
+      {file, File},
+      {write_buffer_size, 16 * 1024 * 1024},
+      {total_leveldb_mem_percent,       40},
+      {eleveldb_threads,                32},
+      {sync, false},
+
+      %% read/write thought cache
+      {cache, [
+         {n,      4},
+         {ttl,    3600},
+         {memory, 100 * 1024 * 1024}
+      ]}
+   ]),
+   {ok, handle, #{fd => FD}}.
 
 free(_, _) ->
    ok.
@@ -52,18 +70,9 @@ ioctl(fd, #{fd := FD}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
-   spawn(
-      fun() ->
-         List = stream:list( Gen(FD) ),
-         pipe:ack(Pipe, {ok, List})
-      end
-   ),
-   {next_state, handle, State};
-
-
 handle(_, _, State) ->
    {next_state, handle, State}.
+
 
 %%%----------------------------------------------------------------------------   
 %%%

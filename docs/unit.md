@@ -42,6 +42,6 @@ The content of ```url``` and ```data``` fields are enriched using template engin
 * ```{.typhoon:ascii(N).}``` generate random ASCII payload of given length, characters are uniformly distributed.
 * ```{.typhoon:text(N).}``` generate random text alike combination
 
-Note: the given syntax construction is victim of code injection, thus access to the tool shall not be open to public networks.
+The application uses white-list concept to protect environment from code injection. The list of allowed function calls is defined by `typhoon.hrl`.
 
 

@@ -13,7 +13,7 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
--module(aura_sup).
+-module(aura_egress_sup).
 -behaviour(supervisor).
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -38,10 +38,10 @@ init([]) ->
    {ok,
       {
          {one_for_one, 10000, 1},
-         [
-            ?CHILD(worker,     aura_storage)
-           ,?CHILD(supervisor, aura_egress_sup)
-           ,?CHILD(supervisor, aura_ingress_sup)
-         ]
+         [?CHILD(worker, X, aura_egress, []) || X <- seq()]
       }
    }.
+
+seq() ->
+   lists:seq(1, opts:val(egress, 1, aura)).
+

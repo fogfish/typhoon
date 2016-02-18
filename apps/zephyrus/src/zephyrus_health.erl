@@ -13,37 +13,36 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-{"apps/scenario/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/scenario/ebin"},
-   debug_info
-]}.
+%% @doc
+%%   rest api - health check
+-module(zephyrus_health).
+-author('dmitry.kolesnikov@zalando.fi').
 
-{"apps/typhoon/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/typhoon/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+-export([
+   allowed_methods/1,
+   content_provided/1, 
+   'GET'/2
+]).
 
-{"apps/aura/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/aura/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%%
+%%
+allowed_methods(_Req) ->
+   ['GET'].
 
-{"apps/zephyrus/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/zephyrus/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%%
+%%
+content_provided(_Req) ->
+   [{'application', 'json'}].
+
+%%
+%%
+'GET'(_, {_Url, _Head, Env}) ->
+   case lens:get(lens:pair(<<"check">>), Env) of
+
+      %%
+      %% active peers 
+      <<"peer">> ->
+         Peer = [erlang:node() | erlang:nodes()], 
+         {200, jsx:encode([scalar:s(X) || X <- Peer])}
+
+   end.

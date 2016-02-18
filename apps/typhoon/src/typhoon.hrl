@@ -13,37 +13,24 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
-{"apps/scenario/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/scenario/ebin"},
-   debug_info
-]}.
 
-{"apps/typhoon/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/typhoon/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%%
+%% functions allowed by script
+-define(CONFIG_SCRIPT_ALLOWED, 
+   #{'@eval' => 
+      #{
+         'typhoon' => [
+            {uid,    true}
+           ,{int,    true}
+           ,{pareto, true}
+           ,{ascii,  true}
+           ,{text,   true}
+         ]
+      }
+   }
+).
 
-{"apps/aura/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/aura/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
-
-{"apps/zephyrus/src/*", [
-   report, 
-   verbose, 
-   {i, "include"}, 
-   {outdir, "apps/zephyrus/ebin"},
-   debug_info,
-   {parse_transform, lager_transform}
-]}.
+%%
+%%
+-define(CONFIG_SCHEMA_ACTION, <<"http://typhoon.zalan.do/schema/action">>).
+-define(CONFIG_SCHEMA_HTTP,   <<"http://typhoon.zalan.do/schema/http">>).

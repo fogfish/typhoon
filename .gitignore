@@ -18,3 +18,5 @@ rebar
 .rebar/
 *.sublime-*
 tests/
+test/test.erl
+
