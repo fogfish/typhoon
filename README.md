@@ -25,7 +25,7 @@ Typhoon focuses on **visualization**, **protocol metric** and **usability**. The
 
 ### getting typhoon
 
-The project supplies pre-build release for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page][github-release].
+The project supplies pre-build release for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](releases).
 
 The latest version of `typhoon` can be build from `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on `master` branch using forking and pull requests as described in [contribution guideline](docs/contribution.md).
 
@@ -39,7 +39,7 @@ docker run -it -p 8080:8080 registry.opensource.zalan.do/typhoon:x.y.z
 
 This will start single typhoon node as docker container. It exposes services using rest api on port 8080 (by default it is bound to following ip address 192.168.99.100 on MacOS, please check your docker configuration on other platforms).  
 
-It is possible to spawn the tool using native platform binaries, see the installation instructions on the [GitHub releases page][github-release]. 
+It is possible to spawn the tool using native platform binaries, see the installation instructions on the [GitHub releases page](releases). 
 ```
 /usr/local/typhoon-x.y.z foreground
 ```
