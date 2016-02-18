@@ -15,7 +15,7 @@ The tool is a continuation of scalability and latency analysis efforts driven by
 
 It uses Erlang as runtime environment due to massive scalability and soft real-time properties (accuracy on measurements) . It recommended itself as indispensable technology in similar solution Tsung suitable to test scalability and performance of IP based applications.
 
-Typhoon focuses on **visualization**, **protocol metric** analysis and **usability**. The time-series data visualization crisis is well depicted [here](https://bost.ocks.org/mike/cubism/intro/#0), the usage of proposed solution by cubism.js improves readability and analysis of latencies experienced by SUT. The design of distributed systems requires deep-dive understanding of latencies introduced by infrastructure, protocol and application. Typhoon captures and visualize them allowing to solve a series of decision problem concerning both short-term and long-term arrangements: short term decisions include for example the determination of optimal software configuration, the number of servers, the number of concurrent connections; long term decisions include for example decisions concerning the development and extension of data and service architecture, choice of technology, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
+Typhoon focuses on **visualization**, **protocol metric** and **usability**. The time-series data visualization crisis is well depicted [here](https://bost.ocks.org/mike/cubism/intro/#0), the usage of proposed visualization technique (cubism.js) improves readability and analysis of latencies experienced by SUT. The design of distributed systems and micro-services requires deep-dive understanding of latencies introduced by infrastructure, protocol and application. Typhoon captures and visualize them. It allows to solve a series of decision problem concerning both short-term and long-term arrangements: short term decisions include for example the determination of optimal software configuration, the number of servers, the number of concurrent connections; long term decisions include for example decisions concerning the development and extension of data and service architecture, choice of technology, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
 
 
 
@@ -24,11 +24,32 @@ Typhoon focuses on **visualization**, **protocol metric** analysis and **usabili
 
 
 ### getting typhoon
-tbd
+
+The project supplies pre-build release for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page][github-release].
+
+The latest version of `typhoon` can be build from `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on `master` branch using forking and pull requests as described in [contribution guideline](docs/contribution.md).
 
 
 ### running typhoon
-tdb
+
+The docker container is easiest way to run standalone instance of the application. The option is viable only if either [docker toolbox](https://www.docker.com/products/docker-toolbox) or docker daemon is configured at your environment:
+```
+docker run -it -p 8080:8080 registry.opensource.zalan.do/typhoon:x.y.z
+```
+
+This will start single typhoon node as docker container. It exposes services using rest api on port 8080 (by default it is bound to following ip address 192.168.99.100 on MacOS, please check your docker configuration on other platforms).  
+
+It is possible to spawn the tool using native platform binaries, see the installation instructions on the [GitHub releases page][github-release]. 
+```
+/usr/local/typhoon-x.y.z foreground
+```
+
+This bring typhoon up and running. The application uses local ip 127.0.0.1 and port 8080 to offer services.
+
+Use following command to check if the application is up and running and the rest api is exposed. The application should return list of cluster peers `["typhoon@127.0.0.1"]`.   
+```
+curl http://192.168.99.100:8080/health/peer
+```
 
 
 ### deploying typhoon
@@ -37,7 +58,6 @@ tbd
 
 ### running local typhoon cluster
 
-The project development requires Erlang/OTP development environment [see the instructions here](docs/erlang.md) and essential toolkit such as `git`, `make`, etc.
 
 tbd
 

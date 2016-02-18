@@ -22,7 +22,7 @@ TEST?= ${APP}
 S3  ?=
 VMI ?= fogfish/erlang
 NET ?= lo0
-IID ?= undefined
+IID ?= registry.opensource.zalan.do
 
 ## root path to benchmark framework
 BB     = ../basho_bench
@@ -48,7 +48,9 @@ EFLAGS = \
 ## self-extracting bundle wrapper
 BUNDLE_INIT = PREFIX=${PREFIX}\nREL=${PREFIX}/${REL}\nAPP=${APP}\nVSN=${VSN}\nLINE=`grep -a -n "BUNDLE:$$" $$0`\ntail -n +$$(( $${LINE%%%%:*} + 1)) $$0 | gzip -vdc - | tar -C ${PREFIX} -xvf - > /dev/null\n
 BUNDLE_FREE = exit\nBUNDLE:\n
-BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make && make rel\n
+
+## NOTE: due to native code (eleveldb) distclean is required
+BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make distclean && make && make rel\n
 CTRUN   = \
 	-module(test). \
 	-export([run/1]). \

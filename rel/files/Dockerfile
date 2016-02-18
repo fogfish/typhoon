@@ -17,6 +17,8 @@ FROM centos
 
 ENV   ARCH  x86_64
 ENV   PLAT  Linux
+ARG   APP=typhoon
+ARG   VSN=
 
 ##
 ## install dependencies
@@ -38,7 +40,7 @@ RUN \
 
 ##
 ## install application
-COPY typhoon-current.${ARCH}.${PLAT}.bundle /tmp/typhoon.bundle
+COPY typhoon-${VSN}+${ARCH}.${PLAT}.bundle /tmp/typhoon.bundle
 
 RUN \
    sh /tmp/typhoon.bundle && \
@@ -60,5 +62,4 @@ EXPOSE 20107/udp
 EXPOSE 20108/udp
 EXPOSE 20109/udp
 
-CMD /etc/init.d/typhoon start
-
+ENTRYPOINT /etc/init.d/typhoon foreground

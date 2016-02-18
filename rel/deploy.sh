@@ -23,6 +23,13 @@ set -u
 set -e
 
 ##
+## discover version of erlang release
+VERSION=`cat ${REL}/releases/start_erl.data`
+SYS_VSN=${VERSION% *}
+APP_VSN=${VERSION#* }
+
+
+##
 ## make alias to current version
 rm -f /usr/local/${APP}
 ln -s /usr/local/${APP}-${VSN} /usr/local/${APP}
@@ -31,7 +38,7 @@ ln -s /usr/local/${APP}-${VSN} /usr/local/${APP}
 ## configure application 
 if [[ $(uname -s) == "Linux" ]] ;
 then 
-   FILE=${REL}/releases/${VSN}/vm.args
+   FILE=${REL}/releases/${APP_VSN}/vm.args
    HOST=$(curl -s --connect-timeout 1 http://169.254.169.254/latest/meta-data/local-ipv4 || echo "127.0.0.1")
    NODE=`sed -n -e "s/-name \(.*\)@.*/\1/p" ${FILE}`
    sed -i -e "s/@\(127.0.0.1\)/@${HOST}/g" ${FILE}
@@ -41,12 +48,8 @@ fi
 ## build service wrapper
 if [[ $(uname -s) == "Linux" ]] ;
 then
-   ## @todo: hard-coded assumption that node runs inside docker container
-   if [ ! -a /etc/init.d/${APP} ] ; 
-   then
-      echo -e "#!/bin/bash\nexport HOME=/root\nsh ${PREFIX}/${APP}/bin/${APP}.docker \$1" >  /etc/init.d/${APP}
-      chmod ugo+x /etc/init.d/${APP}
-   fi
+   echo -e "#!/bin/bash\nexport HOME=/root\nsh ${PREFIX}/${APP}/bin/${APP} \$1" >  /etc/init.d/${APP}
+   chmod ugo+x /etc/init.d/${APP}
 fi
 
 ##
@@ -54,8 +57,8 @@ fi
 if [[ $(id -u) -ne 0 ]] ; 
 then
    test ! -d /etc/${APP} && mkdir -p /etc/${APP}
-   test ! -e /etc/${APP}/app.config && cp ${REL}/releases/${VSN}/sys.config /etc/${APP}/app.config
-   test ! -e /etc/${APP}/vm.args && cp ${REL}/releases/${VSN}/vm.args /etc/${APP}/vm.args
+   test ! -e /etc/${APP}/app.config && cp ${REL}/releases/${APP_VSN}/sys.config /etc/${APP}/app.config
+   test ! -e /etc/${APP}/vm.args && cp ${REL}/releases/${APP_VSN}/vm.args /etc/${APP}/vm.args
 fi
 
 set +u
