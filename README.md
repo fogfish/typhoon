@@ -51,14 +51,44 @@ Use following command to check if the application is up and running and the rest
 curl http://192.168.99.100:8080/health/peer
 ```
 
+Next define a simple workload scenario, publish it to typhoon.
+```
+curl -XPUT http://192.168.99.100:8080/scenario/example \
+   -H 'Content-Type: application/json' \
+   -d '
+   {
+      "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+      "n": 1,
+      "t": 60000,
+      "url": "http://example.org:80",
+      "header": {"Connection": "keep-alive"},
+      "seq": 
+      [
+         {
+            "@id"     : "urn:http:example.org",
+            "method"  : "GET",
+            "url"     : "/"
+         },
+         {
+            "@id"     : "urn:thinktime:1",
+            "@type"   : "thinktime",
+            "t"       : 1000
+         }
+      ]
+   }
+   '
+```  
+
+Open the link `http://192.168.99.100:8080/example` in web browser to manage the workload and analyze the results. User interface should look similar to following screen shot. Click `run` button to kick-off stress testing. The tool has about 60 second delay before it renders the first result. The tool renders Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
+![User interface screenshot](screenshot.png)
+
+You have successfully started an typhoon, written a stress test scenario, deployed it to cluster and analyze the system behavior.
 
 ### deploying typhoon
 tbd
 
 
 ### running local typhoon cluster
-
-
 tbd
 
 
