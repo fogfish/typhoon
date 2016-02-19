@@ -34,7 +34,7 @@ The latest version of `typhoon` can be build from `master` branch. The build pro
 
 The docker container is easiest way to run standalone instance of the application. The option is viable only if either [docker toolbox](https://www.docker.com/products/docker-toolbox) or docker daemon is configured at your environment. Use latest release version instead of `x.y.z`
 ```
-docker run -it -p 8080:8080 registry.opensource.zalan.do/typhoon:x.y.z
+docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
 ```
 
 This will start single typhoon node as docker container. It exposes services using rest api on port 8080 (by default it is bound to following ip address 192.168.99.100 on MacOS, please check your docker configuration on other platforms).  
