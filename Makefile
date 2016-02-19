@@ -22,7 +22,7 @@ TEST?= ${APP}
 S3  ?=
 VMI ?= fogfish/erlang
 NET ?= lo0
-IID ?= registry.opensource.zalan.do
+IID ?= registry.opensource.zalan.do/hunt
 
 ## root path to benchmark framework
 BB     = ../basho_bench
