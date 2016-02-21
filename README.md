@@ -7,6 +7,7 @@ The typhoon is operable as standalone application and scalable up to dozens of i
 The tool provides REST interface to build, define and spawn workload scenarios; collect the telemetry and visualize results. 
 
 
+[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
 
 ## inspiration

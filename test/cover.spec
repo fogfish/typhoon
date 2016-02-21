@@ -1,2 +1,1 @@
-{incl_app, scenario, details}.
-
+{incl_app, typhoon, details}.
