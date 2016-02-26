@@ -47,7 +47,7 @@ encode({urn, _, _} = Urn, T, {ssl, ca, X}) ->
 
 encode({urn, _, _} = Urn, T, {ssl, peer, X}) ->
    % size of peer certificate
-   encode(uri:schema(<<"ca">>, Urn), T, X);
+   encode(uri:schema(<<"peer">>, Urn), T, X);
 
 encode({urn, _, _} = Urn, T, {http, ttfb, X}) ->
    encode(uri:schema(<<"ttfb">>, Urn), T, X);
