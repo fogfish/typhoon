@@ -15,4 +15,5 @@ log/
 *.bundle
 *.sublime-*
 tests/
+relx.config
 
