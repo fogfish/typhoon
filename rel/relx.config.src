@@ -22,7 +22,7 @@
    zephyrus,
 
    %% 
-   %% unresolved dependencies due to bugs to libraries 
+   %% unresolved dependencies due to bugs in libraries 
    %% @todo: raise issue to dependencies
    hornlog,
    htstream,
