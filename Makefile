@@ -92,7 +92,7 @@ unit: all
 ## execute common test and terminate node
 test: _build/test.beam
 	@mkdir -p /tmp/test/${APP} ;\
-	erl ${EFLAGS} -pa test/ -run test run test/${TEST}.config
+	erl ${EFLAGS} -pa _build/ -pa test/ -run test run test/${TEST}.config
 
 _build/test.beam: _build/test.erl
 	erlc -o _build $<
