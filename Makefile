@@ -32,7 +32,7 @@ COOKIE?= nocookie
 
 ## erlang runtime flags use by `make run`
 ROOT   = `pwd`
-ADDR   = $(shell ifconfig ${NET} | sed -En 's/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p')
+ADDR   = $(shell ifconfig ${NET} | sed -En 's/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' && echo "127.0.0.1")
 EFLAGS = \
 	-name ${APP}@${ADDR} \
 	-setcookie ${COOKIE} \
@@ -92,7 +92,7 @@ unit: all
 ## execute common test and terminate node
 test: _build/test.beam
 	@mkdir -p /tmp/test/${APP} ;\
-	erl ${EFLAGS} -run test run test/${TEST}.config
+	erl ${EFLAGS} -pa test/ -run test run test/${TEST}.config
 
 _build/test.beam: _build/test.erl
 	erlc -o _build $<
