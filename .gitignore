@@ -4,19 +4,15 @@
 *.beam
 *.dump
 *.tag.gz
-*.tgz
 *.pdf
 *.gz
 deps.config
-ebin/
-deps/
+_build/
+rebar3
+rebar.lock
 log/
 .eunit/
 *.bundle
-rel/typhoon*/
-rebar
-.rebar/
 *.sublime-*
 tests/
-test/test.erl
 

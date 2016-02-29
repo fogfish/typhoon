@@ -53,7 +53,7 @@ SenzaComponents:
          application_version: "{{Arguments.ImageVersion}}"
          runtime: Docker
          networking: host
-         source: "registry.opensource.zalan.do/zeus/typhoon:{{Arguments.ImageVersion}}"
+         source: "registry.opensource.zalan.do/hunt/typhoon:{{Arguments.ImageVersion}}"
          ports:
             8080: 8080
             4369: 4369
