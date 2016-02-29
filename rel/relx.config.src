@@ -1,0 +1,37 @@
+%%
+%% include vm and extended bootstrap to release
+{include_erts,          true}.
+{extended_start_script, true}.
+
+%%
+%% release development mode
+{dev_mode,             false}.
+
+%%
+%% release configuration
+{vm_args,      "rel/vm.args"}.
+{sys_config,   "rel/sys.config"}.
+
+
+%%
+%% release content definition
+{release, [
+   aura,
+   scenario,
+   typhoon,
+   zephyrus,
+
+   %% 
+   %% unresolved dependencies due to bugs to libraries 
+   %% @todo: raise issue to dependencies
+   hornlog,
+   htstream,
+   ambitz,
+   feta,
+   jsx,
+   pipe,
+   pns,
+   swirl,
+   datum,
+   esh
+]}.
