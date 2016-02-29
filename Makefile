@@ -46,7 +46,7 @@ EFLAGS = \
 ## self-extracting bundle wrapper
 BUNDLE_INIT = PREFIX=${PREFIX}\nREL=${PREFIX}/${REL}\nAPP=${APP}\nVSN=${VSN}\nLINE=`grep -a -n "BUNDLE:$$" $$0`\nmkdir -p $${REL}\ntail -n +$$(( $${LINE%%%%:*} + 1)) $$0 | gzip -vdc - | tar -C $${REL} -xvf - > /dev/null\n
 BUNDLE_FREE = exit\nBUNDLE:\n
-BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make && make rel\n
+BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make distclean && make && make rel\n
 CTRUN   = \
 	-module(test). \
 	-export([run/1]). \
@@ -80,7 +80,8 @@ clean:
 
 distclean: clean 
 	@./rebar3 unlock ;\
-	rm -Rf _build
+	rm -Rf _build ;\
+	rm -Rf rebar3 
 
 ##
 ## execute unit test
