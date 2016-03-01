@@ -124,7 +124,6 @@ ${PKG}.tar.gz: _build/dockermake
 	docker cp $$I:/${APP}/$@ $@ ;\
 	docker rm -f $$I ;\
 	docker rmi build/${APP}:latest ;\
-	rm $< ;\
 	test -f $@ && echo "==> tarball: $@"
 
 _build/dockermake:
