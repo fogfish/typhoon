@@ -41,7 +41,7 @@ start_link(Name, Spec) ->
 init([Name, Spec]) ->
    random:seed(os:timestamp()),
    Scenario = scenario:compile(Spec),
-   pipe:ioctl_(self(), {trap, true}),
+   erlang:process_flag(trap_exit, true),
    erlang:send(self(), request),
    tempus:timer(scenario:t(Scenario), expired),
    {ok, idle, 
@@ -99,6 +99,12 @@ active({http, _, _Pckt}, _, State) ->
 
 active(expired, _, State) ->
    {stop, normal, State};
+
+active({sidedown, _, _}, _, State) ->
+   %% @todo: Do we need to reflect into telemetry connection error? 
+   %%        How To ?
+   erlang:send(self(), request),
+   {next_state, idle, State};
 
 active(_, _Pipe, State) ->
    {next_state, active, State}.
