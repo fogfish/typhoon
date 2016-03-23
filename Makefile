@@ -31,8 +31,8 @@ SSHENV = /tmp/ssh-agent.conf
 COOKIE?= nocookie
 
 ## erlang runtime flags use by `make run`
-ROOT   = `pwd`
-ADDR   = $(shell ifconfig ${NET} | sed -En 's/.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' && echo "127.0.0.1")
+ROOT   = $(shell pwd)
+ADDR   = $(shell ifconfig ${NET} | sed -En 's/^${NET}:.*inet (addr:)?(([0-9]*\.){3}[0-9]*).*/\2/p' && echo "127.0.0.1")
 EFLAGS = \
 	-name ${APP}@${ADDR} \
 	-setcookie ${COOKIE} \
