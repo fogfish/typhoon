@@ -17,7 +17,7 @@
    report, 
    verbose, 
    {i, "include"}, 
-   {outdir, "apps/scenario/ebin"},
+   {outdir, "_build/default/lib/scenario/ebin"},
    debug_info
 ]}.
 
@@ -25,7 +25,7 @@
    report, 
    verbose, 
    {i, "include"}, 
-   {outdir, "apps/typhoon/ebin"},
+   {outdir, "_build/default/lib/typhoon/ebin"},
    debug_info,
    {parse_transform, lager_transform}
 ]}.
@@ -34,7 +34,7 @@
    report, 
    verbose, 
    {i, "include"}, 
-   {outdir, "apps/aura/ebin"},
+   {outdir, "_build/default/lib/aura/ebin"},
    debug_info,
    {parse_transform, lager_transform}
 ]}.
@@ -43,7 +43,7 @@
    report, 
    verbose, 
    {i, "include"}, 
-   {outdir, "apps/zephyrus/ebin"},
+   {outdir, "_build/default/lib/zephyrus/ebin"},
    debug_info,
    {parse_transform, lager_transform}
 ]}.
