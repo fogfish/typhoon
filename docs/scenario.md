@@ -69,7 +69,7 @@ The application uses white-list concept to protect environment from code injecti
 
 ## example
 
-See full example towards [httpbin](apps/typhoon/priv/httpbin.json).
+See full example towards [httpbin](../apps/typhoon/priv/httpbin.json).
 ```
 {
    "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
