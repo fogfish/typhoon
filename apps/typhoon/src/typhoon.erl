@@ -25,6 +25,7 @@
    define/3
   ,lookup/2
   ,remove/2
+  ,peer/1
   ,run/1
   ,unit/1
 ]).
@@ -33,10 +34,6 @@
 -export([
    fd/0
   ,stream/2
-  % ,series/4
-  % ,series/5
-  % ,metric/4
-  % ,status/5
 ]).
 
 
@@ -44,8 +41,6 @@
 %%
 -type(id()     :: binary()).
 -type(json()   :: [{binary(), _}]).
-
-% -type(filter() :: mean | max | {pth, float()}).
 
 %%
 %% RnD node start
@@ -106,6 +101,27 @@ remove(Id, Opts) ->
       {ok, Entity} ->
          ambitz:free(Entity, Opts)
    end.
+
+%%
+%% return list of peer(s) nodes (ip addresses) 
+-spec peer(id()) -> [_].
+
+peer(Id) ->
+   {ok, Entity} = ambitz:lookup(
+      ambitz:entity(ring, typhoon, 
+         ambitz:entity(Id)
+      )
+   ),
+   lists:map(
+      fun(X) ->
+         %% @todo: it would fail if cluster uses FQDN
+         [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
+         {ok, IP}  = inet_parse:address(scalar:c(Host)),
+         IP
+      end,
+      ambitz:entity(vnode, Entity)
+   ).
+
 
 %%
 %% run load scenario, the scenario will terminate automatically after timeout

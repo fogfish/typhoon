@@ -82,7 +82,12 @@ content_accepted(_Req) ->
          stream(Id, pth(Urn, 0.95, Chronon, {A, B}));
 
       <<"p99">> ->
-         stream(Id, pth(Urn, 0.99, Chronon, {A, B}))
+         stream(Id, pth(Urn, 0.99, Chronon, {A, B}));
+
+      %% identity stream
+      <<"id">> ->
+         stream(Id, id(Urn, {A, B}))
+         
    end.
 
 %%
@@ -96,6 +101,17 @@ stream(Id, Gen) ->
          {ok, jsx:encode(List)}
    end.
 
+%%
+%% identity stream
+id(Req, Range) ->
+   fun(FD) ->
+      stream:map(
+         fun({T, X}) -> 
+            [tempus:s(T), X] 
+         end,
+         chronolog:stream(FD, Req, Range)
+      )
+   end.
 
 %%
 %% transactions per time unit generator function

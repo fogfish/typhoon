@@ -81,10 +81,8 @@ handle({handoff, _Vnode}, Tx, State) ->
    {next_state, handle, State};
 
 handle(run, Tx, #{n := N0}=State) ->
-   N1 = run(
-      q:new([erlang:node() | erlang:nodes()]), 
-      State
-   ),
+   milestone(State),
+   N1 = run(q:new([erlang:node() | erlang:nodes()]), State),
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
 
@@ -119,7 +117,14 @@ run(N, K, Nodes, #{name :=Name, spec := Spec}=State) ->
    end.
 
 %%
-%% define counters
+%% log milestone
+milestone(#{name := Name, spec := Spec}) ->
+   Sock = aura:socket(),
+   Peer = typhoon:peer(Name),
+   Urn  = {urn, <<"scenario">>, Name},
+   Ta   = os:timestamp(),
+   Tb   = tempus:add(Ta, pair:x(<<"t">>, Spec) div 1000),
+   aura:send(Sock, Peer, {Urn, Ta, tempus:s(Tb)}).
 
 
 
