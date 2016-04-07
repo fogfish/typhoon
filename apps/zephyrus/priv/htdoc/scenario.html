@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<!--
+%%
+%%   Copyright 2015 Zalando SE
+%%
+%%   Licensed under the Apache License, Version 2.0 (the "License");
+%%   you may not use this file except in compliance with the License.
+%%   You may obtain a copy of the License at
+%%
+%%       http://www.apache.org/licenses/LICENSE-2.0
+%%
+%%   Unless required by applicable law or agreed to in writing, software
+%%   distributed under the License is distributed on an "AS IS" BASIS,
+%%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%%   See the License for the specific language governing permissions and
+%%   limitations under the License.
+%%
+-->
+<meta charset="utf-8">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<script src="http://d3js.org/d3.v2.js?2.9.1"></script>
+<script src="http://square.github.com/cubism/cubism.v1.js?1.0.0"></script>
+
+<!--
+%%
+%% Styles
+%%
+-->
+<style>
+body 
+{
+   font-family: "Helvetica Neue", Helvetica, sans-serif;
+   padding-top: 80px;
+   padding-bottom: 20px;
+}
+
+.container
+{
+   width: 800px;
+   padding: 0px;
+   position: relative;
+}
+
+header 
+{
+  padding: 6px 0;
+}
+
+.group 
+{
+  margin-bottom: 1em;
+}
+
+.axis 
+{
+  font: 10px sans-serif;
+  position: fixed;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.axis text 
+{
+  -webkit-transition: fill-opacity 250ms linear;
+}
+
+.axis path 
+{
+  display: none;
+}
+
+.axis line 
+{
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis.top 
+{
+  position: relative;
+  background-image: linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  top: 0px;
+  padding: 0 0 24px 0;
+}
+
+.axis.bottom 
+{
+  position: relative;
+  background-image: linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  bottom: 0px;
+  padding: 24px 0 0 0;
+}
+
+.horizon 
+{
+  border-bottom: solid 1px #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.horizon 
+{
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+}
+
+.horizon + .horizon 
+{
+  border-top: none;
+}
+
+.horizon canvas 
+{
+  display: block;
+}
+
+.horizon .title,
+.horizon .value 
+{
+  bottom: 0;
+  /*line-height: 30px;*/
+  margin: 0 6px;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  white-space: nowrap;
+}
+
+.horizon .title 
+{
+   left: 0;
+   font-size: 10px;
+   margin: 0 0 0 0;
+   width: 80px;
+}
+
+.horizon .value 
+{
+   right: 0;
+   font-size: 12px;
+   color: black;
+   text-shadow: 0px 0px 10px rgba(255,255,255,1);
+}
+
+.line 
+{
+   background: #000;
+   z-index: 2;
+}
+
+h1
+{
+   font-size: 12px;
+   font-weight: bold;
+}
+
+h2
+{
+   font-size: 10px;
+   font-weight: bold;
+   margin-top: 20px;
+}
+
+.progress
+{
+   margin: 0px;
+   height: 2px;
+   -webkit-box-shadow: none;
+   box-shadow: none;
+}
+
+</style>
+
+
+<body>
+
+<!--
+%%
+%% View
+%%
+-->
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container-fluid">
+      <div class="navbar-header">
+         <a class="navbar-brand" href="#">Typhoon</a>
+      </div>
+      <ul class="nav navbar-nav">
+         <li>
+            <button id="scenario-run" type="button" class="btn btn-primary navbar-btn">Run</button>
+         </li>
+         <li>
+            <p class="navbar-text">RPS <span id="scenario-rps" class="badge">0</span></p>
+         </li>
+         <li>
+            <p class="navbar-text">Processes <span id="scenario-processes" class="badge">0</span></p>
+         </li>
+         <li>
+            <p class="navbar-text">Nodes <span id="cluster-peer" class="badge">0</span></p>
+         </li>
+      </ul>
+
+      <!-- TODO: expand with documentation
+      <ul class="nav navbar-nav navbar-right">
+         <li><a href="#">Link</a></li>
+         <li><a href="#">Link</a></li>
+         <li><a href="#">Link</a></li>
+      </ul>
+      -->
+   </div>
+
+   <!-- progress bar to visualize server delay -->
+   <div class="progress">
+      <div class="progress-bar" style="width: 0%;">
+      </div>
+   </div>
+</nav>
+
+
+<div class="container">
+   <div id="case" class="chronolog"></div>
+
+<h1 id="urn"></h1>
+<h2> Request Per Second</h2>
+   <div id="request" class="chronolog"></div>
+
+<h2> TCP/IP Latency (μs)</h2>
+<div id="tcp" class="chronolog"></div>
+
+<h2> SSL Latency (μs)</h2>
+<div id="ssl" class="chronolog"></div>
+
+<h2> Time To First Byte (μs)</h2>
+<div id="ttfb" class="chronolog"></div>
+
+<h2> Time To Meaningful Response (μs)</h2>
+<div id="ttmr" class="chronolog"></div>
+
+<h2> Packet Per Second</h2>
+<div id="pack" class="chronolog"></div>
+
+
+</div>
+
+<!--
+%%
+%% Controller
+%%
+-->
+<script type="text/javascript">
+
+
+var height  = 30;
+var pcolors = [
+   "#ffa500",
+   "#d88c00",
+   "#b17200",
+   "#9d6600",
+
+   "#00caec",
+   "#00a8c5",
+   "#00879e",
+   "#006576"
+];
+var scolors = [
+   "#00caec",
+   "#00a8c5",
+   "#00879e",
+   "#006576",
+
+   "#ffa500",
+   "#d88c00",
+   "#b17200",
+   "#9d6600"
+]
+
+//--------------------------------------------------------------------------
+//
+// chronolog rest access
+//
+//--------------------------------------------------------------------------
+var chronolog = function(context, host) {
+   if (!host) host = "";
+   var source = {};
+
+   source.series = function(title, urn, kpi) {
+      return context.metric(function(start, stop, step, callback) {
+         d3.json(host + "/scenario/" + ns + "/series/" +  urn + "/" + kpi
+            + "/" + start.getTime() / 1000
+            + "/" + stop.getTime() / 1000 
+            + "?chronon=" + step / 1000, 
+            function(data) {
+               if (!data) return callback(new Error("unable to load data"));
+               callback(null, data.map(function(x){return x[1]}))
+            });
+         }, title);
+   };
+
+   return source;
+};
+
+
+//--------------------------------------------------------------------------
+//
+// time-series visualization
+//
+//--------------------------------------------------------------------------
+var timeseries = function(el, width)
+{
+   var self = {}
+   var context = cubism.context()
+      .step(1 * 1000)          // 1 second per value
+      .size(width)
+      .serverDelay(60 * 1000)  // time to collect and process metrics by server
+      .clientDelay( 5 * 1000)
+      .start();
+   
+   d3.select(el).selectAll(".axis")
+      .data(["top", "bottom"])
+      .enter().append("div")
+      .attr("class", function(d) {return d + " axis"; })
+      .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+
+   d3.select(el).append("div")
+      .attr("class", "rule")
+      .call(context.rule());
+
+   context.on("focus", 
+      function(i) 
+      {
+         d3.selectAll(".value")
+            .style("right", i == null ? null : context.size() - i + "px");
+      }
+   );
+   
+   //
+   // visualize list of time series metrics
+   self.series = function(list)
+   {
+      var data = list.map(
+         function(x)
+         {
+            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+         }
+      );
+      d3.select(el).selectAll(".horizon")
+         .data(data, function(d){return d.toString()})
+         .enter()
+            .insert("div", ".bottom")
+               .attr("class", "horizon")
+               .on("click", function(d){ viz("" + d) })
+               .call(
+                  context.horizon()
+                     .format(d3.format("+,.2d"))
+               );
+   }
+
+   //
+   // visualize primary metric
+   self.primary = function(id, list)
+   {
+      var data = list.map(
+         function(x)
+         {
+            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+         }
+      );
+
+      d3.select(id).selectAll("*").remove();
+      d3.select(id).selectAll(".horizon")
+         .data(data, function(d){return d.toString()})
+         .enter()
+            .insert("div", ".bottom")
+               .attr("class", "horizon")
+               .call(
+                  context.horizon()
+                     .height( height )
+                     .format(d3.format("+,.2d"))
+                     .colors(pcolors)
+               );
+   }
+
+   //
+   // visualize secondary metric
+   self.secondary = function(id, list)
+   {
+      var data = list.map(
+         function(x)
+         {
+            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+         }
+      );
+
+      d3.select(id).selectAll(".horizon")
+         .data(data, function(d){return d.toString()})
+         .enter()
+            .insert("div", ".bottom")
+               .attr("class", "horizon")
+               .call(
+                  context.horizon()
+                     .height( height / 2)
+                     .format(d3.format("+,.2d"))
+                     .colors(scolors)
+               );
+   }
+
+   return self;
+}
+
+
+//--------------------------------------------------------------------------
+//
+// cluster
+//
+//--------------------------------------------------------------------------
+var cluster = function()
+{
+   var self = {}
+   
+   // 
+   // check peer(s) status
+   self.peer = function()
+   {
+      d3.json("/health/peer", self.view)
+      return true;
+   }
+
+   //
+   // visualize peer(s) status
+   self.view = function(json)
+   {
+      d3.select("#cluster-peer").text(json.length)
+      d3.timer(self.peer, 1000);
+   }
+
+   return self;
+}
+
+//--------------------------------------------------------------------------
+//
+// scenario
+//
+//--------------------------------------------------------------------------
+function unit(a, b, c) 
+{
+   return {title: a, urn: b, kpi: c}
+}
+
+var scenario = function(id, ts) 
+{
+   var self = {}
+   
+   //
+   // check scenario status
+   self.ping = function()
+   {
+      d3.json("/scenario/" + id + "/ping", self.view)
+      return true;
+   }
+
+   //
+   // visualize scenario status
+   self.view = function(json)
+   {
+      d3.select("#scenario-processes").text(json.processes)
+      d3.select("#scenario-rps").text(json.rps.toFixed(1))
+      d3.timer(self.ping, 1000);
+   }
+
+   //
+   // initialize scenario
+   self.init = function()
+   {
+      d3.select("#scenario-run").on("click",
+         function()
+         {
+            d3.select("nav").select(".progress-bar")
+               .transition()
+               .style("width", "100%")
+               .duration(65000)
+               .ease("linear")
+               .each("end", function(){d3.select(this).style("width", "0%")})
+
+            d3.text("/scenario/" + id + "/spawn", function(data){ })
+         }
+      );
+      d3.json("/scenario/" + id,
+         function(json)
+         {
+            var urn = json
+               .seq
+               .filter(function(x){return x['@type'] == null})
+               .map(function(x){return x['@id']})
+               .map(function(x){return unit(x, x, "rps")});
+
+            ts.series(urn, "rps")
+            self.latency("" + urn[0].urn)
+         }
+      ) 
+   }
+
+   //
+   // visualize latency details
+   self.latency = function(urn)
+   {
+      d3.select("#urn").text(urn);
+      d3.select("#unit").selectAll("*").remove();
+      self.http(urn);
+      self.tcp(urn);
+      self.ssl(urn);
+      self.ttfb(urn);
+      self.ttmr(urn);
+      self.packet(urn);
+   }
+
+   //
+   // visualize http status code
+   self.http = function(urn)
+   {
+      ts.primary('#request', 
+         [
+            unit("rps", urn, "rps")
+         ]
+      );
+      ts.secondary('#request',
+         [
+            unit("http 2xx", urn, "200"),
+            unit("http 3xx", urn, "300"),
+            unit("http 4xx", urn, "400"),
+            unit("http 5xx", urn, "500")
+         ]
+      );
+   }
+   
+   //
+   // visualize tcp latency
+   self.tcp = function(urn)
+   {
+      ts.primary('#tcp', 
+         [
+            unit("mean", urn.replace("urn:http", "urn:tcp"), "mean")
+         ]
+      );
+      ts.secondary('#tcp', 
+         [
+            unit("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
+            unit("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
+            unit("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
+            unit("max", urn.replace("urn:http", "urn:tcp"), "max")
+         ]
+      );
+   }
+
+   //
+   // visualize ssl latency
+   self.ssl = function(urn)
+   {
+      ts.primary('#ssl',
+         [
+            unit("mean", urn.replace("urn:http", "urn:ssl"), "mean")
+         ]
+      );
+      ts.secondary('#ssl',
+         [
+            unit("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
+            unit("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
+            unit("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
+            unit("max", urn.replace("urn:http", "urn:ssl"), "max")
+         ]
+      );
+   }
+
+   //
+   // visualize time to first byte
+   self.ttfb = function(urn)
+   {
+      ts.primary('#ttfb',
+         [
+            unit("mean", urn.replace("urn:http", "urn:ttfb"), "mean")
+         ]
+      );
+      ts.secondary('#ttfb',
+         [
+            unit("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
+            unit("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
+            unit("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
+            unit("max", urn.replace("urn:http", "urn:ttfb"), "max")
+         ]
+      );
+   }
+
+   //
+   // visualize time to meaningful response
+   self.ttmr = function(urn)
+   {
+      ts.primary('#ttmr',
+         [
+            unit("mean", urn.replace("urn:http", "urn:ttmr"), "mean")
+         ]
+      );
+      ts.secondary('#ttmr',
+         [
+            unit("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
+            unit("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
+            unit("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
+            unit("max", urn.replace("urn:http", "urn:ttmr"), "max")
+         ]
+      );
+   }
+
+   //
+   // visualize packet rate
+   self.packet = function(urn)
+   {
+      ts.primary('#pack',
+         [
+            unit("pps",  urn.replace("urn:http", "urn:pack"), "rps"),
+            unit("size", urn.replace("urn:http", "urn:pack"), "mean")
+         ]
+      );
+      ts.secondary('#pack',
+         [
+            unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
+            unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
+            unit("99%", urn.replace("urn:http", "urn:pack"), "p90"),
+            unit("max", urn.replace("urn:http", "urn:pack"), "max")
+         ]
+      );
+   }
+
+   return self;
+}
+
+//--------------------------------------------------------------------------
+//
+// entry point / global state
+//
+//--------------------------------------------------------------------------
+var ns = window.location.pathname.substring(1);
+var ts = timeseries("#case", 800);
+var sc = scenario(ns, ts);
+var cc = cluster();
+
+function viz(urn)
+{
+   sc.latency(urn)
+} 
+
+
+sc.init();
+sc.ping();
+
+cc.peer();
+</script>
+
+
+</body>

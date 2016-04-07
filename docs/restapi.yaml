@@ -210,8 +210,7 @@ paths:
    /scenario/{id}/ping :
       get:
          summary: |
-            The operation checks the status of workload scenario and return number of active
-            workload sessions.
+            The operation checks the status of workload scenario and return live KPI.
 
          parameters:
             - $ref: '#/parameters/id'
@@ -220,10 +219,10 @@ paths:
             200:
                description: |
                   The operation is completed successfully.
-               
+
                schema:
-                  type: integer
-                  description: the number of active stress test session
+                  $ref: '#/definitions/kpi'
+                    
 
 
    ##
@@ -306,6 +305,22 @@ definitions:
          handoff:
             type: integer
             description: number of handoff nodes accepted the request
+
+   ##
+   ##
+   kpi:
+      type: object
+      description: |
+         key performance indicators of the scenario
+
+      properties:
+         processes:
+            type: integer
+            description: number of requester processes spawned in the cluster
+
+         rps:
+            type: number
+            description: instant load produced by scenario
 
    ##
    ##

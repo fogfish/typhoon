@@ -50,6 +50,10 @@ content_provided(_Req) ->
       %%
       %% ping runing workers (concurrent units producing load)
       <<"ping">> ->
-         {200, jsx:encode(typhoon:unit(Id))}
-
+         {200, 
+            jsx:encode([
+               {processes, typhoon:unit(Id)},
+               {rps,       clue:get(Id)}
+            ])
+         }
    end.
