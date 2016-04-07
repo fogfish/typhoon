@@ -49,7 +49,8 @@ content_provided(_Req) ->
             _         ->
                % {'Access-Control-Allow-Origin', <<"*">>}
                file:read_file(
-                  filename:join([code:priv_dir(zephyrus), htdoc, "index.html"])
+                  % filename:join([code:priv_dir(zephyrus), htdoc, "index.html"])
+                  filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
                )
          end
    end.
