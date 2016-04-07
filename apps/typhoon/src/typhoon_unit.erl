@@ -46,6 +46,7 @@ init([Name, Spec]) ->
    tempus:timer(scenario:t(Scenario), expired),
    {ok, idle, 
       #{
+         name      => Name,
          scenario  => Scenario,
          telemetry => aura:socket(), 
          peer      => trace(Name)
@@ -84,6 +85,7 @@ idle(_, _Pipe, State) ->
 %%
 active({http, _, {Code, _Text, _Head, _Env}}, _, State) ->
    telemetry(os:timestamp(), {http, status, Code}, State),
+   clue(State),
    {next_state, active, State};
 
 active({trace, T, Msg}, _, State) ->
@@ -167,6 +169,14 @@ trace(Name) ->
    ).
 
 %%
-%%
+%% 
 telemetry(T, Value, #{urn := Urn, peer := Peers, telemetry := Sock}) ->
    aura:send(Sock, Peers, {Urn, T, Value}).
+
+%%
+%%
+clue(#{name := Name, peer := Peers, telemetry := Sock}) ->
+   aura:clue(Sock, Peers, Name).
+
+
+

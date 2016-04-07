@@ -62,7 +62,12 @@ handle(run, _, State) ->
             }
          }
    end;
-   
+
+handle({{urn, <<"clue">>, Key}, _T, X}, Pipe, State) ->
+   clue:inc(Key, X),
+   pipe:ack(Pipe, ok),
+   {next_state, handle, State};
+
 handle({{urn, _, _} = Urn, T, X}, Pipe, #{fd := FD} = State) ->
    spawn(
       fun() ->
@@ -89,8 +94,3 @@ handle({Tx, ok}, _Pipe, #{tx := List0} = State) ->
 %%%
 %%%----------------------------------------------------------------------------   
    
-
-
-
-   
-

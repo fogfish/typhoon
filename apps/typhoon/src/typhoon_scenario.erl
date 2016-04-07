@@ -42,6 +42,7 @@ start_link(Vnode, Name, Spec) ->
    pipe:start_link(?MODULE, [Vnode, Name, Spec], []).
 
 init([Vnode, Name, Spec]) ->
+   clue:define(meter, Name, 60000),
    {ok, handle, 
       #{
          vnode => Vnode,
@@ -117,6 +118,8 @@ run(N, K, Nodes, #{name :=Name, spec := Spec}=State) ->
          run(N - 1, K, q:enq(q:head(Nodes), q:tail(Nodes)), State)
    end.
 
+%%
+%% define counters
 
 
 
