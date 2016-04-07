@@ -19,6 +19,8 @@
 -export([
    socket/0
   ,send/3
+  ,clue/3
+  ,clue/3
   ,fd/0
 ]).
 
@@ -46,6 +48,18 @@ socket() ->
 
 send(Sock, Peers, {_, _, _} = Telemetry) ->
    pipe:send(Sock, {Peers, Telemetry}).
+
+%%
+%% send KPI-counter to peers
+-spec clue(pid(), [_], _) -> ok.
+
+clue(Sock, Peers, Key) ->
+   clue(Sock, Peers, Key, 1).
+   
+clue(Sock, Peers, Key, Val) ->
+   Urn = {urn, <<"clue">>, scalar:s(Key)},
+   send(Sock, Peers, {Urn, os:timestamp(), Val}).
+
 
 %%
 %% file descriptor to time series data-base
