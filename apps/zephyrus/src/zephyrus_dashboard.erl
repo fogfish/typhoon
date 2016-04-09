@@ -47,11 +47,16 @@ content_provided(_Req) ->
             undefined ->
                404;
             _         ->
-               % {'Access-Control-Allow-Origin', <<"*">>}
-               file:read_file(
-                  % filename:join([code:priv_dir(zephyrus), htdoc, "index.html"])
-                  filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
-               )
+               case uri:segments(Url) of
+                  [<<"analysis">> | _] ->
+                     file:read_file(
+                        filename:join([code:priv_dir(zephyrus), htdoc, "analysis.html"])
+                     );
+                  _ ->
+                     file:read_file(
+                        filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
+                     )
+               end
          end
    end.
 

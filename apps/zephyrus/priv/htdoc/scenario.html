@@ -18,7 +18,7 @@
 -->
 <meta charset="utf-8">
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
-<script src="http://d3js.org/d3.v2.js?2.9.1"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://square.github.com/cubism/cubism.v1.js?1.0.0"></script>
 
 <!--
@@ -112,6 +112,11 @@ header
   border-bottom: solid 1px #000;
 }
 
+.horizon:hover
+{
+   background: #f8f8f8;
+}
+
 .horizon + .horizon 
 {
   border-top: none;
@@ -192,6 +197,7 @@ h2
          <a class="navbar-brand" href="#">Typhoon</a>
       </div>
       <ul class="nav navbar-nav">
+         <li><p id="scenario-id" class="navbar-text"></p></li>
          <li>
             <button id="scenario-run" type="button" class="btn btn-primary navbar-btn">Run</button>
          </li>
@@ -206,13 +212,11 @@ h2
          </li>
       </ul>
 
-      <!-- TODO: expand with documentation
       <ul class="nav navbar-nav navbar-right">
-         <li><a href="#">Link</a></li>
-         <li><a href="#">Link</a></li>
-         <li><a href="#">Link</a></li>
+         <li><a id="scenario-analysis" href="#"><span class="glyphicon glyphicon-stats"></span> Latest Analysis</a></li>
+         <li><a href="https://github.com/zalando/typhoon/docs/howto.md"><span class="glyphicon glyphicon-link"></span> Tips and Hints</a></li>
+         <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
       </ul>
-      -->
    </div>
 
    <!-- progress bar to visualize server delay -->
@@ -224,11 +228,13 @@ h2
 
 
 <div class="container">
-   <div id="case" class="chronolog"></div>
+
+<h1><span id="url"></span> <small>click on following graph to expand details.</small></h1>
+<div id="case" class="chronolog"></div>
 
 <h1 id="urn"></h1>
 <h2> Request Per Second</h2>
-   <div id="request" class="chronolog"></div>
+<div id="request" class="chronolog"></div>
 
 <h2> TCP/IP Latency (μs)</h2>
 <div id="tcp" class="chronolog"></div>
@@ -244,7 +250,6 @@ h2
 
 <h2> Packet Per Second</h2>
 <div id="pack" class="chronolog"></div>
-
 
 </div>
 
@@ -278,7 +283,7 @@ var scolors = [
    "#d88c00",
    "#b17200",
    "#9d6600"
-]
+];
 
 //--------------------------------------------------------------------------
 //
@@ -349,6 +354,7 @@ var timeseries = function(el, width)
             return chronolog(context).series("" + x.title, x.urn, x.kpi)
          }
       );
+
       d3.select(el).selectAll(".horizon")
          .data(data, function(d){return d.toString()})
          .enter()
@@ -485,7 +491,13 @@ var scenario = function(id, ts)
                .style("width", "100%")
                .duration(65000)
                .ease("linear")
-               .each("end", function(){d3.select(this).style("width", "0%")})
+               .each("end", 
+                  function()
+                  {
+                     d3.select(this).style("width", "0%");
+                     self.analysis();
+                  }
+               )
 
             d3.text("/scenario/" + id + "/spawn", function(data){ })
          }
@@ -498,11 +510,30 @@ var scenario = function(id, ts)
                .filter(function(x){return x['@type'] == null})
                .map(function(x){return x['@id']})
                .map(function(x){return unit(x, x, "rps")});
-
-            ts.series(urn, "rps")
-            self.latency("" + urn[0].urn)
+            
+            d3.select("#url").text(json.url);
+            ts.series(urn, "rps");
+            self.latency("" + urn[0].urn);
+            self.analysis();
          }
       ) 
+   }
+
+   //
+   // update latest analysis (7 days)
+   self.analysis = function()
+   {
+      var tb  = Math.round(+new Date() / 1000);
+      var ta  = tb - 7 * 86400;
+      var req = ['scenario', id, 'series', 'urn:scenario:' + id, 'id', ta, tb].join("/");
+      d3.json('/' + req,
+         function(list)
+         {
+            var t    = list.pop();
+            var path = ['analysis', id, t[0], t[1]].join("/");
+            d3.select("#scenario-analysis").attr("href", '/' + path);
+         }
+      );
    }
 
    //
@@ -628,7 +659,7 @@ var scenario = function(id, ts)
          [
             unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
             unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:pack"), "p90"),
+            unit("99%", urn.replace("urn:http", "urn:pack"), "p99"),
             unit("max", urn.replace("urn:http", "urn:pack"), "max")
          ]
       );
@@ -643,6 +674,8 @@ var scenario = function(id, ts)
 //
 //--------------------------------------------------------------------------
 var ns = window.location.pathname.substring(1);
+d3.select("#scenario-id").text(ns);
+
 var ts = timeseries("#case", 800);
 var sc = scenario(ns, ts);
 var cc = cluster();
