@@ -49,7 +49,7 @@ init([Name, Spec]) ->
          name      => Name,
          scenario  => Scenario,
          telemetry => aura:socket(), 
-         peer      => trace(Name)
+         peer      => typhoon:peer(Name)
       }
    }.
 
@@ -149,24 +149,6 @@ request(#{type := protocol,  urn := Urn, packet := List}, State) ->
    ),
    {active, State#{urn => Urn, sock => Sock}}.
 
-
-%%
-%% discover destination nodes for sampled data
-trace(Name) ->
-   {ok, Entity} = ambitz:lookup(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(Name)
-      )
-   ),
-   lists:map(
-      fun(X) ->
-         %% @todo: it would fail if cluster uses FQDN
-         [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
-         {ok, IP}  = inet_parse:address(scalar:c(Host)),
-         IP
-      end,
-      ambitz:entity(vnode, Entity)
-   ).
 
 %%
 %% 
