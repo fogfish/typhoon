@@ -36,7 +36,8 @@ start_link() ->
 
 
 init([]) ->
-   {ok, Sock} = gen_udp:open(0, [{sndbuf, 256 * 1024}]),
+   %% @todo: make buffer configurable
+   {ok, Sock} = gen_udp:open(0, [{sndbuf, 1 * 1024 * 1024}]),
    {ok, handle, Sock}.
 
 
