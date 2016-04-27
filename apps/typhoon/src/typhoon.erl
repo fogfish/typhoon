@@ -107,20 +107,14 @@ remove(Id, Opts) ->
 -spec peer(id()) -> [_].
 
 peer(Id) ->
-   {ok, Entity} = ambitz:lookup(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(Id)
-      )
-   ),
-   lists:map(
-      fun(X) ->
-         %% @todo: it would fail if cluster uses FQDN
-         [_, Host] = binary:split(ek:vnode(node, X), <<$@>>),
-         {ok, IP}  = inet_parse:address(scalar:c(Host)),
-         IP
-      end,
-      ambitz:entity(vnode, Entity)
-   ).
+   [addr(Vnode) || Vnode <- ek:successors(typhoon, Id), 
+      ek:vnode(type, Vnode) == primary].
+
+addr(Vnode) ->
+   %% @todo: it would fail if cluster uses FQDN
+   [_, Host] = binary:split(ek:vnode(node, Vnode), <<$@>>),
+   {ok, IP}  = inet_parse:address(scalar:c(Host)),
+   IP.
 
 
 %%
