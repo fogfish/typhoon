@@ -63,3 +63,7 @@ EXPOSE 20108/udp
 EXPOSE 20109/udp
 
 ENTRYPOINT /etc/init.d/typhoon foreground
+
+##
+##
+COPY scm-source.json /scm-source.json

@@ -16,4 +16,5 @@ log/
 *.sublime-*
 tests/
 relx.config
+scm-source.json
 
