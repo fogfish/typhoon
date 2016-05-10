@@ -131,7 +131,7 @@ _build/dockermake:
 endif
 
 ## build docker image
-docker: rel/Dockerfile
+docker: rel/Dockerfile scm-source.json
 	docker build \
 		--build-arg APP=${APP} \
 		--build-arg VSN=${VSN} \
@@ -209,6 +209,23 @@ console: ${PKG}.tar.gz
 rebar3:
 	@curl -L -O https://s3.amazonaws.com/rebar3/rebar3 ; \
 	chmod ugo+x $@
+
+
+#####################################################################
+##
+## stups extension
+##
+#####################################################################
+
+
+scm-source.json: FORCE
+	@R=`git rev-parse HEAD`;\
+	U=`git config --get remote.upstream.url || git config --get remote.origin.url`;\
+	S=`git status --porcelain | awk 1 ORS=' '`;\
+	if [ -n "$$S" ]; then R="$$R (locally modified)"; fi; \
+	echo "{\"url\": \"git:$$U\", \"revision\": \"$$R\", \"author\": \"${USER}\", \"status\": \"$$S\"}" > $@
+
+FORCE:
 
 .PHONY: test rel deps all pkg 
 
