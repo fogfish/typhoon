@@ -33,5 +33,9 @@
    pns,
    swirl,
    datum,
-   esh
+   esh,
+
+   %% 
+   %% performance analysis tooling
+   eep
 ]}.
