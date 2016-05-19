@@ -29,6 +29,9 @@ SenzaInfo:
       - Cluster:
          Description: "Initial cluster size"
          Default: "3"
+      - AppId:
+         Description: "Yourturn application id"
+         Default: typhoon
 
 SenzaComponents:
    - Configuration:
@@ -50,6 +53,7 @@ SenzaComponents:
       AssociatePublicIpAddress: false 
       TaupageConfig:
          root: true
+         application_id: "{{Arguments.AppId}}"
          application_version: "{{Arguments.ImageVersion}}"
          runtime: Docker
          networking: host
