@@ -17,13 +17,22 @@ ARCH   ?= $(shell uname -m)
 PLAT   ?= $(shell uname -s)
 VSN    ?= $(shell test -z "`git status --porcelain`" && git describe --tags --long | sed -e 's/-g[0-9a-f]*//' | sed -e 's/-0//' || echo "`git describe --abbrev=0 --tags`-SNAPSHOT")
 REL     = ${APP}-${VSN}
-PKG    ?= ${REL}+${ARCH}.${PLAT}
 TEST   ?= ${APP}
 S3     ?=
 VMI    ?= fogfish/erlang:18.2.1
 NET    ?= lo0
 URL    ?= registry.opensource.zalan.do/hunt
 LATEST ?= latest
+
+##
+## release is build either using cross-compile feature of Erlang/OTP,
+## otherwise release assembly is offloaded to Docker builder that produces only Linux
+ifeq (${PLAT},$(shell uname -s))
+PKG  ?= ${REL}+${ARCH}.${PLAT}
+else
+PKG  ?= ${REL}+${ARCH}.Linux
+endif
+
 
 ## root path to benchmark framework
 BB     = ../basho_bench
