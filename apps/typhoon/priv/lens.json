@@ -1,0 +1,28 @@
+{
+   "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+   "n": 10,
+   "t": 60000,
+   "url": "http://localhost:8888",
+   "header": {"Connection": "keep-alive"},
+   "heap": {
+      "text": ["a", "b", "c", "d", "e"],
+      "ip": "0.0.0.0"
+   },
+   "seq": 
+   [
+      {
+         "@id"     : "urn:http:httpbin.org:ip",
+         "method"  : "GET",
+         "url"     : "/ip",
+         "return"  : {"ip": ["origin"]}
+      },
+
+      {
+         "@id"     : "urn:http:httpbin.org:post",
+         "method"  : "POST",
+         "url"     : "/post",
+         "header"  : {"Content-Type": "text/plain", "Transfer-Encoding": "chunked"},
+         "payload" : "{.scenario:lens([text, uniform], C).} + {.scenario:lens([ip], C).}"
+      }
+   ]
+}

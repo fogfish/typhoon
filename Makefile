@@ -136,7 +136,7 @@ ${PKG}.tar.gz: _build/dockermake
 	test -f $@ && echo "==> tarball: $@"
 
 _build/dockermake:
-	@echo "${BUILDER}" > $@
+	@mkdir _build && echo "${BUILDER}" > $@
 endif
 
 ## build docker image
