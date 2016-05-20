@@ -1,0 +1,20 @@
+{
+   "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
+   "n": 10,
+   "t": 60000,
+   "url": "http://localhost:8888",
+   "header": {"Connection": "keep-alive"},
+   "heap": {
+      "text": ["a", "b", "c", "d", "e"]
+   },
+   "seq": 
+   [
+      {
+         "@id"     : "urn:http:httpbin.org:post",
+         "method"  : "POST",
+         "url"     : "/post",
+         "header"  : {"Content-Type": "text/plain", "Transfer-Encoding": "chunked"},
+         "payload" : "{.scenario:lens([text, uniform], C).}"
+      }
+   ]
+}

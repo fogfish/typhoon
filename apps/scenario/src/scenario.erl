@@ -23,14 +23,16 @@
    compile/1,
    n/1,
    t/1,
-   eval/1
+   eval/1,
+   accept/2
 ]).
 -export([
    uid/0,
    int/1,
    pareto/2,
    ascii/1,
-   text/1
+   text/1,
+   lens/2
 ]).
 
 %%
@@ -48,9 +50,10 @@ compile(Spec) ->
    ?CONTEXT = lens:get(lens:pair(<<"@context">>), Spec),
    N   = lens:get(lens:pair(<<"n">>, ?CONFIG_N), Spec),
    T   = tempus:t(m, lens:get(lens:pair(<<"t">>, ?CONFIG_T), Spec)),
-   Seq = q:new([compile_req(Spec, Req) 
+   Heap= compile_heap(lens:get(lens:pair(<<"heap">>, []), Spec)),
+   Seq = deq:new([compile_req(Spec, Req) 
       || Req <- lens:get(lens:pair(<<"seq">>), Spec)]),
-   #{n => N, t => T, seq => Seq}.
+   #{n => N, t => T, heap => Heap, seq => Seq}.
 
 %%
 %% number of processes
@@ -66,7 +69,6 @@ n(#{n := N}) ->
 t(#{t := T}) ->
    T.
 
-
 %%
 %% evaluates request to list of communication primitives
 -spec eval(fun((_) -> ok), scenario()) -> {binary(), [_], scenario()}.
@@ -76,18 +78,37 @@ eval(#{seq :=  {}} = Scenario) ->
    {#{}, Scenario};
 
 eval(#{seq := Seq} = Scenario) ->
-   eval(q:head(Seq), 
-      Scenario#{seq => q:enq(q:head(Seq), q:tail(Seq))}
+   eval(deq:head(Seq), 
+      Scenario#{seq => deq:enq(deq:head(Seq), deq:tail(Seq))}
    ).
 
 eval(#{id := Urn, thinktime := T}, Scenario) ->
    {#{type => thinktime, urn => Urn, t => scalar:i(T(?CONFIG_SCRIPT_ALLOWED))}, Scenario};
 
-eval(#{id := Urn} = Unit, Scenario) ->
+eval(#{id := Urn} = Unit, #{heap := Heap} = Scenario) ->
    List = lists:flatten([
-      http_head(Unit), http_payload(Unit), http_eof(Unit)
+      http_head(Heap, Unit), http_payload(Heap, Unit), http_eof(Heap, Unit)
    ]),
    {#{type => protocol,  urn => Urn, packet => List}, Scenario}.
+
+
+%%
+%% accept result to impact on heap state
+-spec accept(binary(), scenario()) -> scenario().
+
+accept(Payload, #{seq := Seq, heap := Heap} = Scenario) ->
+   case deq:last(Seq) of
+      #{lens := {Id, Lens}} ->
+         case lens:get(Lens, jsx:decode(Payload)) of
+            [] ->
+               Scenario;
+            Value ->
+               Key = scalar:s(Id),
+               Scenario#{heap => Heap#{Key => Value}}
+         end;
+      _ ->
+         Scenario
+   end.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -164,6 +185,31 @@ text() ->
       0
    ).
 
+%%
+%% lens focuses on variable at heap 
+lens(Focus, Context) ->
+   Lens = lens:c([lens:map(heap) | focus(Focus)]),
+   scalar:s( lens:get(Lens, Context) ).
+
+focus([uniform | T]) ->
+   [lens_uniform() | T];
+
+focus([H | T])
+ when is_atom(H) ->
+   [lens:map(scalar:s(H)) | focus(T)];
+
+focus([]) ->
+   [].
+
+%%
+%% focus on random element from set
+lens_uniform() ->
+   fun(Fun, List) ->
+      lens:fmap(fun(_) -> List end, Fun(lens_uniform(List)))
+   end.
+
+lens_uniform(List) ->
+   lists:nth(random:uniform(length(List)), List).
 
 
 %%%----------------------------------------------------------------------------   
@@ -178,14 +224,16 @@ compile_req(Spec, Unit) ->
    Id = uri:new( lens:get(lens:pair(<<"@id">>), Unit) ),
    case lens:get(lens:pair(<<"@type">>, <<"http">>), Unit) of
       <<"http">>  ->
-         compile_payload(Spec, Unit,
-            compile_uri(Spec, Unit, 
-               compile_header(Spec, Unit, 
-                  compile_method(Spec, Unit, #{id => Id})
+         compile_return(Spec, Unit,
+            compile_payload(Spec, Unit,
+               compile_uri(Spec, Unit, 
+                  compile_header(Spec, Unit, 
+                     compile_method(Spec, Unit, #{id => Id})
+                  )
                )
             )
          );
-      <<"thinktime">> = Type ->
+      <<"thinktime">> = _Type ->
          compile_thinktime(Spec, Unit, #{id => Id})
    end.
    
@@ -237,26 +285,46 @@ compile_thinktime(_Spec, Unit, Req) ->
    end.
 
 %%
+compile_return(_Spec, Unit, Req) ->
+   case lens:get(lens:pair(<<"return">>, undefined), Unit) of
+      [{Id, Focus}] ->
+         Req#{lens => {Id, lens:c([lens:pair(X, []) || X <- Focus])}};  
+      
+      %% lens in not defined or wrong syntax
+      _ ->
+         Req
+   end.
+
+%% compile data sets into format processable by scenario
+compile_heap(List) ->
+   maps:from_list(List).
+
 %%
-http_head(#{method := Mthd, uri := Uri, header := Head}) ->
+%%
+http_head(Heap, #{method := Mthd, uri := Uri, header := Head}) ->
    [
       {
          Mthd, 
-         uri:new(scalar:s( Uri(?CONFIG_SCRIPT_ALLOWED) )), 
+         uri:new(scalar:s( Uri( context(Heap) ) )), 
          %% @todo: header files are forced to atom due to htstream issue.
-         [{scalar:atom(Key), Val(?CONFIG_SCRIPT_ALLOWED)} || {Key, Val} <- Head]
+         [{scalar:atom(Key), Val( context(Heap) ) } || {Key, Val} <- Head]
       }
    ].
 
 %%
-http_payload(#{payload := Payload}) ->
+http_payload(Heap, #{payload := Payload}) ->
    [
-      scalar:s( Payload(?CONFIG_SCRIPT_ALLOWED) )
+      scalar:s( Payload( context(Heap) ) )
    ];
-http_payload(_) ->
+http_payload(_Heap, _Req) ->
    [].
 
 %%
-http_eof(_) ->
+http_eof(_Heap, _Req) ->
    [eof].
+
+
+%% build context for evaluator
+context(Heap) ->
+   maps:put(heap, Heap, ?CONFIG_SCRIPT_ALLOWED).
 

@@ -37,6 +37,7 @@
            ,{pareto, true}
            ,{ascii,  true}
            ,{text,   true}
+           ,{lens,   true}
          ]
       }
    }

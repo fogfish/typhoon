@@ -83,21 +83,22 @@ idle(_, _Pipe, State) ->
 
 %%
 %%
-active({http, _, {Code, _Text, _Head, _Env}}, _, State) ->
+active({http, _, {Code, _Text, Head, _Env}}, _, State) ->
    telemetry(os:timestamp(), {http, status, Code}, State),
    clue(State),
-   {next_state, active, State};
+   {next_state, active, State#{recv => q:new()}};
 
 active({trace, T, Msg}, _, State) ->
    telemetry(T, Msg, State),
-   {next_state, active, State};
+   {next_state, active, State#{}};
 
-active({http, _, eof}, _, State) ->
+active({http, _, eof}, _, #{recv := Recv, scenario := Scenario0} = State) ->
    erlang:send(self(), request),
-   {next_state, idle, State};
+   Scenario1 = scenario:accept(erlang:iolist_to_binary(q:list(Recv)), Scenario0),
+   {next_state, idle, State#{scenario => Scenario1}};
 
-active({http, _, _Pckt}, _, State) ->
-   {next_state, active, State};
+active({http, _, Pckt}, _, #{recv := Recv} = State) ->
+   {next_state, active, State#{recv => q:enq(Pckt, Recv)}};
 
 active(expired, _, State) ->
    {stop, normal, State};
