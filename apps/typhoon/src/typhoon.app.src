@@ -16,7 +16,7 @@
 {application, typhoon,
    [
       {description, "distributed stress, load testing tool"},
-      {vsn,         "0.2.0"},
+      {vsn,         "0.3.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
@@ -29,6 +29,7 @@
         ,knet
         ,chronolog
         ,clot
+        ,scenario
       ]},
       {mod, {typhoon_app, []}},
       {env, []}

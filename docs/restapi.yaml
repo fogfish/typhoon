@@ -187,6 +187,40 @@ paths:
                   Requested operation cannot be completed, the runtime environment is not capable 
                   to meet client requirements.
 
+   ##
+   ## scenario attributes
+   /scenario/{id}/attributes :
+      get:
+         summary: |
+            The operation returns scenario attributes
+
+         parameters:
+            -  $ref: '#/parameters/id'
+            -  $ref: '#/parameters/r'
+
+         responses:
+            200:
+               description: |
+                  The scenario definition (see doc/scenario.md)
+               
+               schema:
+                  $ref: '#/definitions/scenario'
+
+            303:
+               description: |
+                  The quorum requirements of request is not achievable, replicas are not agreeing 
+                  on the resource status. The resource redirects user-agent using Location header 
+                  to another resource, which facilitates validation and conflict resolution 
+                  (e.g. wait for eventual consistency or revoke the resource).
+
+            404:
+               description: |
+                  The scenario object is not found.
+
+            412:
+               description: |
+                  Requested operation cannot be completed, the runtime environment is not capable 
+                  to meet client requirements.
 
    ##
    ## scenario actions - 
@@ -284,11 +318,6 @@ definitions:
       type: object
       description: |
          The document defines the workload scenario (see docs/scenario.md)
-
-      properties:
-         '@context':
-            type: string
-            description: equals to `http://github.com/zalando/typhoon/schema/scenario/1.0`
 
    ##
    ##

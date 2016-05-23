@@ -417,13 +417,11 @@ var analysis = function(id, ta, tb, fun)
 
    self.init = function()
    {
-      d3.json("/scenario/" + id,
+      d3.json("/scenario/" + id + "/attributes",
          function(json)
          {
-            scenario  = json 
-            var list  = scenario.seq
-               .filter(function(x){return x['@type'] == null})
-               .map(function(x){return x['@id']});
+            scenario = json 
+            var list = json;
 
             list.forEach(self.load);
          }

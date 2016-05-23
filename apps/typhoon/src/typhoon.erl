@@ -28,12 +28,14 @@
   ,peer/1
   ,run/1
   ,unit/1
+  ,attr/1
 ]).
 %%
 %% data interface
 -export([
    fd/0
   ,stream/2
+  ,t/0
 ]).
 
 
@@ -57,12 +59,13 @@ start() ->
 %% defines load scenario to the cluster, 
 %% takes unique name of test scenario and its specification,
 %% returns cluster descriptor entity
+%% @todo: id is converted to atom, scalar:atom(Id)
 -spec define(id(), json(), list()) -> {ok, ambitz:entity()} | {error, _}.
 
 define(Id, Spec, Opts) ->
    ambitz:spawn(
       ambitz:entity(ring, typhoon, 
-         ambitz:entity(service, {typhoon_scenario, start_link, [Id, Spec]},
+         ambitz:entity(service, {typhoon_scenario, start_link, [scalar:atom(Id), Spec]},
             ambitz:entity(Id)
          )
       ),
@@ -107,7 +110,7 @@ remove(Id, Opts) ->
 -spec peer(id()) -> [_].
 
 peer(Id) ->
-   [addr(Vnode) || Vnode <- ek:successors(typhoon, Id), 
+   [addr(Vnode) || Vnode <- ek:successors(typhoon, scalar:s(Id)), 
       ek:vnode(type, Vnode) == primary].
 
 addr(Vnode) ->
@@ -160,6 +163,24 @@ unit(Id) ->
          )
    end.
 
+%%
+%% return number of active load units
+-spec(attr/1 :: (id()) -> {ok, [_]} | {error, any()}).
+
+attr(Id) ->
+   case
+      ambitz:whereis(
+         ambitz:entity(ring, typhoon, ambitz:entity(Id)),
+         [{r, 1}]
+      )
+   of
+      {error, _} = Error ->
+         Error;
+      
+      {ok, Entity} ->
+         Pid = hd( ambitz:entity(service, Entity) ),
+         {ok, pipe:ioctl(Pid, attr)}
+   end.
 
 
 %%%----------------------------------------------------------------------------   
@@ -196,3 +217,37 @@ stream(Id, Gen) ->
          Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
          pipe:call({typhoon_peer, Node}, {stream, Gen}, 30000)
    end.
+
+
+t() ->
+   [
+      % new(fun(_) -> 'GET' end),
+      % url(fun(_) -> "http://example.com" end),
+      % header(fun(_) -> {"Accept", "application/json"} end),
+      % return(fun(_) -> "xxx" end)
+   ].   
+
+
+%% method()
+new(X) ->
+   fun(Req) ->
+      fun(Heap) ->
+         lens:put(lens:map(method, undefined), X(Heap), Req)
+      end
+   end.
+
+url(X) ->
+   fun(Req) ->
+      fun(Heap) ->
+         lens:put(lens:map(url, undefined), X(Heap), Req)
+      end
+   end.
+
+header(X) ->
+   fun(Req) ->
+      fun(Heap) ->
+         lens:put(lens:map(header, undefined), X(Heap), Req)
+      end
+   end.
+
+

@@ -13,3 +13,22 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
+-module(scenario_app).
+-behaviour(application).
+-author('dmitry.kolesnikov@zalando.fi').
+
+
+-export([
+   start/2
+  ,stop/1
+]).
+
+%%
+%%
+start(_Type, _Args) ->
+   scenario_sup:start_link(). 
+
+%%
+%%
+stop(_State) ->
+   ok.
