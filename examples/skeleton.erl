@@ -16,7 +16,7 @@ t() ->
 
 %% number of concurrent session to spawn in the cluster.
 n() ->
-   1.
+   2.
 
 %% identifiers of requests to visualize
 urn() ->
@@ -35,6 +35,6 @@ run() ->
 request() ->
    [{monad, id} ||
       A <- scenario:new("urn:http:example"),
-      B <- scenario:url("http://example.com", A),
+      B <- scenario:url("http://example.com/", A),
       C <- scenario:request(B)
    ].

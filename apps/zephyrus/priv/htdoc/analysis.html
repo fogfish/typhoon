@@ -421,7 +421,7 @@ var analysis = function(id, ta, tb, fun)
          function(json)
          {
             scenario = json 
-            var list = json;
+            var list = json.urn;
 
             list.forEach(self.load);
          }
