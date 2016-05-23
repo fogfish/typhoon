@@ -33,11 +33,11 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, json}].
+   [{application, erlang}].
 
 %%
 content_accepted(_Req) ->
-   [{application, json}].
+   [{application, erlang}].
 
 %%
 %%

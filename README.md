@@ -1,10 +1,10 @@
 # typhoon
 
-Typhoon is distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and application latencies. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
+Typhoon is distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and latencies of microservices. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
       
-The typhoon is operable as standalone application and scalable up to dozens of individual nodes hosted in cloud environment. The incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
+Typhoon is operable as standalone application and scalable up to dozens of individual nodes hosted in cloud environment. The incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
 
-The tool provides REST interface to build, define and spawn workload scenarios; collect the telemetry and visualize results. 
+Typhoon uses pure functional expressions to define load scenario and provides REST interface to build, define and spawn workload scenarios; collect the telemetry and visualize results. 
 
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
@@ -14,7 +14,7 @@ The tool provides REST interface to build, define and spawn workload scenarios; 
 
 The tool is a continuation of scalability and latency analysis efforts driven by tech companies within the mobile application domain. For example Nokia's contribution to latency analysis on cellular networks... Google's proposals on web protocol enchantment and evolutions...  
 
-It uses Erlang as runtime environment due to massive scalability and soft real-time properties (accuracy on measurements) . It recommended itself as indispensable technology in similar solution Tsung suitable to test scalability and performance of IP based applications.
+It uses Erlang as runtime environment due to massive scalability and soft real-time properties (accuracy on measurements). It recommended itself as indispensable technology in similar solution Tsung suitable to test scalability and performance of IP based applications.
 
 Typhoon focuses on **visualization**, **protocol metric** and **usability**. The time-series data visualization crisis is well depicted [here](https://bost.ocks.org/mike/cubism/intro/#0), the usage of proposed visualization technique (cubism.js) improves readability and analysis of latencies experienced by SUT. The design of distributed systems and micro-services requires deep-dive understanding of latencies introduced by infrastructure, protocol and application. Typhoon captures and visualize them. It allows to solve a series of decision problem concerning both short-term and long-term arrangements: short term decisions include for example the determination of optimal software configuration, the number of servers, the number of concurrent connections; long term decisions include for example decisions concerning the development and extension of data and service architecture, choice of technology, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
 
@@ -26,6 +26,8 @@ Typhoon focuses on **visualization**, **protocol metric** and **usability**. The
 ### changelog
 The project uses [semantic version](http://semver.org) to identity stable releases. 
 
+* [0.6.0](https://github.com/zalando/typhoon/releases/tag/0.6.0) - uses pure functional expressions to define load scenario.
+* [0.5.0](https://github.com/zalando/typhoon/releases/tag/0.5.0) - re-do UI and report analysis
 * [0.4.1](https://github.com/zalando/typhoon/releases/tag/0.4.1) - stability at distributed environment 
 * [0.3.0](https://github.com/zalando/typhoon/releases/tag/0.3.0) - storage improvements 
 * [0.2.1](https://github.com/zalando/typhoon/releases/tag/0.2.1) - minimum viable product 
@@ -62,29 +64,8 @@ curl http://192.168.99.100:8080/health/peer
 Next define a simple workload scenario, publish it to typhoon.
 ```
 curl -XPUT http://192.168.99.100:8080/scenario/example \
-   -H 'Content-Type: application/json' \
-   -d '
-   {
-      "@context": "http://github.com/zalando/typhoon/schema/scenario/1.0",
-      "n": 1,
-      "t": 60000,
-      "url": "http://example.org:80",
-      "header": {"Connection": "keep-alive"},
-      "seq": 
-      [
-         {
-            "@id"     : "urn:http:example.org",
-            "method"  : "GET",
-            "url"     : "/"
-         },
-         {
-            "@id"     : "urn:thinktime:1",
-            "@type"   : "thinktime",
-            "t"       : 1000
-         }
-      ]
-   }
-   '
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
 ```  
 
 Open the link `http://192.168.99.100:8080/example` in web browser to manage the workload and analyze the results. User interface should look similar to following screen shot. Click `run` button to kick-off stress testing. The tool has about 60 second delay before it renders the first result. The tool renders Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.

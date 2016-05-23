@@ -28,7 +28,8 @@
    header/3,
    payload/2,
    request/2,
-   request/1
+   request/1,
+   thinktime/2
 ]).
 %% script utility interface
 -export([
@@ -87,7 +88,9 @@ cc_mod(_, []) ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%% new request descriptor
+%% 
+-spec new(string()) -> _.
+
 new({urn, <<"http">>, _} = Id) ->
    #{
       id     => Id, 
@@ -99,29 +102,40 @@ new(Id) ->
    new( uri:new(scalar:s(Id)) ).
 
 %%
-%% set http request method
+%% 
+-spec method(atom() | string() | binary(), _) -> _.
+
 method(Method, #{id := {urn, <<"http">>, _}} = Http) ->
    % @todo: validate and normalize method
    Http#{method => Method}.
 
 %%
-%% set http destination url
+%% 
+-spec url(string() | binary(), _) -> _.
+
 url(Url, #{id := {urn, <<"http">>, _}} = Http) ->
    Http#{url => uri:new(Url)}.
 
 %%
-%% set http header
+%% 
+-spec header(string(), string(), _) -> _.
+ 
 header(Head, Value, #{id := {urn, <<"http">>, _}, header := List} = Http) -> 
    % @todo: fix htstream to accept various headers
    Http#{header => [{scalar:atom(Head), scalar:s(Value)} | List]}.
 
 %%
-%% set http payload
+%% 
+-spec payload(string() | binary(), _) -> _.
+
 payload(Pckt, #{id := {urn, <<"http">>, _}, header := List} = Http) ->
    Http#{payload => Pckt, header => [{'Transfer-Encoding', <<"chunked">>} | List]}.
 
 %%
-%% execute http request
+%% 
+-spec request(_) -> _.
+-spec request([atom()], _) -> _.
+
 request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
    fun(IO) ->
       Pckt = send(IO, Http),
@@ -133,6 +147,18 @@ request(#{id := {urn, <<"http">>, _}} = Http) ->
    fun(IO) -> 
       send(IO, Http)
    end.
+
+%%
+%%
+-spec thinktime(_, integer()) -> _.
+
+thinktime(X, T) ->
+   fun(_IO) ->
+      timer:sleep(T),
+      X
+   end.
+
+
 
 %%%----------------------------------------------------------------------------   
 %%%
