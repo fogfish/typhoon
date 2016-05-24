@@ -13,17 +13,18 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
--module(typhoon_sup).
+-module(typhoon_net_sup).
 -behaviour(supervisor).
 -author('dmitry.kolesnikov@zalando.fi').
 
 -export([
    start_link/0, init/1
 ]).
+-export([spawn/2]).
 
--define(CHILD(Type, I),            {I,  {I, start_link,   []}, permanent, 5000, Type, dynamic}).
--define(CHILD(Type, I, Args),      {I,  {I, start_link, Args}, permanent, 5000, Type, dynamic}).
--define(CHILD(Type, ID, I, Args),  {ID, {I, start_link, Args}, permanent, 5000, Type, dynamic}).
+-define(CHILD(Type, I),            {I,  {I, start_link,   []}, transient, 5000, Type, dynamic}).
+-define(CHILD(Type, I, Args),      {I,  {I, start_link, Args}, transient, 5000, Type, dynamic}).
+-define(CHILD(Type, ID, I, Args),  {ID, {I, start_link, Args}, transient, 5000, Type, dynamic}).
 
 %%-----------------------------------------------------------------------------
 %%
@@ -37,13 +38,31 @@ start_link() ->
 init([]) ->   
    {ok,
       {
-         {one_for_one, 4, 1800},
+         {one_for_one, 10000, 1},
          [
-            ?CHILD(worker,     typhoon_peer)
-           ,?CHILD(supervisor, typhoon_net_sup)
-           ,?CHILD(supervisor, typhoon_unit_sup)
          ]
       }
    }.
 
+
+%%
+%% spawn new socket pool
+spawn(Id, Uri) ->
+   pid(
+      supervisor:start_child(?MODULE, 
+         ?CHILD(supervisor, Id, pq, [Id, netpool(Uri)])
+      )
+   ). 
+
+pid({ok, _}) -> ok;
+pid({error, {already_started, _}}) -> ok.
+
+
+%%
+netpool(Uri) ->
+   [
+      {capacity,  inf},
+      {worker,    {typhoon_net, [Uri]}},
+      {strategy,  lifo}
+   ].
 

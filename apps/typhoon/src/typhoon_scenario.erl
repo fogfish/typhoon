@@ -38,25 +38,35 @@
 %%%
 %%%----------------------------------------------------------------------------   
 
-start_link(Vnode, Name, Spec) ->
-   pipe:start_link(?MODULE, [Vnode, Name, Spec], []).
+start_link(Vnode, Id, Spec) ->
+   pipe:start_link(?MODULE, [Vnode, Id, Spec], []).
 
-init([Vnode, Name, Spec]) ->
-   clue:define(meter, Name, 60000),
+init([Vnode, Id, Spec]) ->
+   clue:define(meter, Id, 60000),
+   {ok, Id, Code} = compile(Id, Spec),
+   code:purge(Id),
+   {module, Id} = code:load_binary(Id, undefined, Code),
    {ok, handle, 
       #{
          vnode => Vnode,
-         name  => Name,
-         spec  => Spec,
+         id    => Id,
+         code  => Code,
          n     => 0
       }
    }.
 
-free(_, _) ->
-   ok.
+free(_, #{id := Id}) ->
+   file:delete(file(Id)).
 
 ioctl(n, #{n := N}) ->
-   N.
+   N;
+
+ioctl(attr, #{id := Scenario}) ->
+   [
+      {t,   Scenario:t()},
+      {n,   Scenario:n()},
+      {urn, [scalar:s(X) || X <- Scenario:urn()]}
+   ].
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -80,9 +90,13 @@ handle({handoff, _Vnode}, Tx, State) ->
    pipe:ack(Tx, ok),
    {next_state, handle, State};
 
-handle(run, Tx, #{n := N0}=State) ->
+handle(run, Tx, #{id := Id, code := Code, n := N0}=State) ->
+   % deploy compiled scenario code to each node
+   Nodes = erlang:nodes(),
+   lists:foreach(fun(Node) -> drift(Node, Id, Code) end, Nodes),
    milestone(State),
-   N1 = run(q:new([erlang:node() | erlang:nodes()]), State),
+   % run scenario
+   N1 = run(q:new([erlang:node() | Nodes]), State),
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
 
@@ -99,15 +113,36 @@ handle(_Msg, _Tx, State) ->
 %%%----------------------------------------------------------------------------   
 
 %%
+%%
+file(Id) ->
+   filename:join([opts:val(libdir, typhoon), scalar:c(Id) ++ ".erl"]).
+
+%%
+%% compiles specification into binary code
+compile(Id, Scenario) ->
+   File = file(Id),
+   ok = filelib:ensure_dir(File),
+   ok = file:write_file(File, Scenario),
+   scenario:c(scalar:atom(Id), File).
+
+%%
+%% deploy code to cluster nodes
+drift(Node, Mod, Code) ->
+   _ = rpc:call(Node, code, purge, [Mod]),
+   {module, Mod} = rpc:call(Node, code, load_binary, [Mod, undefined, Code]).
+
+
+
+%%
 %% run test case on cluster
-run(Nodes, #{spec := Spec} = State) ->
-   run(pair:x(<<"n">>, Spec), 0, Nodes, State).
+run(Nodes, #{id := Scenario} = State) ->
+   run(Scenario:n(), 0, Nodes, State).
 
 run(0, K, _Nodes, _State) ->
    K;
-run(N, K, Nodes, #{name :=Name, spec := Spec}=State) ->
+run(N, K, Nodes, #{id := Scenario}=State) ->
    case 
-      supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Name, Spec]) 
+      supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Scenario]) 
    of
       {ok, Pid} ->
          erlang:monitor(process, Pid),
@@ -118,12 +153,12 @@ run(N, K, Nodes, #{name :=Name, spec := Spec}=State) ->
 
 %%
 %% log milestone
-milestone(#{name := Name, spec := Spec}) ->
+milestone(#{id := Scenario}) ->
    Sock = aura:socket(),
-   Peer = typhoon:peer(Name),
-   Urn  = {urn, <<"scenario">>, Name},
+   Peer = typhoon:peer(Scenario),
+   Urn  = {urn, <<"scenario">>, Scenario},
    Ta   = os:timestamp(),
-   Tb   = tempus:add(Ta, pair:x(<<"t">>, Spec) div 1000),
+   Tb   = tempus:add(Ta, Scenario:t() div 1000),
    aura:send(Sock, Peer, {Urn, Ta, tempus:s(Tb)}).
 
 

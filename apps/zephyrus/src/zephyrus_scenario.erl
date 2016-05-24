@@ -33,11 +33,11 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, json}].
+   [{application, erlang}].
 
 %%
 content_accepted(_Req) ->
-   [{application, json}].
+   [{application, erlang}].
 
 %%
 %%
@@ -55,16 +55,16 @@ content_accepted(_Req) ->
 
             Service   ->
                Spec = lens:get(lens:t3(), lens:tl(), lens:hd(), Service),
-               {ok, jsx:encode(Spec)}
+               {ok, Spec}
          end      
    end.
 
 %%
 %%
-'PUT'(_, {Url, _Head, Env}, Msg) ->
+'PUT'(_, {Url, _Head, Env}, Scenario) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
-   case typhoon:define(Id, jsx:decode(Msg), [{w, W}]) of
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
+   case typhoon:define(Id, Scenario, [{w, W}]) of
       {error, unity} ->
          {303, [{'Location', uri:s(Url)}], <<>>};
 

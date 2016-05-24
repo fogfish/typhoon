@@ -502,16 +502,15 @@ var scenario = function(id, ts)
             d3.text("/scenario/" + id + "/spawn", function(data){ })
          }
       );
-      d3.json("/scenario/" + id,
+      d3.json("/scenario/" + id + "/attributes",
          function(json)
          {
             var urn = json
-               .seq
-               .filter(function(x){return x['@type'] == null})
-               .map(function(x){return x['@id']})
+               .urn
                .map(function(x){return unit(x, x, "rps")});
             
-            d3.select("#url").text(json.url);
+            // d3.select("#url").text(json.url);
+            d3.select("#url").text(id);
             ts.series(urn, "rps");
             self.latency("" + urn[0].urn);
             self.analysis();
