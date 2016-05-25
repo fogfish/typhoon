@@ -66,28 +66,30 @@ urn() ->
 %% function and so on. We are using IO-monad to isolate side-effect and protocol stack 
 %% from scenario developers.
 run() -> 
-   [{monad, io} ||
+   [{do, 'Mio'} ||
       % the first action is HTTP GET request
       A <- get_ip(),
 
       % the second and third actions are nested chains of requests
       B <- usecase_a(),
-      C <- usecase_b()
+      C <- usecase_b(),
+      return(C)
    ].
 
 usecase_a() ->
-   [{monad, io} ||
+   [{do, 'Mio'} ||
       % the use-case executes three HTTP GET requests 
       A <- get_ip(),
       B <- get_ip(),
       C <- get_ip(),
 
       % the result of last HTTP GET request is feed to HTTP POST request
-      Y <- post(C)
+      Y <- post(C),
+      return(Y)
    ].
 
 usecase_b() ->
-   [{monad, io} ||
+   [{do, 'Mio'} ||
       % the use-case executes three HTTP GET requests 
       A <- get_ip(),
       B <- get_ip(),
@@ -97,25 +99,26 @@ usecase_b() ->
       Y <- post(C),
 
       % the result of previous HTTP POST request is fed again to HTTP POST request
-      Z <- post(Y)
+      Z <- post(Y),
+      return(Z)
    ].
 
 
 get_ip() ->
-   [{monad, id} ||
-      A0 <- scenario:new("urn:http:httpbin:get"),
-      A1 <- scenario:method('GET', A0),
-      A2 <- scenario:url("http://127.0.0.1:8888/ip", A1),
-      A3 <- scenario:request([origin], A2)
+   [{do, 'Mid'} ||
+      A <- scenario:new("urn:http:httpbin:get"),
+      B <- scenario:method('GET', A),
+      C <- scenario:url("http://127.0.0.1:8888/ip", B),
+      scenario:request([origin], C)
    ].
 
 post(Y) ->
-   [{monad, id} ||
-      A0 <- scenario:new("urn:http:httpbin:post"),
-      A1 <- scenario:method('POST', A0),
-      A2 <- scenario:url("http://127.0.0.1:8888/post", A1),
-      A3 <- scenario:header("Content-Type", "text/plain", A2),
-      A4 <- scenario:payload(Y, A3),
-      A5 <- scenario:request(A4)
+   [{do, 'Mid'} ||
+      A <- scenario:new("urn:http:httpbin:post"),
+      B <- scenario:method('POST', A),
+      C <- scenario:url("http://127.0.0.1:8888/post", B),
+      D <- scenario:header("Content-Type", "text/plain", C),
+      E <- scenario:payload(Y, D),
+      scenario:request(E)
    ].
 
