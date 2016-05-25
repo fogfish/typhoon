@@ -28,13 +28,14 @@ urn() ->
 %% scenario entry-point
 %%
 run() ->
-   [{monad, io} ||
-      A <- request()
+   [{do, 'Mio'} ||
+      A <- request(),
+      return(A)
    ].
 
 request() ->
-   [{monad, id} ||
+   [{do, 'Mid'} ||
       A <- scenario:new("urn:http:example"),
       B <- scenario:url("http://example.com/", A),
-      C <- scenario:request(B)
+      scenario:request(B)
    ].

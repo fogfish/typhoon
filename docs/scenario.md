@@ -37,15 +37,16 @@ urn() ->
 %% scenario entry-point
 %%
 run() ->
-   [{monad, io} ||
-      A <- request()
+   [{do, 'Mio'} ||
+      A <- request(),
+      return(A)
    ].
 
 request() ->
-   [{monad, id} ||
+   [{do, 'Mid'} ||
       A <- scenario:new("urn:http:example"),
       B <- scenario:url("http://example.com/", A),
-      C <- scenario:request(B)
+      scenario:request(B)
    ].
 ```
 
@@ -104,9 +105,10 @@ Actions are composition of functions, each function builds and executes protocol
 Let's us consider following example. The scenario is build around two use-case A and B. A executes IO operation and returns result to B.
 ```erlang
 run() -> 
-   [{monad, io} ||
+   [{do, 'Mio'} ||
       A <- usecase_a(),
-      B <- usecase_b(A)
+      B <- usecase_b(A),
+      return(B)
    ].
 ```
 
@@ -116,13 +118,13 @@ The request is pure functional data structure that defined protocol behavior. We
 
 ```erlang
 http_post_req() ->
-   [{monad, id} ||
+   [{do, 'Mid'} ||
       A0 <- scenario:new("urn:http:xxx:zzz"),
       A1 <- scenario:method('POST', A0),
       A2 <- scenario:url("http://127.0.0.1:8888/post", A1),
       A3 <- scenario:header("Content-Type", "text/plain", A2),
       A4 <- scenario:payload("example", A3),
-      A5 <- scenario:request(A4)
+      scenario:request(A4)
    ].
 ```
 
