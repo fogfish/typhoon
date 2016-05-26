@@ -196,51 +196,103 @@ The function return IO computation corresponding to the defined request.
 The function return IO computation that emulates think-time of terminal.
 
 
+
 ## Scenario utility
 
-### uid
+
+### join/1
+
+Joins any terms to binary string, the term is either in-line scalar value or function call. The produced string is acceptable by any request functions defined in chapter above. 
+
+```erlang
+-spec join([_]) -> binary().
+
+%% E.g.
+<<"abc">> = scenario:join([a, b, c]).
+<<"a12c">> = scenario:join([a, 12, c]).
+<<"http://example.com/abc">> = scenario:join(["http://example.com/", "abc"]).
+<<"a12c">> = scenario:join([a, get_12(), c]).
+```
+
+
+### uid/0
+
+Generate globally unique lexicographically ordered identity (k-order number). The function is usable to generate url pointing to unique object.
 
 ```erlang
 -spec uid() -> binary().
+
+%% E.g.
+<<"002d21a2005b8443c4b4c000">> = scenario:uid().
+<<"http://example.com/002d21a2005b8443db61c000">> = scenario:join(["http://example.com/", scenario:uid()]).
 ```
 
-generate globally unique sequential identity
 
 
-### int
+### uniform/1
+
+Generates uniformly distributed integer or term. The function has overloaded meaning that depends on input data type:
+* Generates integer on interval `1 .. N` if input has type integer.
+* Generates value from set if input is type of list
+The return value is binary string usable for url or payload generation.
 
 ```erlang
--spec int(integer()) -> binary().
+-spec uniform(integer() | [_]) -> binary().
+
+%% E.g.
+<<"5">> = scenario:uniform(10).
+<<"11">> = scenario:uniform([10, 11]).
 ```
 
-generate uniformly distributed integer on interval `1 .. N`
 
 
-### pareto
+### pareto/1
+
+Generate random integer on interval `1 .. N` or term from the set using bounded Pareto distribution with parameter A. The function has overloaded meaning that depends on input data type:
+* Generates integer on interval `1 .. N` if input has type integer.
+* Generates value from set if input is type of list
 
 ```erlang
--spec pareto(float(), integer()) -> binary().
+-spec pareto(float(), integer() | [_]) -> binary().
+
+%% E.g.
+<<"5">> = scenario:pareto(10).
+<<"11">> = scenario:pareto(0.1, [10, 11, 12, 13, 14]).
 ```
 
-generate random integer on interval `1 .. N` using bounded Pareto distribution with parameter A.
 
 
-### ascii
+### ascii/1
+
+Generate random ASCII payload of given length, characters are uniformly distributed.
 
 ```erlang
 -spec ascii(integer()) -> binary().
+
+%% E.g.
+<<"Ik1i8qrSX0">> = scenario:ascii(10).
 ```
 
-generate random ASCII payload of given length, characters are uniformly distributed.
 
 
-### text
+### text/1
+
+Generates random text alike combination of given length.
 
 ```erlang
 -spec text(integer()) -> binary().
+
+<<"bi mbo  g ">> = scenario:text(10).
 ```
 
-generate random text alike combination
 
+### json/1
 
+Convert tuple list into JSON object
+
+```erlang
+-spec json([{atom, _}]) -> binary().
+
+<<"{\"a\":1,\"b\":\"Bwt2x\"}">> = scenario:json([{a, 1}, {b, scenario:ascii(5)}]).
+```
 
