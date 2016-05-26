@@ -6,17 +6,29 @@ Typhoon uses pure functional expressions to define load scenario. These expressi
 * [Erlang expressions](http://erlang.org/doc/reference_manual/expressions.html)
 
 
+## Make Workload Scenario
+
 Each load scenario is valid Erlang module. The [skeleton scenario](../examples/skeleton.erl) is defined and explained below. See also the [advanced example](../examples/httpbin.erl).
 ```erlang
+%% 
+%% The mandatory header for each scenario file. The workload scenario MUST have a `-module(...).`
+%% definition as first line of code. The best practice require module name to be equals to 
+%% name of file. 
+%%
 -module(skeleton).
 -compile({parse_transform, monad}).
 
 %% 
-%% exported functions
+%% 
+%% The workload scenario consists of attributes and actions. The attribute is a function that
+%% returns a scalar value, the action returns a pure IO-monadic computation.  Current version of
+%% Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called 
+%% `run()`. These functions shall be exported `-export([...]).` from the module.
+%%
 -export([t/0, n/0, urn/0, run/0]).
 
 %%
-%% scenario attributes
+%% scenario attributes - pure function returns scalar values.
 %%
 
 %% time to execute workload in milliseconds
@@ -34,26 +46,50 @@ urn() ->
    ].
    
 %%
-%% scenario entry-point
-%%
+%% scenario entry-point, IO-monads 
 run() ->
-   [{do, 'Mio'} ||
-      A <- request(),
-      return(A)
+   [{do, 'Mio'} ||       %% define sequence of requests to execute as IO monadic type
+      _ <- request(),    %% execute HTTP request and discard results
+      A <- request(),    %% execute HTTP request and assign response to variable A
+      return(A)          %% it just takes a value A and puts it in a IO context. 
    ].
 
+%%
+%% The request is an opaque data structure, the developer uses scenario interface to
+%% manipulate this data structure and reflect the required protocol request. 
+%% The dot notation is best approach to configure the request, however it do not exists at
+%% pure functional languages. Thus, identity monad is used to chain configuration actions 
+%% over data structure
 request() ->
    [{do, 'Mid'} ||
-      A <- scenario:new("urn:http:example"),
-      B <- scenario:url("http://example.com/", A),
-      scenario:request(B)
+      A <- scenario:new("urn:http:example"),         %% create new request and set unique id
+      B <- scenario:url("http://example.com/", A),   %% define end-point
+      scenario:request(B)                            %% return request
    ].
 ```
 
-The workload scenario MUST have a `-module(...).` definition as first line of code. The best practice require module name to be equals to name of file. 
+### Validate scenario
 
+The tool implement `lint` end-point. You can validate scenario syntax, compile it and execute against SUT. 
 
-The workload scenario consists of attributes and actions. The attribute is a function that returns a scalar value, the action returns a pure IO-monadic computation. Current version of Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called `run()`. These functions shall be exported `-export([...]).` from the module.
+```
+curl -v -XPOST http://192.168.99.100:8080/lint/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
+```
+
+### Deploy scenario
+
+There is `scenario` end-point to `PUT`, `GET` or `DELETE` workload scenario that is uniquely identified by a key.
+
+```
+curl -v -XPOST http://192.168.99.100:8080/scenario/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
+```
+
+Use web-browser to execute scenario and observe results (http://192.168.99.100:8080/example).
+
 
 
 ## Scenario attributes
@@ -75,7 +111,7 @@ t() ->
 
 `-spec n() -> integer().`
 
-The function returns number of concurrent session to globally spawn in the cluster. The following example defines 100 concurrent session in the cluster.
+The function returns number of concurrent session globally spawned in the cluster. The following example defines 100 concurrent session in the cluster.
 
 ```erlang
 n() ->
@@ -95,7 +131,6 @@ urn() ->
       "urn:http:example"
    ].
 ```
-
 
 
 ## Scenario actions
