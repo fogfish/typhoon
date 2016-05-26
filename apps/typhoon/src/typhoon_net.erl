@@ -66,6 +66,8 @@ wire(_, _, State) ->
 
 %%
 %% 
+telemetry(T, Value, #{aura := Sock, urn := Urn, peer := []}) ->
+   ok;
 telemetry(T, Value, #{aura := Sock, urn := Urn, peer := Peers}) ->
    aura:send(Sock, Peers, {Urn, T, Value}).
 
