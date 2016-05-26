@@ -43,7 +43,7 @@ init([Scenario]) ->
    erlang:send(self(), request),
    {ok, handle, 
       #{
-         scenario  => Scenario:run(),
+         scenario  => Scenario,
          peer      => typhoon:peer(Scenario)
       }
    }.
@@ -60,7 +60,8 @@ free(_Reason, _) ->
 %%
 %%
 handle(request, _, #{scenario := Scenario, peer := Peer} = State) ->
-   _ = Scenario(#{pool => fun netpool/1, peer => Peer}),
+   Fun = Scenario:run(),
+   _   = Fun(#{pool => fun netpool/1, peer => Peer}),
    erlang:send(self(), request),
    {next_state, handle, State};
 
