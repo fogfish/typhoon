@@ -85,6 +85,7 @@ tbd
 
 * specification of [workload scenario](docs/scenario.md)
 * explore [rest interface](docs/restapi.yaml)
+* read [hints and code snippets](docs/howto.md) of workload scenarios 
 
 
 

@@ -6,17 +6,29 @@ Typhoon uses pure functional expressions to define load scenario. These expressi
 * [Erlang expressions](http://erlang.org/doc/reference_manual/expressions.html)
 
 
+## Make Workload Scenario
+
 Each load scenario is valid Erlang module. The [skeleton scenario](../examples/skeleton.erl) is defined and explained below. See also the [advanced example](../examples/httpbin.erl).
 ```erlang
+%% 
+%% The mandatory header for each scenario file. The workload scenario MUST have a `-module(...).`
+%% definition as first line of code. The best practice require module name to be equals to 
+%% name of file. 
+%%
 -module(skeleton).
 -compile({parse_transform, monad}).
 
 %% 
-%% exported functions
+%% 
+%% The workload scenario consists of attributes and actions. The attribute is a function that
+%% returns a scalar value, the action returns a pure IO-monadic computation.  Current version of
+%% Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called 
+%% `run()`. These functions shall be exported `-export([...]).` from the module.
+%%
 -export([t/0, n/0, urn/0, run/0]).
 
 %%
-%% scenario attributes
+%% scenario attributes - pure function returns scalar values.
 %%
 
 %% time to execute workload in milliseconds
@@ -34,26 +46,50 @@ urn() ->
    ].
    
 %%
-%% scenario entry-point
-%%
+%% scenario entry-point, IO-monads 
 run() ->
-   [{do, 'Mio'} ||
-      A <- request(),
-      return(A)
+   [{do, 'Mio'} ||       %% define sequence of requests to execute as IO monadic type
+      _ <- request(),    %% execute HTTP request and discard results
+      A <- request(),    %% execute HTTP request and assign response to variable A
+      return(A)          %% it just takes a value A and puts it in a IO context. 
    ].
 
+%%
+%% The request is an opaque data structure, the developer uses scenario interface to
+%% manipulate this data structure and reflect the required protocol request. 
+%% The dot notation is best approach to configure the request, however it do not exists at
+%% pure functional languages. Thus, identity monad is used to chain configuration actions 
+%% over data structure
 request() ->
    [{do, 'Mid'} ||
-      A <- scenario:new("urn:http:example"),
-      B <- scenario:url("http://example.com/", A),
-      scenario:request(B)
+      A <- scenario:new("urn:http:example"),         %% create new request and set unique id
+      B <- scenario:url("http://example.com/", A),   %% define end-point
+      scenario:request(B)                            %% return request
    ].
 ```
 
-The workload scenario MUST have a `-module(...).` definition as first line of code. The best practice require module name to be equals to name of file. 
+### Validate scenario
 
+The tool implement `lint` end-point. You can validate scenario syntax, compile it and execute against SUT. 
 
-The workload scenario consists of attributes and actions. The attribute is a function that returns a scalar value, the action returns a pure IO-monadic computation. Current version of Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called `run()`. These functions shall be exported `-export([...]).` from the module.
+```
+curl -v -XPOST http://192.168.99.100:8080/lint/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
+```
+
+### Deploy scenario
+
+There is `scenario` end-point to `PUT`, `GET` or `DELETE` workload scenario that is uniquely identified by a key.
+
+```
+curl -v -XPOST http://192.168.99.100:8080/scenario/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
+```
+
+Use web-browser to execute scenario and observe results (http://192.168.99.100:8080/example).
+
 
 
 ## Scenario attributes
@@ -75,7 +111,7 @@ t() ->
 
 `-spec n() -> integer().`
 
-The function returns number of concurrent session to globally spawn in the cluster. The following example defines 100 concurrent session in the cluster.
+The function returns number of concurrent session globally spawned in the cluster. The following example defines 100 concurrent session in the cluster.
 
 ```erlang
 n() ->
@@ -95,7 +131,6 @@ urn() ->
       "urn:http:example"
    ].
 ```
-
 
 
 ## Scenario actions
@@ -196,51 +231,103 @@ The function return IO computation corresponding to the defined request.
 The function return IO computation that emulates think-time of terminal.
 
 
+
 ## Scenario utility
 
-### uid
+
+### join/1
+
+Joins any terms to binary string, the term is either in-line scalar value or function call. The produced string is acceptable by any request functions defined in chapter above. 
+
+```erlang
+-spec join([_]) -> binary().
+
+%% E.g.
+<<"abc">> = scenario:join([a, b, c]).
+<<"a12c">> = scenario:join([a, 12, c]).
+<<"http://example.com/abc">> = scenario:join(["http://example.com/", "abc"]).
+<<"a12c">> = scenario:join([a, get_12(), c]).
+```
+
+
+### uid/0
+
+Generate globally unique lexicographically ordered identity (k-order number). The function is usable to generate url pointing to unique object.
 
 ```erlang
 -spec uid() -> binary().
+
+%% E.g.
+<<"002d21a2005b8443c4b4c000">> = scenario:uid().
+<<"http://example.com/002d21a2005b8443db61c000">> = scenario:join(["http://example.com/", scenario:uid()]).
 ```
 
-generate globally unique sequential identity
 
 
-### int
+### uniform/1
+
+Generates uniformly distributed integer or term. The function has overloaded meaning that depends on input data type:
+* Generates integer on interval `1 .. N` if input has type integer.
+* Generates value from set if input is type of list
+The return value is binary string usable for url or payload generation.
 
 ```erlang
--spec int(integer()) -> binary().
+-spec uniform(integer() | [_]) -> binary().
+
+%% E.g.
+<<"5">> = scenario:uniform(10).
+<<"11">> = scenario:uniform([10, 11]).
 ```
 
-generate uniformly distributed integer on interval `1 .. N`
 
 
-### pareto
+### pareto/1
+
+Generate random integer on interval `1 .. N` or term from the set using bounded Pareto distribution with parameter A. The function has overloaded meaning that depends on input data type:
+* Generates integer on interval `1 .. N` if input has type integer.
+* Generates value from set if input is type of list
 
 ```erlang
--spec pareto(float(), integer()) -> binary().
+-spec pareto(float(), integer() | [_]) -> binary().
+
+%% E.g.
+<<"5">> = scenario:pareto(10).
+<<"11">> = scenario:pareto(0.1, [10, 11, 12, 13, 14]).
 ```
 
-generate random integer on interval `1 .. N` using bounded Pareto distribution with parameter A.
 
 
-### ascii
+### ascii/1
+
+Generate random ASCII payload of given length, characters are uniformly distributed.
 
 ```erlang
 -spec ascii(integer()) -> binary().
+
+%% E.g.
+<<"Ik1i8qrSX0">> = scenario:ascii(10).
 ```
 
-generate random ASCII payload of given length, characters are uniformly distributed.
 
 
-### text
+### text/1
+
+Generates random text alike combination of given length.
 
 ```erlang
 -spec text(integer()) -> binary().
+
+<<"bi mbo  g ">> = scenario:text(10).
 ```
 
-generate random text alike combination
 
+### json/1
 
+Convert tuple list into JSON object
+
+```erlang
+-spec json([{atom, _}]) -> binary().
+
+<<"{\"a\":1,\"b\":\"Bwt2x\"}">> = scenario:json([{a, 1}, {b, scenario:ascii(5)}]).
+```
 

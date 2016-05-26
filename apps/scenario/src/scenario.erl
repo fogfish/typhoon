@@ -33,11 +33,13 @@
 ]).
 %% script utility interface
 -export([
+   join/1,
    uid/0,
-   int/1,
+   uniform/1,
    pareto/2,
    ascii/1,
-   text/1
+   text/1,
+   json/1
 ]).
 
 %%
@@ -167,6 +169,13 @@ thinktime(X, T) ->
 %%%----------------------------------------------------------------------------   
 
 %%
+%% join terms to string
+-spec join([_]) -> binary().
+
+join(Terms) ->
+   scalar:s([scalar:s(X) || X <- Terms]).
+
+%%
 %% generate globally unique sequential (k-order) identity
 -spec uid() -> binary().
 
@@ -174,18 +183,36 @@ uid() ->
    bits:btoh( uid:encode(uid:g()) ).
 
 %%
-%% generate uniformly distributed integer
--spec int(integer()) -> binary().
+%% generate uniformly distributed integer or term
+-spec uniform(integer() | [_]) -> binary().
 
-int(N) ->
-   scalar:s(random:uniform(N)).
+uniform(N)
+ when is_integer(N) ->
+   scalar:s(random:uniform(N));
+uniform(List)
+ when is_list(List) ->
+   scalar:s(
+      lists:nth(
+         random:uniform(length(List)), 
+         List
+      )
+   ).
 
 %%
-%% generate random integer using Pareto distribution
--spec pareto(float(), integer()) -> binary().
+%% generate random integer or term using Pareto distribution
+-spec pareto(float(), integer() | [_]) -> binary().
 
-pareto(A, N) ->
-   scalar:s(pdf:pareto(A, N)).
+pareto(A, N)
+ when is_integer(N) ->
+   scalar:s(pdf:pareto(A, N));
+pareto(A, List)
+ when is_list(List) ->
+   scalar:s(
+      lists:nth(
+         pdf:pareto(A, length(List)),
+         List
+      )
+   ).
 
 %%
 %% generate random ASCII payload of given length, 
@@ -234,6 +261,13 @@ text() ->
       end,
       0
    ).
+
+%%
+%% converts list of tuples into json
+-spec json([{atom, _}]) -> binary().
+
+json(Json) ->
+   jsx:encode(Json).
 
 
 %%%----------------------------------------------------------------------------   

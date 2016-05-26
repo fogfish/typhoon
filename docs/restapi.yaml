@@ -74,13 +74,30 @@ paths:
 
    ##
    ## scenario management
+   /lint/{id} :
+      post:
+         summary: |
+            Validates scenario syntax, compiles it and execute against SUT.
+
+         parameters:
+            -  $ref: '#/parameters/id'
+
+         responses:
+            200:
+               description: |
+                  The workload scenario is correct and it is successfully executed.
+
+            400:
+               description: |
+                  The workload scenario has syntaxt errors or it fails execution.
+
    /scenario/{id} :
 
       ##
       ## /scenario/{id}
       put:
          summary: |
-            Simple write operation to workload scenario that is uniquely identified by a key.
+            Simple write operation of workload scenario that is uniquely identified by a key.
             The json object is written and asynchronoysly replicated to N nodes in the cluster.
             Use w parameters to define the quorum requirements of write request.  
 
