@@ -281,7 +281,7 @@ json(Json) ->
 send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := Url} = Http) ->
    NetIO = Pool(Url),
    {ok, Sock} = pq:lease( NetIO ),
-   Pckt = pipe:call(Sock, {request, Urn, Peer, encode(Http)}),
+   Pckt = pipe:call(Sock, {request, Urn, Peer, encode(Http)}, infinity),
    pq:release(NetIO, Sock),
    Pckt.
 
