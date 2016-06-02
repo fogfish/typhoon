@@ -141,7 +141,7 @@ payload(Pckt, #{id := {urn, <<"http">>, _}, header := List} = Http) ->
 request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
    fun(IO) ->
       Pckt = send(IO, Http),
-      Lens = lens:c([lens:pair(scalar:s(X), []) || X <- Ln]),
+      Lens = lens(Ln),
       lens:get(Lens, jsx:decode(Pckt))
    end.
 
@@ -160,7 +160,27 @@ thinktime(X, T) ->
       X
    end.
 
+%%
+%%
+lens(Ln)
+ when is_list(Ln) ->
+   lens:c([lens(X) || X <- Ln]);
 
+lens(Ln)
+ when is_atom(Ln) ->
+   lens:pair(scalar:s(Ln), []);
+
+lens({uniform}) ->
+   fun(Fun, List) ->
+      Value = lists:nth(random:uniform(length(List)), List),
+      lens:fmap(fun(_) -> List end, Fun(Value))
+   end;
+
+lens({pareto, A}) ->
+   fun(Fun, List) ->
+      Value = lists:nth(pdf:pareto(A, length(List)), List),
+      lens:fmap(fun(_) -> List end, Fun(Value))
+   end.
 
 %%%----------------------------------------------------------------------------   
 %%%
