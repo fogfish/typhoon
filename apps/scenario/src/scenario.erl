@@ -171,13 +171,19 @@ lens(Ln)
    lens:pair(scalar:s(Ln), []);
 
 lens({uniform}) ->
-   fun(Fun, List) ->
+   fun
+   (Fun,   []) ->
+      lens:fmap(fun(_) -> [] end, Fun([]));
+   (Fun, List) ->
       Value = lists:nth(random:uniform(length(List)), List),
       lens:fmap(fun(_) -> List end, Fun(Value))
    end;
 
 lens({pareto, A}) ->
-   fun(Fun, List) ->
+   fun
+   (Fun,   []) ->
+      lens:fmap(fun(_) -> [] end, Fun([]));
+   (Fun, List) ->
       Value = lists:nth(pdf:pareto(A, length(List)), List),
       lens:fmap(fun(_) -> List end, Fun(Value))
    end.
