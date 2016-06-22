@@ -14,57 +14,41 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   
--module(aura_storage).
+%%   client side publisher of stream data (e.g. map operation)  
+-module(aura_stream).
 -behaviour(pipe).
--author('dmitry.kolesnikov@zalando.fi').
 
 -export([
-   start_link/0
-  ,init/1
-  ,free/2
-  ,ioctl/2
-  ,handle/3
+   start_link/2,
+   init/1,
+   free/2,
+   handle/3
 ]).
 
+
 %%%----------------------------------------------------------------------------   
 %%%
-%%% Factory
+%%% factory
 %%%
 %%%----------------------------------------------------------------------------   
 
-start_link() ->
-   pipe:start_link({local, ?MODULE}, ?MODULE, [], []).
+start_link(Ns, Urn) ->
+   pipe:start_link(?MODULE, [Ns, Urn], []).
 
-init([]) ->
-   [Node, _Host] = string:tokens(scalar:c(erlang:node()), "@"),
-   File = filename:join([opts:val(vardir, aura), Node]),
-   {ok, FD} = chronolog:new([
-      persistent,
 
-      %% eleveldb options 
-      {file, File},
-      {write_buffer_size, 16 * 1024 * 1024},
-      {total_leveldb_mem_percent,       40},
-      {eleveldb_threads,                32},
-      {sync, false},
+init([Ns, {urn, _, _} = Urn]) ->
+   ok = pns:register(Ns, Urn, self()),
+   random:seed(os:timestamp()),
+   {ok, handle,
+      #{
+         urn  => Urn,
+         sock => socket(),
+         peer => peer(Urn)
+      }
+   }.
 
-      %% read/write thought cache
-      {cache, [
-         {n,      4},
-         {ttl,    3600},
-         {memory, 100 * 1024 * 1024}
-      ]}
-   ]),
-   {ok, _} = ek:create(aura, opts:val(ring, aura)),
-    ok     = ek:join(aura, scalar:s(erlang:node()), self()),
-   {ok, handle, #{fd => FD}}.
-
-free(_, _) ->
+free(_, _State) ->
    ok.
-
-ioctl(fd, #{fd := FD}) ->
-   FD.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -72,7 +56,12 @@ ioctl(fd, #{fd := FD}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle(_, _, State) ->
+%% @todo ttl timeout 
+
+%%
+%%
+handle({T, X}, _, #{urn := Urn, sock := Sock, peer := Peer} = State) ->
+   pipe:send(Sock, {Peer, {Urn, T, X}}),   
    {next_state, handle, State}.
 
 
@@ -82,3 +71,21 @@ handle(_, _, State) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
+%%
+%% return list of peers (ip addresses) responsible for sensor
+peer(Urn) ->
+   [addr(Vnode) 
+      || Vnode <- ek:successors(aura, uri:s(Urn)), 
+         ek:vnode(type, Vnode) == primary].
+
+%% @todo: it would fail if cluster uses FQDN
+addr(Vnode) ->
+   [_, Host] = binary:split(ek:vnode(node, Vnode), <<$@>>),
+   {ok, IP}  = inet_parse:address(scalar:c(Host)),
+   IP.
+
+%%
+%% allocate egress socket
+socket() ->
+   Socks = [erlang:element(2, X) || X <- supervisor:which_children(aura_egress_sup)],
+   lists:nth( random:uniform(length(Socks)), Socks ).

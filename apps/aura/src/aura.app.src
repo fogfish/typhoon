@@ -22,7 +22,9 @@
       {applications,[
          kernel
         ,stdlib
+        ,pts
         ,chronolog
+        ,ek
         ,kmq
         ,clue
       ]},

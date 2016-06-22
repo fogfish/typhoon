@@ -17,10 +17,11 @@
 
 -export([start/0]).
 -export([
-   socket/0
+   % socket/0
+   ensure/1
   ,send/3
-  ,clue/3
-  ,clue/3
+  % ,clue/3
+  % ,clue/3
   ,fd/0
 ]).
 
@@ -35,6 +36,20 @@ start() ->
    ).
 
 %%
+%% send telemetry for processing
+-spec send(uri:urn(), tempus:t(), number()) -> ok.
+
+send(Urn, T, X) ->
+   pts:send(aura_stream, Urn, {T, X}).
+
+% send(Sock, Peers, {_, _, _} = Telemetry) ->
+%    pipe:send(Sock, {Peers, Telemetry}).
+
+ensure(Urn) ->
+   pts:ensure(aura_stream, Urn).   
+
+
+%%
 %% allocate egress socket
 -spec socket() -> pid().
 
@@ -42,23 +57,17 @@ socket() ->
    Socks = [erlang:element(2, X) || X <- supervisor:which_children(aura_egress_sup)],
    lists:nth( random:uniform(length(Socks)), Socks ).
    
-%%
-%% send telemetry to peers
--spec send(pid(), [_], _) -> ok.
 
-send(Sock, Peers, {_, _, _} = Telemetry) ->
-   pipe:send(Sock, {Peers, Telemetry}).
+% %%
+% %% send KPI-counter to peers
+% -spec clue(pid(), [_], _) -> ok.
 
-%%
-%% send KPI-counter to peers
--spec clue(pid(), [_], _) -> ok.
-
-clue(Sock, Peers, Key) ->
-   clue(Sock, Peers, Key, 1).
+% clue(Sock, Peers, Key) ->
+%    clue(Sock, Peers, Key, 1).
    
-clue(Sock, Peers, Key, Val) ->
-   Urn = {urn, <<"clue">>, scalar:s(Key)},
-   send(Sock, Peers, {Urn, os:timestamp(), Val}).
+% clue(Sock, Peers, Key, Val) ->
+%    Urn = {urn, <<"clue">>, scalar:s(Key)},
+%    send(Sock, Peers, {Urn, os:timestamp(), Val}).
 
 
 %%

@@ -29,35 +29,6 @@ encode({urn, _, _} = Urn, T, X)
  when is_integer(X) ->
    <<"auraq:", (uri:s(Urn))/binary, $|, (scalar:s(tempus:u(T)))/binary, $,, (scalar:s(X))/binary>>;
 
-encode({urn, _, _} = Urn, T, {tcp, connect, X}) ->
-   encode(uri:schema(<<"tcp">>, Urn),  T, X);
-
-encode({urn, _, _} = Urn, T, {tcp, packet, X}) ->
-   encode(uri:schema(<<"pack">>, Urn),  T, X);
-
-encode({urn, _, _} = Urn, T, {ssl, handshake, X}) ->
-   encode(uri:schema(<<"ssl">>, Urn),  T, X);
-
-encode({urn, _, _} = Urn, T, {ssl, packet, X}) ->
-   encode(uri:schema(<<"pack">>, Urn),  T, X);
-
-encode({urn, _, _} = Urn, T, {ssl, ca, X}) ->
-   % size of certificate authority
-   encode(uri:schema(<<"ca">>, Urn), T, X);
-
-encode({urn, _, _} = Urn, T, {ssl, peer, X}) ->
-   % size of peer certificate
-   encode(uri:schema(<<"peer">>, Urn), T, X);
-
-encode({urn, _, _} = Urn, T, {http, ttfb, X}) ->
-   encode(uri:schema(<<"ttfb">>, Urn), T, X);
-
-encode({urn, _, _} = Urn, T, {http, ttmr, X}) ->
-   encode(uri:schema(<<"ttmr">>, Urn), T, X);
-
-encode({urn, _, _} = Urn, T, {http, status, X}) ->
-   encode(uri:schema(<<"http">>, Urn), T, X);
-
 encode({urn, _, _} = Urn, T, {_, _, _} = X) ->
    encode(Urn, T, tempus:u(X)).
 
