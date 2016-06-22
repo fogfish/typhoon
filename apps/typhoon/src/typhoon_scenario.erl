@@ -92,7 +92,7 @@ handle(run, Tx, #{id := Id, code := Code, n := N0}=State) ->
    % deploy compiled scenario code to each node
    Nodes = erlang:nodes(),
    lists:foreach(fun(Node) -> drift(Node, Id, Code) end, Nodes),
-   % milestone(State),
+   milestone(State),
    % run scenario
    N1 = run(q:new([erlang:node() | Nodes]), State),
    pipe:ack(Tx, {ok, N1}),
@@ -155,13 +155,8 @@ run(N, K, Nodes, #{id := Scenario}=State) ->
 
 %%
 %% log milestone
-% milestone(#{id := Scenario}) ->
-%    Sock = aura:socket(),
-%    Peer = typhoon:peer(Scenario),
-%    Urn  = {urn, <<"scenario">>, Scenario},
-%    Ta   = os:timestamp(),
-%    Tb   = tempus:add(Ta, Scenario:t() div 1000).
-%    aura:send(Sock, Peer, {Urn, Ta, tempus:s(Tb)}).
-
+milestone(#{id := Scenario}) ->
+   Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   aura:send(Urn, os:timestamp(), Scenario:t()).
 
 

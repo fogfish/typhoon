@@ -134,17 +134,20 @@ header
   /*line-height: 30px;*/
   margin: 0 6px;
   position: absolute;
-  text-shadow: 0 1px 0 rgba(255,255,255,.5);
+  text-shadow: 0 1px 4px rgba(255,255,255,.9);
   white-space: nowrap;
 }
 
 .horizon .title 
 {
+   top: 0;
    left: 0;
    font-size: 10px;
+   font-weight: bold;
    margin: 0 0 0 0;
    width: 80px;
 }
+
 
 .horizon .value 
 {
@@ -179,6 +182,16 @@ h2
    height: 2px;
    -webkit-box-shadow: none;
    box-shadow: none;
+}
+
+.chronolog .horizon:last-child
+{
+   border-bottom: none;
+}
+
+.container .chronolog:last-child .horizon:last-child
+{
+   border-bottom: 1px solid black;
 }
 
 </style>
@@ -233,22 +246,22 @@ h2
 <div id="case" class="chronolog"></div>
 
 <h1 id="urn"></h1>
-<h2> Request Per Second</h2>
+<!-- <h2> Request Per Second</h2> -->
 <div id="request" class="chronolog"></div>
 
-<h2> TCP/IP Latency (μs)</h2>
+<!-- <h2> TCP/IP Latency (μs)</h2> -->
 <div id="tcp" class="chronolog"></div>
 
-<h2> SSL Latency (μs)</h2>
+<!-- <h2> SSL Latency (μs)</h2> -->
 <div id="ssl" class="chronolog"></div>
 
-<h2> Time To First Byte (μs)</h2>
+<!-- <h2> Time To First Byte (μs)</h2> -->
 <div id="ttfb" class="chronolog"></div>
 
-<h2> Time To Meaningful Response (μs)</h2>
+<!-- <h2> Time To Meaningful Response (μs)</h2> -->
 <div id="ttmr" class="chronolog"></div>
 
-<h2> Packet Per Second</h2>
+<!-- <h2> Packet Per Second</h2> -->
 <div id="pack" class="chronolog"></div>
 
 </div>
@@ -296,7 +309,7 @@ var chronolog = function(context, host) {
 
    source.series = function(title, urn, kpi) {
       return context.metric(function(start, stop, step, callback) {
-         d3.json(host + "/scenario/" + ns + "/series/" +  urn + "/" + kpi
+         d3.json(host + "/scenario/" + ns + "/cubism/" + urn 
             + "/" + start.getTime() / 1000
             + "/" + stop.getTime() / 1000 
             + "?chronon=" + step / 1000, 
@@ -351,7 +364,8 @@ var timeseries = function(el, width)
       var data = list.map(
          function(x)
          {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+            var urn = "urn:c:2xx:" + x.urn.substring(4)
+            return chronolog(context).series("" + x.title, urn, x.kpi)
          }
       );
 
@@ -555,36 +569,35 @@ var scenario = function(id, ts)
    {
       ts.primary('#request', 
          [
-            unit("rps", urn, "rps")
+            unit("http 2xx", "urn:c:2xx:" + urn.substring(4), "rps")
          ]
       );
       ts.secondary('#request',
          [
-            unit("http 2xx", urn, "200"),
-            unit("http 3xx", urn, "300"),
-            unit("http 4xx", urn, "400"),
-            unit("http 5xx", urn, "500")
+            unit("http 3xx", "urn:c:3xx:" + urn.substring(4), "rps"),
+            unit("http 4xx", "urn:c:4xx:" + urn.substring(4), "rps"),
+            unit("http 5xx", "urn:c:5xx:" + urn.substring(4), "rps")
          ]
       );
    }
    
-   //
+   // 
    // visualize tcp latency
    self.tcp = function(urn)
    {
       ts.primary('#tcp', 
          [
-            unit("mean", urn.replace("urn:http", "urn:tcp"), "mean")
+            unit("tcp (μs)", "urn:g:tcp:" + urn.substring(4), "rps")
          ]
       );
-      ts.secondary('#tcp', 
-         [
-            unit("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:tcp"), "max")
-         ]
-      );
+      // ts.secondary('#tcp', 
+      //    [
+      //       unit("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
+      //       unit("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
+      //       unit("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
+      //       unit("max", urn.replace("urn:http", "urn:tcp"), "max")
+      //    ]
+      // );
    }
 
    //
@@ -593,17 +606,17 @@ var scenario = function(id, ts)
    {
       ts.primary('#ssl',
          [
-            unit("mean", urn.replace("urn:http", "urn:ssl"), "mean")
+            unit("ssl (μs)", "urn:g:ssl:" + urn.substring(4), "rps")
          ]
       );
-      ts.secondary('#ssl',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ssl"), "max")
-         ]
-      );
+      // ts.secondary('#ssl',
+      //    [
+      //       unit("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
+      //       unit("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
+      //       unit("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
+      //       unit("max", urn.replace("urn:http", "urn:ssl"), "max")
+      //    ]
+      // );
    }
 
    //
@@ -612,17 +625,17 @@ var scenario = function(id, ts)
    {
       ts.primary('#ttfb',
          [
-            unit("mean", urn.replace("urn:http", "urn:ttfb"), "mean")
+            unit("ttfb (μs)", "urn:g:ttfb:" + urn.substring(4), "rps")
          ]
       );
-      ts.secondary('#ttfb',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ttfb"), "max")
-         ]
-      );
+      // ts.secondary('#ttfb',
+      //    [
+      //       unit("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
+      //       unit("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
+      //       unit("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
+      //       unit("max", urn.replace("urn:http", "urn:ttfb"), "max")
+      //    ]
+      // );
    }
 
    //
@@ -631,17 +644,17 @@ var scenario = function(id, ts)
    {
       ts.primary('#ttmr',
          [
-            unit("mean", urn.replace("urn:http", "urn:ttmr"), "mean")
+            unit("ttmr (μs)", "urn:g:ttmr:" + urn.substring(4), "rps")
          ]
       );
-      ts.secondary('#ttmr',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ttmr"), "max")
-         ]
-      );
+      // ts.secondary('#ttmr',
+      //    [
+      //       unit("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
+      //       unit("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
+      //       unit("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
+      //       unit("max", urn.replace("urn:http", "urn:ttmr"), "max")
+      //    ]
+      // );
    }
 
    //
@@ -650,18 +663,18 @@ var scenario = function(id, ts)
    {
       ts.primary('#pack',
          [
-            unit("pps",  urn.replace("urn:http", "urn:pack"), "rps"),
-            unit("size", urn.replace("urn:http", "urn:pack"), "mean")
+            unit("packet / sec",  "urn:c:pack:" + urn.substring(4), "rps"),
+            unit("packet (byte)", "urn:g:pack:" + urn.substring(4), "rps")
          ]
       );
-      ts.secondary('#pack',
-         [
-            unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:pack"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:pack"), "max")
-         ]
-      );
+      // ts.secondary('#pack',
+      //    [
+      //       unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
+      //       unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
+      //       unit("99%", urn.replace("urn:http", "urn:pack"), "p99"),
+      //       unit("max", urn.replace("urn:http", "urn:pack"), "max")
+      //    ]
+      // );
    }
 
    return self;
