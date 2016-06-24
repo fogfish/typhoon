@@ -42,6 +42,7 @@ wire({http, _, {Code, _Text, _Head, _Env}}, _, State) ->
    {next_state, wire, State#{recv => q:new()}};
 
 wire({http, _, eof}, _, #{recv := Recv, pipe := Pipe, sock := Sock}) ->
+   %% @todo: payload size
    pipe:a(Pipe, erlang:iolist_to_binary(q:list(Recv))),
    {next_state, idle, #{sock => Sock}};
 

@@ -56,13 +56,12 @@ init([Vnode, Id, Spec]) ->
 free(_, #{id := Id}) ->
    file:delete(file(Id)).
 
-ioctl(n, #{n := N}) ->
-   N;
-
-ioctl(attr, #{id := Scenario}) ->
+ioctl(attr, #{id := Scenario, n := Session}) ->
    [
+      {id,  Scenario},
       {t,   Scenario:t()},
       {n,   Scenario:n()},
+      {session,  Session},
       {urn, [scalar:s(X) || X <- Scenario:urn()]}
    ].
 

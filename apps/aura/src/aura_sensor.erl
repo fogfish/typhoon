@@ -60,8 +60,14 @@ free(_, _State) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
+%% @todo: do not accept OLD measurement
+
 %%
 %%
+dirty({get, _}, Pipe, #{x := X} = State) ->
+   pipe:ack(Pipe, {ok, X}),
+   {next_state, dirty, State};
+
 dirty({_, _} = X, Pipe, State) ->
    pipe:ack(Pipe, ok),
    {next_state, fresh, update(X, State)};
@@ -75,6 +81,10 @@ dirty(tts, _Pipe, #{tts := TTS} = State) ->
 
 %%
 %%
+fresh({get, _}, Pipe, #{x := X} = State) ->
+   pipe:ack(Pipe, {ok, X}),
+   {next_state, fresh, State};
+
 fresh({_, _} = X, Pipe, State) ->
    pipe:ack(Pipe, ok),
    {next_state, fresh, update(X, State)};

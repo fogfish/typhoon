@@ -18,8 +18,14 @@
 -->
 <meta charset="utf-8">
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://talkslab.github.io/metro-bootstrap/dist/css/metro-bootstrap.min.css" rel="stylesheet">
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://square.github.com/cubism/cubism.v1.js?1.0.0"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script src="/js/bullet.js"></script>
+
+<script src="http://square.github.com/cubism/cubism.v1.js"></script>
+<script src="https://cdn.rawgit.com/fogfish/monad.js/master/src/monad.js"></script>
 
 <!--
 %%
@@ -29,14 +35,14 @@
 <style>
 body 
 {
-   font-family: "Helvetica Neue", Helvetica, sans-serif;
    padding-top: 80px;
    padding-bottom: 20px;
+   /*background: #272822;*/
 }
 
 .container
 {
-   width: 800px;
+   width: 960px;
    padding: 0px;
    position: relative;
 }
@@ -143,9 +149,8 @@ header
    top: 0;
    left: 0;
    font-size: 10px;
-   font-weight: bold;
    margin: 0 0 0 0;
-   width: 80px;
+   width: 120px;
 }
 
 
@@ -163,19 +168,6 @@ header
    z-index: 2;
 }
 
-h1
-{
-   font-size: 12px;
-   font-weight: bold;
-}
-
-h2
-{
-   font-size: 10px;
-   font-weight: bold;
-   margin-top: 20px;
-}
-
 .progress
 {
    margin: 0px;
@@ -184,26 +176,81 @@ h2
    box-shadow: none;
 }
 
-.chronolog .horizon:last-child
+
+.chart {
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+  }
+
+  .axis path, .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+.bar 
 {
-   border-bottom: none;
+   fill: #299DE1;
+   stroke-width: 1px;
+   stroke: white
 }
 
-.container .chronolog:last-child .horizon:last-child
+.bar:hover
 {
-   border-bottom: 1px solid black;
+   fill: #FF5722;
 }
+
+.d3-tip 
+{
+  line-height: 1;
+  font-size: 10px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after 
+{
+  display: inline;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after 
+{
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+}
+
+
+.bullet { font: 10px sans-serif; }
+.bullet .marker { stroke: #000; stroke-width: 2px; }
+.bullet .tick line { stroke: #666; stroke-width: .5px; }
+.bullet .range.s0 { fill: #eee; }
+.bullet .range.s1 { fill: #ddd; }
+.bullet .range.s2 { fill: #ccc; }
+.bullet .measure.s0 { fill: lightsteelblue; }
+.bullet .measure.s1 { fill: steelblue; }
+.bullet .measure.s2 { fill: #3B7CA3; }
+.bullet .measure.s3 { fill: #299DE1; }
+.bullet .measure.s4 { fill: #FF7C53; }
+.bullet .title { font-size: 14px; font-weight: bold; }
+.bullet .subtitle { fill: #999; }
 
 </style>
 
 
 <body>
 
-<!--
-%%
-%% View
-%%
--->
+
 <nav class="navbar navbar-default navbar-fixed-top">
    <div class="container-fluid">
       <div class="navbar-header">
@@ -211,27 +258,12 @@ h2
       </div>
       <ul class="nav navbar-nav">
          <li><p id="scenario-id" class="navbar-text"></p></li>
-         <li>
-            <button id="scenario-run" type="button" class="btn btn-primary navbar-btn">Run</button>
-         </li>
-         <li>
-            <p class="navbar-text">RPS <span id="scenario-rps" class="badge">0</span></p>
-         </li>
-         <li>
-            <p class="navbar-text">Processes <span id="scenario-processes" class="badge">0</span></p>
-         </li>
-         <li>
-            <p class="navbar-text">Nodes <span id="cluster-peer" class="badge">0</span></p>
-         </li>
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-         <li><a id="scenario-analysis" href="#"><span class="glyphicon glyphicon-stats"></span> Latest Analysis</a></li>
-         <li><a href="https://github.com/zalando/typhoon/blob/master/docs/howto.md"><span class="glyphicon glyphicon-link"></span> Tips and Hints</a></li>
          <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
       </ul>
    </div>
-
    <!-- progress bar to visualize server delay -->
    <div class="progress">
       <div class="progress-bar" style="width: 0%;">
@@ -240,31 +272,135 @@ h2
 </nav>
 
 
+
+<div class="jumbotron">
+   <div class="container">
+      <h1>Hello, world!</h1>
+      <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+      <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
+   </div>
+</div>
+
+
+
 <div class="container">
+   <div class="row">
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">Capacity</h2>
+            <h1 class="tile-text"><span id="tile-capacity"></span></h1>
+         </div>
+      </div>
 
-<h1><span id="url"></span> <small>click on following graph to expand details.</small></h1>
-<div id="case" class="chronolog"></div>
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">Availability</h2>
+            <h1 class="tile-text"><span id="tile-availability"></span></h1>
+         </div>
+      </div>
 
-<h1 id="urn"></h1>
-<!-- <h2> Request Per Second</h2> -->
-<div id="request" class="chronolog"></div>
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">Latency</h2>
+            <h1 class="tile-text"><span id="tile-latency"></span></h1>
+         </div>
+      </div>
 
-<!-- <h2> TCP/IP Latency (μs)</h2> -->
-<div id="tcp" class="chronolog"></div>
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">Session</h2>
+            <h1 class="tile-text"><span id="tile-session"></span></h1>
+         </div>
+      </div>
 
-<!-- <h2> SSL Latency (μs)</h2> -->
-<div id="ssl" class="chronolog"></div>
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">Nodes</h2>
+            <h1 class="tile-text"><span id="tile-cluster"></span></h1>
+         </div>
+      </div>
 
-<!-- <h2> Time To First Byte (μs)</h2> -->
-<div id="ttfb" class="chronolog"></div>
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-teal">
+            <h2 class="tile-text">History</h2>
+            <h1 class="tile-text"><span id="tile-history"></span></h1>
+         </div>
+      </div>
+   </div>
+</div>
 
-<!-- <h2> Time To Meaningful Response (μs)</h2> -->
-<div id="ttmr" class="chronolog"></div>
+<div class="container cubism">
+   <div id="series" class="container">
+   </div>
+</div>
 
-<!-- <h2> Packet Per Second</h2> -->
-<div id="pack" class="chronolog"></div>
+
+
+<div class="container">
+   <h1>History</h1>
+   <div id="history"></div> 
+
+   <h2>Capacity (RPS)</h2>
+   <div id="capacity"></div>
+
+   <h2>Time To First Byte (ms)</h2>
+   <div id="latency-ttfb"></div>
+
+   <h2>Time To Response (ms)</h2>
+   <div id="latency-ttmr"></div>
+
+   <h2>Network Round Trip (ms)</h2>
+   <div id="latency-tcp"></div>
+
+   <h2>SSL Handshake (ms)</h2>
+   <div id="latency-ssl"></div>
+
+   <h2>Packet Per Second (ms)</h2>
+   <div id="pps"></div>
+
+   <h2>Packet Size (byte)</h2>
+   <div id="packet"></div>
+</div>
+
+
+
+
+
+
+
+
+
+
+    <div class="container">
+      <h1>Xxx</h1>
+      <!-- Example row of columns -->
+      <div class="row">
+        <div class="col-md-4">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+        </div>
+        <div class="col-md-4">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+       </div>
+        <div class="col-md-4">
+          <h2>Heading</h2>
+          <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+        </div>
+      </div>
+
+
+      <hr>
+
+      <footer>
+        <p>&copy; 2015 Company, Inc.</p>
+      </footer>
 
 </div>
+
 
 <!--
 %%
@@ -272,9 +408,551 @@ h2
 %%
 -->
 <script type="text/javascript">
+var context = null;
+var model = {
+   scenario: {id: window.location.pathname.substring(1)},
+   runtime: {},
+   cluster: {peer: []},
+   archive: {
+      capacity: d3.map(),
+      ttfb: d3.map(),
+      ttmr: d3.map(),
+      tcp: d3.map(),
+      ssl: d3.map(),
+      pps: d3.map(),
+      pack: d3.map()
+   }
+};
+//--------------------------------------------------------------------------
+//
+// action
+//
+//--------------------------------------------------------------------------
+var actionIO = (function()
+{
+   var self = {};
+
+   //
+   self.scenario = function(id, accept)
+   {
+   }.curry();
+
+   //
+   self.attributes = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/attributes',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   //
+   self.cluster = function(accept)
+   {
+      d3.json('/health/peer',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   //
+   self.series = function(id, urn, title) 
+   {
+      return context.metric(function(start, stop, step, callback) {
+         d3.json("/scenario/" + id + "/cubism/" + urn 
+            + "/" + start.getTime() / 1000
+            + "/" + stop.getTime() / 1000 
+            + "?chronon=" + step / 1000, 
+            function(data) {
+               if (!data) return callback(new Error("unable to load data"));
+               callback(null, data.map(function(x){return x[1]}))
+            });
+         }, title);
+   };
+
+   //
+   self.history = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/history',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   //
+   self.archive = function(id, urn, from, to, accept)
+   {
+      d3.json('/scenario/' + id + '/series/' + urn + '/' + from + '/' + to,
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   return self;   
+})();
+
+var actionUI = (function()
+{
+   var self = {};
+
+   //
+   self.after = function(t, data, accept)
+   {
+      d3.timer(
+         function()
+         {
+            accept(data); 
+            return true;
+         }, 
+         t
+      );
+   }.curry();
+
+   return self;   
+})();
+
+//--------------------------------------------------------------------------
+//
+// presenter
+//
+//--------------------------------------------------------------------------
+var present = (function()
+{
+   var self = {};
+
+   //
+   self.attributes = function(model, json)
+   {
+      model.scenario.t = json.t
+      model.scenario.n = json.n
+      model.scenario.urn = json.urn
+      model.runtime.session  = json.session
+      model.runtime.capacity = json.capacity
+      model.runtime.latency  = (json.latency / 1000).toFixed(1)
+      model.runtime.availability = json.availability
+      return model
+   }.curry();
+
+   //
+   self.sensor = function(model)
+   {
+      model.scenario.sensor = model.scenario.urn.map(
+         function(urn)
+         {
+            var sid = model.scenario.id
+            return {
+               id: urn,
+               series: [
+                  {id: sid, urn: "urn:c:2xx:" + urn.substring(4), title: 'http 2xx'}
+                 ,{id: sid, urn: "urn:c:3xx:" + urn.substring(4), title: 'http 3xx'}
+                 ,{id: sid, urn: "urn:c:4xx:" + urn.substring(4), title: 'http 4xx'}
+                 ,{id: sid, urn: "urn:c:5xx:" + urn.substring(4), title: 'http 5xx'}
+                 ,{id: sid, urn: "urn:g:tcp:" + urn.substring(4), title: 'tcp (μs)'}
+                 ,{id: sid, urn: "urn:g:ssl:" + urn.substring(4), title: 'ssl (μs)'}
+                 ,{id: sid, urn: "urn:g:ttfb:" + urn.substring(4), title: 'ttfb (μs)'}
+                 ,{id: sid, urn: "urn:g:ttmr:" + urn.substring(4), title: 'ttmr (μs)'}
+                 ,{id: sid, urn: "urn:c:pack:" + urn.substring(4), title: 'packet / sec'}
+                 ,{id: sid, urn: "urn:g:pack:" + urn.substring(4), title: 'packet (byte)'}
+               ]
+            }
+         }
+      )
+   }.curry();
+
+   //
+   self.cluster = function(model, json)
+   {
+      model.cluster.peer = json
+      return model
+   }.curry();
+
+   //
+   self.history = function(model, json)
+   {
+      model.scenario.history = json
+      return model
+   }.curry();
+
+   //
+   self.archive = function(model, type, urn, json)
+   {
+      var list = json.map(function(x){return x[1]}).sort(d3.ascending)
+      var stat = {
+         min: d3.min(list),
+         mean: d3.mean(list),
+         q50: d3.quantile(list, 0.50),
+         q75: d3.quantile(list, 0.75),
+         q80: d3.quantile(list, 0.80),
+         q90: d3.quantile(list, 0.90),
+         q95: d3.quantile(list, 0.95),
+         q99: d3.quantile(list, 0.99),
+         max: d3.max(list)
+      }
+
+      model.archive[type].set(urn, stat)
+      return model
+   }.curry();
+
+   return self;   
+})();
+
+//--------------------------------------------------------------------------
+//
+// state
+//
+//--------------------------------------------------------------------------
+var state = (function()
+{
+   var self   = {};
+   var width  = 960;
+   var height = 30;
+
+   // create cubism context
+   context = cubism.context()
+      .step(1 * 1000)          // 1 second per value
+      .size(width)
+      .serverDelay(10 * 1000)  // time to collect and process metrics by server
+      .clientDelay( 5 * 1000)
+      .start();
+   
+   d3.select('.cubism').append("div")
+      .attr("class", "rule")
+      .call(context.rule());
+
+   context.on("focus", 
+      function(i) 
+      {
+         d3.selectAll(".value")
+            .style("right", i == null ? null : context.size() - i + "px");
+      }
+   );
+
+   //
+   self.tiles = function(model)
+   {
+      d3.select("#tile-session").text(model.runtime.session)
+      d3.select("#tile-capacity").text(model.runtime.capacity)
+      d3.select("#tile-latency").text(model.runtime.latency)
+      d3.select("#tile-availability").text(model.runtime.availability)
+      d3.select("#tile-cluster").text(model.cluster.peer.length)
+      d3.select("#tile-history").text(model.scenario.history.length)
+      return model
+   }.curry();
+   
+   //
+   var vmHorizon = function(ui, list)
+   {
+      var data = list.map(
+         function(x)
+         {
+            return actionIO.series(x.id, x.urn, x.title)
+         }
+      );
+
+      d3.select(ui).selectAll(".horizon")
+         .data(data, function(d){return d.toString()})
+         .enter()
+            .insert("div", ".bottom")
+               .attr("class", "horizon")
+               .call(
+                  context.horizon()
+                     .height( height )
+                     .format(d3.format("+,.2d"))
+               );
+   }
+
+   //
+   self.series = function(model)
+   {
+      d3.select("#series").selectAll('div')
+         .data(model.scenario.urn)
+         .enter()
+            .append('div')
+            .attr('id', function(d){return d.split(':').join('_')})
+            .classed('chronolog', true)
+      
+      model.scenario.sensor.map(
+         function(x)
+         {
+            var ui = '#' + x.id.split(':').join('_')
+            d3.select(ui).selectAll("*").remove();
+            d3.select(ui).insert('h1').text(x.id)
+
+            d3.select(ui).selectAll(".axis")
+               .data(["top", "bottom"])
+               .enter().append("div")
+               .attr("class", function(d) {return d + " axis"; })
+               .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+
+            vmHorizon(ui, x.series)
+         }
+      )
+
+      return model;
+   }.curry();
+
+   //
+   self.history = function(model)
+   {
+      var margin = {top: 40, right: 40, bottom: 40, left:40}
+      var height = 150;
+
+      var data = model.scenario.history.map(
+         function(d) 
+         {
+            return {date: new Date(d[0] * 1000), t: ~~(d[1] / 1000)}
+         }
+      ) 
+
+      var ta = d3.time.hour.offset(data[0].date, -1)
+      var tb = d3.time.hour.offset(data[data.length - 1].date, 1)
+      var x  = d3.time.scale()
+         .domain([ta, tb])
+         .rangeRound([0, width - margin.left - margin.right]);
+
+      var y = d3.scale.linear()
+         .domain([0, d3.max(data, function(d) { return d.t; })])
+         .range([height - margin.top - margin.bottom, 0]);
+
+      var xAxis = d3.svg.axis()
+         .scale(x)
+         .orient('bottom')
+         .ticks(12)
+         .tickFormat(d3.time.format('%a %d %H:%M'))
+         .tickSize(4)
+         .tickPadding(4);
+
+      var tip = d3.tip()
+         .attr('class', 'd3-tip')
+         .offset([-10, 0])
+         .html(function(d) {return d.date;})
+
+      var svg = d3.select('#history').append('svg')
+         .attr('class', 'chart')
+         .attr('width', width)
+         .attr('height', height)
+         .append('g')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+      svg.call(tip)
+
+      svg.selectAll('.chart')
+         .data(data)
+         .enter().append('rect')
+            .attr('class', 'bar')
+            .attr('x', function(d) { return x(new Date(d.date)); })
+            .attr('y', function(d) { return y(d.t) })
+            .attr('width', 5.5)
+            .attr('height', function(d) {return height - margin.top - margin.bottom - y(d.t) })
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+            .on('click', chain.history);
+
+      svg.append('g')
+         .attr('class', 'x axis')
+         .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
+         .call(xAxis);
+
+      return model;
+   }.curry();
+
+   //
+   self.bullet = function(ui, type, model)
+   {
+      console.log(model)
+      var data = model.scenario.urn.map(
+         function(urn)
+         {
+            var stat = model.archive[type].get(urn)
+            return {
+               title: urn,
+               subtitle: 'rps',
+               ranges: [stat.min, stat.mean, stat.max],
+               measures: [stat.q75, stat.q80, stat.q90, stat.q95, stat.q99],
+               markers: [stat.q50]
+            }
+         }
+      )
+
+      var margin = {top: 5, right: 40, bottom: 20, left: 120};
+      var width  = 800;
+      var height = 50 - margin.top - margin.bottom;
+
+      var chart = d3.bullet()
+         .width(width)
+         .height(height);
+      
+      d3.select(ui).selectAll('*').remove();
+      var svg = d3.select(ui).selectAll("svg")
+         .data(data)
+         .enter().append("svg")
+            .attr("class", "bullet")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+               .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+               .call(chart);
+
+      var title = svg.append("g")
+         .style("text-anchor", "end")
+         .attr("transform", "translate(-6," + height / 2 + ")");
+
+      title.append("text")
+         .attr("class", "title")
+         .text(function(d) { return d.title; });
+
+      title.append("text")
+         .attr("class", "subtitle")
+         .attr("dy", "1em")
+         .text(function(d) { return d.subtitle; });
+
+      return model;
+   }.curry();
+
+   return self;   
+})();
 
 
-var height  = 30;
+
+//--------------------------------------------------------------------------
+//
+// chain
+//
+//--------------------------------------------------------------------------
+var chain = (function()
+{
+   var self = {};
+
+   //
+   self.bootstrap = function()
+   {
+      monad.do([
+         monad.IO(actionIO.cluster),
+         present.cluster(model),
+         function(_)
+         {
+            return monad.IO(actionIO.attributes(model.scenario.id))
+         },
+         present.attributes(model),
+         present.sensor(),
+         function(_)
+         {
+            return monad.IO(actionIO.history(model.scenario.id))
+         },         
+         present.history(model),
+         state.tiles(),
+         state.series(),
+         state.history()
+      ])
+      self.poll_attributes()
+      self.poll_cluster()
+   }
+
+   //
+   self.poll_attributes = function()
+   {
+      monad.do([
+         monad.UI(actionUI.after(5000, 'tick')),
+         function(_) 
+         {
+            return monad.IO(actionIO.attributes(model.scenario.id))
+         },
+         present.attributes(model),
+         state.tiles(),
+         chain.poll_attributes
+      ])
+   }
+   
+   //
+   self.poll_cluster = function()
+   {
+      monad.do([
+         monad.UI(actionUI.after(60000, 'tick')),
+         function(_) 
+         {
+            return monad.IO(actionIO.cluster)
+         },
+         present.cluster(model),
+         state.tiles(),
+         chain.poll_cluster
+      ])
+   }
+
+   //
+   self.history = function(x)
+   {
+      var ta = x.date.getTime() / 1000
+      var tb = ta + x.t
+
+      self.archive('#capacity', 'capacity', "urn:c:2xx:", ta, tb)
+      self.archive('#latency-ttfb', 'ttfb', "urn:g:ttfb:", ta, tb)
+      self.archive('#latency-ttmr', 'ttmr', "urn:g:ttmr:", ta, tb)
+      self.archive('#latency-tcp', 'tcp', "urn:g:tcp:", ta, tb)
+      self.archive('#latency-ssl', 'ssl', "urn:g:ssl:", ta, tb)
+
+      self.archive('#pps', 'pps', "urn:c:pack:", ta, tb)
+      self.archive('#packet', 'pack', "urn:g:pack:", ta, tb)
+   }
+
+   self.archive = function(ui, type, prefix, ta, tb)
+   {
+
+      var fn = model.scenario.urn.map(
+         function(urn)
+         {
+            var id = prefix + urn.substring(4)
+            return [
+               monad.IO(actionIO.archive(model.scenario.id, id, ta, tb)),
+               present.archive(model, type, urn)
+            ]
+         }
+      )
+      var head = fn.shift()
+      var list = fn.reduce(
+         function(acc, x)
+         {
+            return acc.concat([function(_){return x[0]}, x[1]])
+         },
+         head
+      )
+      monad.do(
+         list.concat([state.bullet(ui, type)])
+      )
+   }
+
+   return self;   
+})();
+
+
+chain.bootstrap();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var pcolors = [
    "#ffa500",
    "#d88c00",
@@ -298,169 +976,8 @@ var scolors = [
    "#9d6600"
 ];
 
-//--------------------------------------------------------------------------
-//
-// chronolog rest access
-//
-//--------------------------------------------------------------------------
-var chronolog = function(context, host) {
-   if (!host) host = "";
-   var source = {};
-
-   source.series = function(title, urn, kpi) {
-      return context.metric(function(start, stop, step, callback) {
-         d3.json(host + "/scenario/" + ns + "/cubism/" + urn 
-            + "/" + start.getTime() / 1000
-            + "/" + stop.getTime() / 1000 
-            + "?chronon=" + step / 1000, 
-            function(data) {
-               if (!data) return callback(new Error("unable to load data"));
-               callback(null, data.map(function(x){return x[1]}))
-            });
-         }, title);
-   };
-
-   return source;
-};
 
 
-//--------------------------------------------------------------------------
-//
-// time-series visualization
-//
-//--------------------------------------------------------------------------
-var timeseries = function(el, width)
-{
-   var self = {}
-   var context = cubism.context()
-      .step(1 * 1000)          // 1 second per value
-      .size(width)
-      .serverDelay(60 * 1000)  // time to collect and process metrics by server
-      .clientDelay( 5 * 1000)
-      .start();
-   
-   d3.select(el).selectAll(".axis")
-      .data(["top", "bottom"])
-      .enter().append("div")
-      .attr("class", function(d) {return d + " axis"; })
-      .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
-
-   d3.select(el).append("div")
-      .attr("class", "rule")
-      .call(context.rule());
-
-   context.on("focus", 
-      function(i) 
-      {
-         d3.selectAll(".value")
-            .style("right", i == null ? null : context.size() - i + "px");
-      }
-   );
-   
-   //
-   // visualize list of time series metrics
-   self.series = function(list)
-   {
-      var data = list.map(
-         function(x)
-         {
-            var urn = "urn:c:2xx:" + x.urn.substring(4)
-            return chronolog(context).series("" + x.title, urn, x.kpi)
-         }
-      );
-
-      d3.select(el).selectAll(".horizon")
-         .data(data, function(d){return d.toString()})
-         .enter()
-            .insert("div", ".bottom")
-               .attr("class", "horizon")
-               .on("click", function(d){ viz("" + d) })
-               .call(
-                  context.horizon()
-                     .format(d3.format("+,.2d"))
-               );
-   }
-
-   //
-   // visualize primary metric
-   self.primary = function(id, list)
-   {
-      var data = list.map(
-         function(x)
-         {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
-         }
-      );
-
-      d3.select(id).selectAll("*").remove();
-      d3.select(id).selectAll(".horizon")
-         .data(data, function(d){return d.toString()})
-         .enter()
-            .insert("div", ".bottom")
-               .attr("class", "horizon")
-               .call(
-                  context.horizon()
-                     .height( height )
-                     .format(d3.format("+,.2d"))
-                     .colors(pcolors)
-               );
-   }
-
-   //
-   // visualize secondary metric
-   self.secondary = function(id, list)
-   {
-      var data = list.map(
-         function(x)
-         {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
-         }
-      );
-
-      d3.select(id).selectAll(".horizon")
-         .data(data, function(d){return d.toString()})
-         .enter()
-            .insert("div", ".bottom")
-               .attr("class", "horizon")
-               .call(
-                  context.horizon()
-                     .height( height / 2)
-                     .format(d3.format("+,.2d"))
-                     .colors(scolors)
-               );
-   }
-
-   return self;
-}
-
-
-//--------------------------------------------------------------------------
-//
-// cluster
-//
-//--------------------------------------------------------------------------
-var cluster = function()
-{
-   var self = {}
-   
-   // 
-   // check peer(s) status
-   self.peer = function()
-   {
-      d3.json("/health/peer", self.view)
-      return true;
-   }
-
-   //
-   // visualize peer(s) status
-   self.view = function(json)
-   {
-      d3.select("#cluster-peer").text(json.length)
-      d3.timer(self.peer, 1000);
-   }
-
-   return self;
-}
 
 //--------------------------------------------------------------------------
 //
@@ -532,176 +1049,9 @@ var scenario = function(id, ts)
       ) 
    }
 
-   //
-   // update latest analysis (7 days)
-   self.analysis = function()
-   {
-      var tb  = Math.round(+new Date() / 1000);
-      var ta  = tb - 7 * 86400;
-      var req = ['scenario', id, 'series', 'urn:scenario:' + id, 'id', ta, tb].join("/");
-      d3.json('/' + req,
-         function(list)
-         {
-            var t    = list.pop();
-            var path = ['analysis', id, t[0], t[1]].join("/");
-            d3.select("#scenario-analysis").attr("href", '/' + path);
-         }
-      );
-   }
-
-   //
-   // visualize latency details
-   self.latency = function(urn)
-   {
-      d3.select("#urn").text(urn);
-      d3.select("#unit").selectAll("*").remove();
-      self.http(urn);
-      self.tcp(urn);
-      self.ssl(urn);
-      self.ttfb(urn);
-      self.ttmr(urn);
-      self.packet(urn);
-   }
-
-   //
-   // visualize http status code
-   self.http = function(urn)
-   {
-      ts.primary('#request', 
-         [
-            unit("http 2xx", "urn:c:2xx:" + urn.substring(4), "rps")
-         ]
-      );
-      ts.secondary('#request',
-         [
-            unit("http 3xx", "urn:c:3xx:" + urn.substring(4), "rps"),
-            unit("http 4xx", "urn:c:4xx:" + urn.substring(4), "rps"),
-            unit("http 5xx", "urn:c:5xx:" + urn.substring(4), "rps")
-         ]
-      );
-   }
-   
-   // 
-   // visualize tcp latency
-   self.tcp = function(urn)
-   {
-      ts.primary('#tcp', 
-         [
-            unit("tcp (μs)", "urn:g:tcp:" + urn.substring(4), "rps")
-         ]
-      );
-      // ts.secondary('#tcp', 
-      //    [
-      //       unit("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
-      //       unit("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
-      //       unit("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
-      //       unit("max", urn.replace("urn:http", "urn:tcp"), "max")
-      //    ]
-      // );
-   }
-
-   //
-   // visualize ssl latency
-   self.ssl = function(urn)
-   {
-      ts.primary('#ssl',
-         [
-            unit("ssl (μs)", "urn:g:ssl:" + urn.substring(4), "rps")
-         ]
-      );
-      // ts.secondary('#ssl',
-      //    [
-      //       unit("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
-      //       unit("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
-      //       unit("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
-      //       unit("max", urn.replace("urn:http", "urn:ssl"), "max")
-      //    ]
-      // );
-   }
-
-   //
-   // visualize time to first byte
-   self.ttfb = function(urn)
-   {
-      ts.primary('#ttfb',
-         [
-            unit("ttfb (μs)", "urn:g:ttfb:" + urn.substring(4), "rps")
-         ]
-      );
-      // ts.secondary('#ttfb',
-      //    [
-      //       unit("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
-      //       unit("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
-      //       unit("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
-      //       unit("max", urn.replace("urn:http", "urn:ttfb"), "max")
-      //    ]
-      // );
-   }
-
-   //
-   // visualize time to meaningful response
-   self.ttmr = function(urn)
-   {
-      ts.primary('#ttmr',
-         [
-            unit("ttmr (μs)", "urn:g:ttmr:" + urn.substring(4), "rps")
-         ]
-      );
-      // ts.secondary('#ttmr',
-      //    [
-      //       unit("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
-      //       unit("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
-      //       unit("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
-      //       unit("max", urn.replace("urn:http", "urn:ttmr"), "max")
-      //    ]
-      // );
-   }
-
-   //
-   // visualize packet rate
-   self.packet = function(urn)
-   {
-      ts.primary('#pack',
-         [
-            unit("packet / sec",  "urn:c:pack:" + urn.substring(4), "rps"),
-            unit("packet (byte)", "urn:g:pack:" + urn.substring(4), "rps")
-         ]
-      );
-      // ts.secondary('#pack',
-      //    [
-      //       unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
-      //       unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
-      //       unit("99%", urn.replace("urn:http", "urn:pack"), "p99"),
-      //       unit("max", urn.replace("urn:http", "urn:pack"), "max")
-      //    ]
-      // );
-   }
 
    return self;
 }
-
-//--------------------------------------------------------------------------
-//
-// entry point / global state
-//
-//--------------------------------------------------------------------------
-var ns = window.location.pathname.substring(1);
-d3.select("#scenario-id").text(ns);
-
-var ts = timeseries("#case", 800);
-var sc = scenario(ns, ts);
-var cc = cluster();
-
-function viz(urn)
-{
-   sc.latency(urn)
-} 
-
-
-sc.init();
-sc.ping();
-
-cc.peer();
 </script>
 
 

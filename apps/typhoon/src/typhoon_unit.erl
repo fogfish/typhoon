@@ -60,8 +60,12 @@ free(_Reason, _) ->
 %%
 %%
 handle(request, _, #{scenario := Scenario, peer := Peer} = State) ->
+   Ta  = os:timestamp(),
    Fun = Scenario:run(),
    _   = Fun(#{pool => fun netpool/1, peer => Peer}),
+   Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   Tb  = os:timestamp(),
+   aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
    erlang:send(self(), request),
    {next_state, handle, State};
 

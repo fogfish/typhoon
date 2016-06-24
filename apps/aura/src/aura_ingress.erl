@@ -36,7 +36,7 @@ start_link() ->
 
 init([]) ->
    erlang:send(self(), run),
-   {ok, handle, #{fd => aura:fd()}}.
+   {ok, handle, #{fd => aura:fd(), tth => 0}}.
 
 free(_, _) ->
    ok.
@@ -50,19 +50,19 @@ ioctl(_, _) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle(run, _, State) ->
+handle(run, _, #{tth := TTH} = State) ->
    case kmq:deq(auraq, 10) of
       [] ->
-         %% @todo: exponential delay
-         % erlang:send_after(5000, self(), run),
-         erlang:send(self(), run),
-         {next_state, handle, State};
+         % erlang:send(self(), run),
+         erlang:send_after(50, self(), run),
+         % erlang:send_after(TTH, self(), run),
+         {next_state, handle, State#{tth => erlang:max(10000, TTH + 1)}};
       List ->
          Tx = [pts:cast(aura_sensor, Urn, {T, Val}) 
                   || X <- List,
                      {{urn, _, _} = Urn, T, Val} <- [aura_protocol:decode(X)]],
          clue:inc({aura, ingress}, length(List)),
-         {next_state, handle, State#{tx => Tx}}
+         {next_state, handle, State#{tx => Tx, tth => 0}}
    end;
 
 handle({{urn, <<"clue">>, Key}, _T, X}, Pipe, State) ->

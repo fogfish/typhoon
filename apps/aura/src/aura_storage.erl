@@ -72,6 +72,15 @@ ioctl(fd, #{fd := FD}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
+handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
+   spawn(
+      fun() ->
+         List = stream:list( Gen(FD) ),
+         pipe:ack(Pipe, {ok, List})
+      end
+   ),
+   {next_state, handle, State};
+
 handle(_, _, State) ->
    {next_state, handle, State}.
 
