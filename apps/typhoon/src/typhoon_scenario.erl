@@ -58,9 +58,10 @@ free(_, #{id := Id}) ->
 
 ioctl(attr, #{id := Scenario, n := Session}) ->
    [
-      {id,  Scenario},
-      {t,   Scenario:t()},
-      {n,   Scenario:n()},
+      {id,     Scenario},
+      {t,      Scenario:t()},
+      {n,      Scenario:n()},
+      {title,  scalar:s(Scenario:title())},
       {session,  Session},
       {urn, [scalar:s(X) || X <- Scenario:urn()]}
    ].

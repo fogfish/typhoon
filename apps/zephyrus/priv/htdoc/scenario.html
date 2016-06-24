@@ -35,9 +35,15 @@
 <style>
 body 
 {
-   padding-top: 80px;
+   padding-top: 30px;
    padding-bottom: 20px;
-   /*background: #272822;*/
+}
+
+.navbar-brand
+{
+   font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
+   font-weight: 100;
+   font-size: 26px;
 }
 
 .container
@@ -45,6 +51,11 @@ body
    width: 960px;
    padding: 0px;
    position: relative;
+}
+
+.jumbotron
+{
+   background-color: #ecf0f1;
 }
 
 header 
@@ -234,16 +245,23 @@ header
 .bullet { font: 10px sans-serif; }
 .bullet .marker { stroke: #000; stroke-width: 2px; }
 .bullet .tick line { stroke: #666; stroke-width: .5px; }
-.bullet .range.s0 { fill: #eee; }
-.bullet .range.s1 { fill: #ddd; }
-.bullet .range.s2 { fill: #ccc; }
-.bullet .measure.s0 { fill: lightsteelblue; }
-.bullet .measure.s1 { fill: steelblue; }
-.bullet .measure.s2 { fill: #3B7CA3; }
-.bullet .measure.s3 { fill: #299DE1; }
-.bullet .measure.s4 { fill: #FF7C53; }
+
 .bullet .title { font-size: 14px; font-weight: bold; }
 .bullet .subtitle { fill: #999; }
+
+.bullet .range.s2 { fill: #ecf0f1; }
+.bullet .range.s1 { fill: #bdc3c7; }
+.bullet .range.s0 { fill: #95a5a6; }
+
+
+.bullet .measure.s0 { fill: #c0392b; }
+.bullet .measure.s1 { fill: #e67e22; }
+.bullet .measure.s2 { fill: #f39c12; }
+.bullet .measure.s3 { fill: #ffc40d; }
+.bullet .measure.s4 { fill: #F9F0CB; }
+
+/*.bullet .measure:hover { fill: #16a085; }*/
+
 
 </style>
 
@@ -275,61 +293,64 @@ header
 
 <div class="jumbotron">
    <div class="container">
-      <h1>Hello, world!</h1>
-      <p>This is a template for a simple marketing or informational website. It includes a large callout called a jumbotron and three supporting pieces of content. Use it as a starting point to create something more unique.</p>
+      <h1 class='scenario-title'></h1>
+      <p>
+      End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions.
+      </p>
       <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
    </div>
 </div>
 
-
-
 <div class="container">
    <div class="row">
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">Capacity</h2>
             <h1 class="tile-text"><span id="tile-capacity"></span></h1>
          </div>
       </div>
 
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">Availability</h2>
             <h1 class="tile-text"><span id="tile-availability"></span></h1>
          </div>
       </div>
 
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">Latency</h2>
             <h1 class="tile-text"><span id="tile-latency"></span></h1>
          </div>
       </div>
 
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">Session</h2>
             <h1 class="tile-text"><span id="tile-session"></span></h1>
          </div>
       </div>
 
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">Nodes</h2>
             <h1 class="tile-text"><span id="tile-cluster"></span></h1>
          </div>
       </div>
 
       <div class="col-sm-6 col-md-2">
-         <div class="thumbnail tile tile-medium tile-teal">
+         <div class="thumbnail tile tile-medium tile-green-sea">
             <h2 class="tile-text">History</h2>
             <h1 class="tile-text"><span id="tile-history"></span></h1>
          </div>
       </div>
    </div>
+
+   <hr>
 </div>
 
 <div class="container cubism">
+   <h1>Real time dashboard</h1>
    <div id="series" class="container">
    </div>
 </div>
@@ -338,24 +359,25 @@ header
 
 <div class="container">
    <h1>History</h1>
+   <p>Last 30 days</p>
    <div id="history"></div> 
 
-   <h2>Capacity (RPS)</h2>
+   <h2>Capacity</h2>
    <div id="capacity"></div>
 
-   <h2>Time To First Byte (ms)</h2>
+   <h2>Time To First Byte (μs)</h2>
    <div id="latency-ttfb"></div>
 
-   <h2>Time To Response (ms)</h2>
+   <h2>Time To Response (μs)</h2>
    <div id="latency-ttmr"></div>
 
-   <h2>Network Round Trip (ms)</h2>
+   <h2>Network Round Trip (μs)</h2>
    <div id="latency-tcp"></div>
 
-   <h2>SSL Handshake (ms)</h2>
+   <h2>SSL Handshake (μs)</h2>
    <div id="latency-ssl"></div>
 
-   <h2>Packet Per Second (ms)</h2>
+   <h2>Packet Per Second</h2>
    <div id="pps"></div>
 
    <h2>Packet Size (byte)</h2>
@@ -531,6 +553,7 @@ var present = (function()
    //
    self.attributes = function(model, json)
    {
+      model.scenario.title = json.title
       model.scenario.t = json.t
       model.scenario.n = json.n
       model.scenario.urn = json.urn
@@ -551,10 +574,10 @@ var present = (function()
             return {
                id: urn,
                series: [
-                  {id: sid, urn: "urn:c:2xx:" + urn.substring(4), title: 'http 2xx'}
-                 ,{id: sid, urn: "urn:c:3xx:" + urn.substring(4), title: 'http 3xx'}
-                 ,{id: sid, urn: "urn:c:4xx:" + urn.substring(4), title: 'http 4xx'}
-                 ,{id: sid, urn: "urn:c:5xx:" + urn.substring(4), title: 'http 5xx'}
+                  {id: sid, urn: "urn:c:2xx:" + urn.substring(4), title: '2xx'}
+                 ,{id: sid, urn: "urn:c:3xx:" + urn.substring(4), title: '3xx'}
+                 ,{id: sid, urn: "urn:c:4xx:" + urn.substring(4), title: '4xx'}
+                 ,{id: sid, urn: "urn:c:5xx:" + urn.substring(4), title: '5xx'}
                  ,{id: sid, urn: "urn:g:tcp:" + urn.substring(4), title: 'tcp (μs)'}
                  ,{id: sid, urn: "urn:g:ssl:" + urn.substring(4), title: 'ssl (μs)'}
                  ,{id: sid, urn: "urn:g:ttfb:" + urn.substring(4), title: 'ttfb (μs)'}
@@ -565,6 +588,7 @@ var present = (function()
             }
          }
       )
+      return model
    }.curry();
 
    //
@@ -588,6 +612,7 @@ var present = (function()
       var stat = {
          min: d3.min(list),
          mean: d3.mean(list),
+         q25: d3.quantile(list, 0.25),
          q50: d3.quantile(list, 0.50),
          q75: d3.quantile(list, 0.75),
          q80: d3.quantile(list, 0.80),
@@ -684,7 +709,7 @@ var state = (function()
          {
             var ui = '#' + x.id.split(':').join('_')
             d3.select(ui).selectAll("*").remove();
-            d3.select(ui).insert('h1').text(x.id)
+            d3.select(ui).insert('h2').text(x.id)
 
             d3.select(ui).selectAll(".axis")
                .data(["top", "bottom"])
@@ -693,6 +718,8 @@ var state = (function()
                .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
 
             vmHorizon(ui, x.series)
+
+            d3.select(ui).insert('hr')
          }
       )
 
@@ -712,8 +739,8 @@ var state = (function()
          }
       ) 
 
-      var ta = d3.time.hour.offset(data[0].date, -1)
-      var tb = d3.time.hour.offset(data[data.length - 1].date, 1)
+      var ta = d3.time.minute.offset(data[0].date, -30)
+      var tb = d3.time.minute.offset(data[data.length - 1].date, 30)
       var x  = d3.time.scale()
          .domain([ta, tb])
          .rangeRound([0, width - margin.left - margin.right]);
@@ -842,6 +869,11 @@ var chain = (function()
          },
          present.attributes(model),
          present.sensor(),
+         function(x)
+         {
+            d3.selectAll('.scenario-title').text(x.scenario.title)
+            return x
+         },
          function(_)
          {
             return monad.IO(actionIO.history(model.scenario.id))

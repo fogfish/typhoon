@@ -26,8 +26,10 @@
 
 %% see 
 %%   https://en.wikipedia.org/wiki/Exponential_smoothing
--define(A, 0.01).
+-define(A, 0.1).
 
+%% aggregation window
+-define(W, 1000).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -42,13 +44,14 @@ start_link(Ns, Urn) ->
 init([Ns, {urn, _, _} = Urn]) ->
    ok = pns:register(Ns, Urn, self()),
    {ok, dirty,
-      #{
-         fd   => aura:fd(),
-         urn  => Urn,
-         x    => 0.0,
-         t    => os:timestamp(),
-         tts  => tempus:timer(1000, tts)   
-      }
+      window(
+         #{
+            fd   => aura:fd(),
+            urn  => Urn,
+            x    => 0.0,
+            tts  => tempus:timer(?W, tts)   
+         }
+      )
    }.
 
 free(_, _State) ->
@@ -60,7 +63,7 @@ free(_, _State) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-%% @todo: do not accept OLD measurement
+%% @todo: use data structure provided by 'clue' library
 
 %%
 %%
@@ -90,7 +93,7 @@ fresh({_, _} = X, Pipe, State) ->
    {next_state, fresh, update(X, State)};
 
 fresh(tts, _Pipe, #{tts := TTS} = State0) ->
-   State = append(State0),
+   State = window(append(State0)),
    {next_state, dirty, 
       State#{
          tts => tempus:reset(TTS, tts)
@@ -107,23 +110,30 @@ fresh(tts, _Pipe, #{tts := TTS} = State0) ->
 %%
 update({_, X}, #{urn := {urn, <<"g">>, _}, x := X0} = State) ->
    State#{
-      t => os:timestamp(), 
       x => ?A * X + (1 - ?A) * X0
    };
 
 update({_, X}, #{urn := {urn, <<"c">>, _}, x := X0} = State) ->
    State#{
-      t => os:timestamp(), 
       x => X0 + X
-   }.
+   };
+
+update(_, State) ->
+   State.
 
 %%
 %%
-append(#{urn := {urn, <<"g">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
+append(#{urn := {urn, <<"g">>, _} = Urn, ta := T, x := X, fd := FD} = State) ->
    chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
    State;
 
-append(#{urn := {urn, <<"c">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
+append(#{urn := {urn, <<"c">>, _} = Urn, ta := T, x := X, fd := FD} = State) ->
    chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
    State#{x => 0.0}.
 
+%%
+%% 
+window(State) ->
+   Ta = os:timestamp(),
+   Tb = tempus:add(Ta, ?W),
+   State#{ta => Ta, tb => Tb}.
