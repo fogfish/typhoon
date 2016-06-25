@@ -262,6 +262,10 @@ header
 
 /*.bullet .measure:hover { fill: #16a085; }*/
 
+p
+{
+   text-align: justify;
+}
 
 </style>
 
@@ -295,9 +299,9 @@ header
    <div class="container">
       <h1 class='scenario-title'></h1>
       <p>
-      End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions.
+      Latency is an important part of Quality of Service that determines the degree of consumer satisfaction. End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off the architecture to ensure competitive end-to-end latency of software solutions... <a href="#">Learn more &raquo;</a>
       </p>
-      <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
+      <p><a class="btn btn-primary btn-lg" href="#" role="button">Launch &raquo;</a></p>
    </div>
 </div>
 
@@ -350,7 +354,7 @@ header
 </div>
 
 <div class="container cubism">
-   <h1>Real time dashboard</h1>
+   <h1>Time Series analysis</h1>
    <div id="series" class="container">
    </div>
 </div>
@@ -382,6 +386,8 @@ header
 
    <h2>Packet Size (byte)</h2>
    <div id="packet"></div>
+
+   <hr>
 </div>
 
 
@@ -390,40 +396,65 @@ header
 
 
 
+<div class="container">
+   <h1>Latency challenge</h1>
+   <p>
+   The latency challenge exists since the beginning of distributed computing. A transparent end-to-end communication involves various technologies and communication principles. We are looking on sources of latency through prism of infrastructure, protocol and application.
+   </p>
 
-
-
-    <div class="container">
-      <h1>Xxx</h1>
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-4">
-          <h2>Heading</h2>
-          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
-        </div>
-        <div class="col-md-4">
-          <h2>Heading</h2>
-          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
-       </div>
-        <div class="col-md-4">
-          <h2>Heading</h2>
-          <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
-        </div>
+   <div class="row">
+      <div class="col-md-4">
+         <h2>Infrastructure</h2>
+         <p>
+         Software architectural decisions shall account complexity of underlying network infrastructure. Internet is not a single network, this is heterogeneous systems composed from backbone networks, infrastructures managed by service providers, and various edge/access networks.
+         </p>
+         <p>
+         The infrastructure appears as a system that make peers wait. This time is composed from network and transmission delays: the network delay is time from when a message delivery is requested until that message begins delivery at the remote end; the transmission delay is time from when the message begins delivery until delivery is completed.
+         </p>
+         <p>
+         The short interactive scenarios such as client-service interaction concern network delay. The tool uses round-trip-time to estimate network delay.
+         </p>
+         <p>
+         The long interactive scenarios involves data transfer, streaming, etc. This interaction concern network transmission. We are using packet metrics to approximate latency experienced by application due to infrastructure. 
+         </p>
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
       </div>
 
+      <div class="col-md-4">
+         <h2>Protocols</h2>
+         <p>
+         The raise of microservices architecture introduces a new challenges to deal with, such as network latency and overhead of communication protocols. The protocol internals has significant impact on end-to-end latency in heterogeneous network environment when communication is constrained by network delay, packet loss and capacity of network equipment.
+         </p>
+         <p>
+         Connection-oriented protocols requires a handshake procedure before data transmission. The tool measures a latency required to establish TCP and TLS connections and approximate a packet rate that shows efficiency of techniques used by protocol to provide value added service (e.g. reliable communication, data integrity, overflow, etc).
+         </p>
+         <p>
+         The time to display response is the most valuable metric from consumer perspective which is influenced by infrastructure, protocol and application environment. The tool provides analysis of application level protocol behavior. One of these metrics is Time to First Byte. This is concrete consumer oriented easily measurable indicator, it is defined independently of underlying solutions or technologies. It represents initial confirmation that remote host is responding and client application could procedure to rendering. Secondly, Time to Meaningful Response defines a network delay required to deliver application payload.
+         </p>
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
+      </div>
+      
+      <div class="col-md-4">
+         <h2>Application</h2>
+         <p>
+         The latency analysis of application requires techniques to investigate components behavior using information gathered as the service sustain the load. A series of technology derision problem arises concerning both short-term and long-term arrangements. The short term decisions include aspects of software configuration, capacity provisioning. The long term focuses on technological and architecture requirements, the system ability to handle amount of work and its potential to be enlarged to accommodate growing traffic requirements, etc.
+         </p>
+         <p>
+         The tool defines methods to control end-to-end latency requirements. Execute emergent actions required for system scalability. 
+         </p> 
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
+      </div>
+   </div>
+   <hr>
+</div>
 
-      <hr>
-
-      <footer>
+<!--       <footer>
         <p>&copy; 2015 Company, Inc.</p>
       </footer>
 
 </div>
 
-
+ -->
 <!--
 %%
 %% Controller
