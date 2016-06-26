@@ -65,8 +65,10 @@ attribute(availability, Spec) ->
    Ht400 = http(<<"4xx">>, Spec),
    Ht500 = http(<<"5xx">>, Spec),
    case (Ht200 + Ht400 + Ht500) of
-      0.0 -> 0.0;
-      X   -> 100 * Ht200 / X
+      X when X > 0 -> 
+         100 * Ht200 / X;
+      _ ->
+         0.0
    end;
 
 attribute(latency, Spec) ->

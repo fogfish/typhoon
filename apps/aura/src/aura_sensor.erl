@@ -44,14 +44,13 @@ start_link(Ns, Urn) ->
 init([Ns, {urn, _, _} = Urn]) ->
    ok = pns:register(Ns, Urn, self()),
    {ok, dirty,
-      window(
-         #{
-            fd   => aura:fd(),
-            urn  => Urn,
-            x    => 0.0,
-            tts  => tempus:timer(?W, tts)   
-         }
-      )
+      #{
+         fd   => aura:fd(),
+         urn  => Urn,
+         t    => os:timestamp(),
+         x    => 0.0,
+         tts  => tempus:timer(?W, tts)
+      }
    }.
 
 free(_, _State) ->
@@ -62,8 +61,6 @@ free(_, _State) ->
 %%% pipe
 %%%
 %%%----------------------------------------------------------------------------   
-
-%% @todo: use data structure provided by 'clue' library
 
 %%
 %%
@@ -93,9 +90,10 @@ fresh({_, _} = X, Pipe, State) ->
    {next_state, fresh, update(X, State)};
 
 fresh(tts, _Pipe, #{tts := TTS} = State0) ->
-   State = window(append(State0)),
+   State = append(State0),
    {next_state, dirty, 
       State#{
+         t   => os:timestamp(),
          tts => tempus:reset(TTS, tts)
       }
    }.      
@@ -123,17 +121,10 @@ update(_, State) ->
 
 %%
 %%
-append(#{urn := {urn, <<"g">>, _} = Urn, ta := T, x := X, fd := FD} = State) ->
+append(#{urn := {urn, <<"g">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
    chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
    State;
 
-append(#{urn := {urn, <<"c">>, _} = Urn, ta := T, x := X, fd := FD} = State) ->
+append(#{urn := {urn, <<"c">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
    chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
    State#{x => 0.0}.
-
-%%
-%% 
-window(State) ->
-   Ta = os:timestamp(),
-   Tb = tempus:add(Ta, ?W),
-   State#{ta => Ta, tb => Tb}.
