@@ -49,6 +49,7 @@ init([Ns, {urn, _, _} = Urn]) ->
          urn  => Urn,
          t    => os:timestamp(),
          x    => 0.0,
+         s    => 0.0,
          tts  => tempus:timer(?W, tts)
       }
    }.
@@ -64,7 +65,7 @@ free(_, _State) ->
 
 %%
 %%
-dirty({get, _}, Pipe, #{x := X} = State) ->
+dirty({get, _}, Pipe, #{s := X} = State) ->
    pipe:ack(Pipe, {ok, X}),
    {next_state, dirty, State};
 
@@ -81,7 +82,7 @@ dirty(tts, _Pipe, #{tts := TTS} = State) ->
 
 %%
 %%
-fresh({get, _}, Pipe, #{x := X} = State) ->
+fresh({get, _}, Pipe, #{s := X} = State) ->
    pipe:ack(Pipe, {ok, X}),
    {next_state, fresh, State};
 
@@ -107,13 +108,17 @@ fresh(tts, _Pipe, #{tts := TTS} = State0) ->
 %%
 %%
 update({_, X}, #{urn := {urn, <<"g">>, _}, x := X0} = State) ->
+   X1 = ?A * X + (1 - ?A) * X0,
    State#{
-      x => ?A * X + (1 - ?A) * X0
+      x => X1,
+      s => X1
    };
 
 update({_, X}, #{urn := {urn, <<"c">>, _}, x := X0} = State) ->
+   X1 = X0 + X,
    State#{
-      x => X0 + X
+      x => X1,
+      s => X1
    };
 
 update(_, State) ->

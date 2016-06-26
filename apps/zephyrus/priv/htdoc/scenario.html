@@ -710,7 +710,7 @@ var state = (function()
             var stat = model.archive[type].get(urn)
             return {
                title: urn,
-               subtitle: 'rps',
+               subtitle: '',
                ranges: [stat.min, stat.mean, stat.max],
                measures: [stat.q75, stat.q80, stat.q90, stat.q95, stat.q99],
                markers: [stat.q50]
