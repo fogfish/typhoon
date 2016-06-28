@@ -304,12 +304,13 @@ json(Json) ->
 
 %%
 %% send request
-send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := Url} = Http) ->
-   NetIO = Pool(Url),
+send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := Url, header := Head} = Http) ->
+   NetIO = Pool(Url, Head),
    {ok, Sock} = pq:lease( NetIO ),
-   Pckt = pipe:call(Sock, {request, Urn, Peer, encode(Http)}, infinity),
+   Pckt = pipe:call(Sock, {request, Urn, Peer, encode(Http)}, 30000),
    pq:release(NetIO, Sock),
    Pckt.
+
 
 %%
 %% build request

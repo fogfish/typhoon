@@ -62,7 +62,7 @@ free(_Reason, _) ->
 handle(request, _, #{scenario := Scenario, peer := Peer} = State) ->
    Ta  = os:timestamp(),
    Fun = Scenario:run(),
-   _   = Fun(#{pool => fun netpool/1, peer => Peer}),
+   Fun(#{pool => fun netpool/2, peer => Peer}),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
    aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
@@ -80,13 +80,27 @@ handle(expired, _, State) ->
 %%-----------------------------------------------------------------------------
 
 %%
-%% selector of net i/o pool
-netpool(Url) ->
-   Id = scalar:atom(uri:s(uri:suburi(<<>>, Url))),
-   case erlang:whereis(Id) of
-      undefined ->
-         typhoon_net_sup:spawn(Id, Url),
-         netpool(Url);
-      Pid ->
-         Pid
-   end.      
+%% selector of net i/o pool (@todo: re-factor code here)
+netpool(Url, Header) ->
+   case lists:keyfind('Connection', 1, Header) of
+      {'Connection', <<"close">>} ->
+         Id = scalar:atom(uri:s(uri:suburi(<<"disposable">>, Url))),
+         case erlang:whereis(Id) of
+            undefined ->
+               typhoon_net_sup:spawn(Id, disposable, Url),
+               netpool(Url, Header);
+            Pid ->
+               Pid
+         end;
+      
+      _ ->
+         Id = scalar:atom(uri:s(uri:suburi(<<"keep-alive">>, Url))),
+         case erlang:whereis(Id) of
+            undefined ->
+               typhoon_net_sup:spawn(Id, 'keep-alive', Url),
+               netpool(Url, Header);
+            Pid ->
+               Pid
+         end
+   end.
+
