@@ -15,12 +15,12 @@
 %%
 %% @doc 
 %%   example of work-load scenario 
--module(ex_httpbin).
+-module(httpbin).
 -compile({parse_transform, monad}).
 
 %%
 %% scenario attributes
--export([t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0, urn/0]).
 
 %%
 %% scenario entry point
@@ -34,6 +34,11 @@
 %%%----------------------------------------------------------------------------   
 
 %%
+%% human readable scenario title
+title() ->
+   "Example Workload Scenario".
+
+%%
 %% duration of each scenario session in milliseconds,
 %% the session is aborted when the timeout is expired.
 t() ->
@@ -42,7 +47,7 @@ t() ->
 %%
 %% number of concurrent session to spawn in the cluster.
 n() ->
-   10.
+   30.
 
 %%
 %% list of request identifiers used at latency visualization
@@ -109,7 +114,8 @@ get_ip() ->
       A <- scenario:new("urn:http:httpbin:get"),
       B <- scenario:method('GET', A),
       C <- scenario:url("http://127.0.0.1:8888/ip", B),
-      scenario:request([origin], C)
+      D <- scenario:header("Connection", "keep-alive", C),
+      scenario:request([origin], D)
    ].
 
 post(Y) ->
@@ -118,7 +124,8 @@ post(Y) ->
       B <- scenario:method('POST', A),
       C <- scenario:url("http://127.0.0.1:8888/post", B),
       D <- scenario:header("Content-Type", "text/plain", C),
-      E <- scenario:payload(Y, D),
-      scenario:request(E)
+      E <- scenario:header("Connection", "keep-alive", D),
+      G <- scenario:payload(Y, E),
+      scenario:request(D)
    ].
 

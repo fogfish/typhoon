@@ -20,16 +20,12 @@
    start_link/2,
    init/1,
    free/2,
-   dirty/3,
-   fresh/3
+   handle/3
 ]).
 
 %% see 
 %%   https://en.wikipedia.org/wiki/Exponential_smoothing
--define(A, 0.1).
-
-%% aggregation window
--define(W, 1000).
+-define(A, 0.2).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -43,14 +39,12 @@ start_link(Ns, Urn) ->
 
 init([Ns, {urn, _, _} = Urn]) ->
    ok = pns:register(Ns, Urn, self()),
-   {ok, dirty,
+   {ok, handle,
       #{
          fd   => aura:fd(),
          urn  => Urn,
-         t    => os:timestamp(),
-         x    => 0.0,
-         s    => 0.0,
-         tts  => tempus:timer(?W, tts)
+         t    => {0, 0, 0},
+         x    => 0.0
       }
    }.
 
@@ -65,71 +59,38 @@ free(_, _State) ->
 
 %%
 %%
-dirty({get, _}, Pipe, #{s := X} = State) ->
+handle({get, _}, Pipe, #{x := X} = State) ->
    pipe:ack(Pipe, {ok, X}),
-   {next_state, dirty, State};
+   {next_state, handle, State};
 
-dirty({_, _} = X, Pipe, State) ->
+handle({{A, B, _}, X}, Pipe, #{t := {A, B, _}} = State) ->
    pipe:ack(Pipe, ok),
-   {next_state, fresh, update(X, State)};
+   {next_state, handle, update(X, State)};
 
-dirty(tts, _Pipe, #{tts := TTS} = State) ->
-   {next_state, dirty, 
-      State#{
-         tts => tempus:reset(TTS, tts)
-      }
-   }.
+handle({{A0, A1, _} = A, _} = X, Pipe, #{t := B} = State)
+ when A > B ->
+   State0 = append(State),
+   handle(X, Pipe, State0#{t := {A0, A1, 0}});
 
-%%
-%%
-fresh({get, _}, Pipe, #{s := X} = State) ->
-   pipe:ack(Pipe, {ok, X}),
-   {next_state, fresh, State};
-
-fresh({_, _} = X, Pipe, State) ->
+handle({_, _}, Pipe, State) ->
    pipe:ack(Pipe, ok),
-   {next_state, fresh, update(X, State)};
+   {next_state, handle, State}.
 
-fresh(tts, _Pipe, #{tts := TTS} = State0) ->
-   State = append(State0),
-   {next_state, dirty, 
-      State#{
-         t   => os:timestamp(),
-         tts => tempus:reset(TTS, tts)
-      }
-   }.      
-
-%%%----------------------------------------------------------------------------   
-%%%
-%%% private
-%%%
-%%%----------------------------------------------------------------------------   
 
 %%
-%%
-update({_, X}, #{urn := {urn, <<"g">>, _}, x := X0} = State) ->
-   X1 = ?A * X + (1 - ?A) * X0,
-   State#{
-      x => X1,
-      s => X1
-   };
+append(#{t := {0, 0, 0}} = State) ->
+   State;
+append(#{fd := FD, urn := Urn, t := T, x := X} = State) ->
+   chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
+   State#{t => {0, 0, 0}, x => 0.0}.
 
-update({_, X}, #{urn := {urn, <<"c">>, _}, x := X0} = State) ->
-   X1 = X0 + X,
-   State#{
-      x => X1,
-      s => X1
-   };
+%%
+update(X, #{urn := {urn, <<"g">>, _}, x := X0} = State) ->
+   State#{x => ?A * X + (1 - ?A) * X0};
+
+update(X, #{urn := {urn, <<"c">>, _}, x := X0} = State) ->
+   State#{x => X0 + X};
 
 update(_, State) ->
    State.
 
-%%
-%%
-append(#{urn := {urn, <<"g">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
-   chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
-   State;
-
-append(#{urn := {urn, <<"c">>, _} = Urn, t := T, x := X, fd := FD} = State) ->
-   chronolog:append(FD, Urn, [{T, erlang:trunc(X)}]),
-   State#{x => 0.0}.
