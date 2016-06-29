@@ -35,7 +35,6 @@
 -export([
    fd/0
   ,stream/2
-  ,t/0
 ]).
 
 
@@ -217,37 +216,4 @@ stream(Id, Gen) ->
          Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
          pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000)
    end.
-
-
-t() ->
-   [
-      % new(fun(_) -> 'GET' end),
-      % url(fun(_) -> "http://example.com" end),
-      % header(fun(_) -> {"Accept", "application/json"} end),
-      % return(fun(_) -> "xxx" end)
-   ].   
-
-
-%% method()
-new(X) ->
-   fun(Req) ->
-      fun(Heap) ->
-         lens:put(lens:map(method, undefined), X(Heap), Req)
-      end
-   end.
-
-url(X) ->
-   fun(Req) ->
-      fun(Heap) ->
-         lens:put(lens:map(url, undefined), X(Heap), Req)
-      end
-   end.
-
-header(X) ->
-   fun(Req) ->
-      fun(Heap) ->
-         lens:put(lens:map(header, undefined), X(Heap), Req)
-      end
-   end.
-
 

@@ -42,7 +42,7 @@ title() ->
 %% duration of each scenario session in milliseconds,
 %% the session is aborted when the timeout is expired.
 t() ->
-   600000.
+   120000.
 
 %%
 %% number of concurrent session to spawn in the cluster.

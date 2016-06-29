@@ -26,12 +26,15 @@ Typhoon focuses on **visualization**, **protocol metric** and **usability**. The
 ### changelog
 The project uses [semantic version](http://semver.org) to identity stable releases. 
 
+* [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling  
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - uses pure functional expressions to define load scenario.
 * [0.5.0](https://github.com/zalando/typhoon/releases/tag/0.5.0) - re-do UI and report analysis
+
+<!--
 * [0.4.1](https://github.com/zalando/typhoon/releases/tag/0.4.1) - stability at distributed environment 
 * [0.3.0](https://github.com/zalando/typhoon/releases/tag/0.3.0) - storage improvements 
 * [0.2.1](https://github.com/zalando/typhoon/releases/tag/0.2.1) - minimum viable product 
-
+-->
 
 ### getting typhoon
 
