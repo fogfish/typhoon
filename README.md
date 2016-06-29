@@ -1,6 +1,6 @@
 # typhoon
 
-Typhoon is distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and latencies of microservices. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
+Typhoon is a distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and latencies of microservices. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
       
 Typhoon is operable as standalone application and scalable up to dozens of individual nodes hosted in cloud environment. The incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
 
@@ -24,10 +24,10 @@ Typhoon focuses on **visualization**, **protocol metric** and **usability**. The
 ## getting started
 
 ### changelog
-The project uses [semantic version](http://semver.org) to identity stable releases. 
+The project uses [semantic versioning](http://semver.org) to identity stable releases. 
 
 * [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling  
-* [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - uses pure functional expressions to define load scenario.
+* [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - uses pure functional expressions to define load scenarios.
 * [0.5.0](https://github.com/zalando/typhoon/releases/tag/0.5.0) - re-do UI and report analysis
 
 <!--
