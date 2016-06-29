@@ -554,7 +554,7 @@ var state = (function()
    context = cubism.context()
       .step(1 * 1000)          // 1 second per value
       .size(width)
-      .serverDelay(10 * 1000)  // time to collect and process metrics by server
+      .serverDelay(60 * 1000)  // time to collect and process metrics by server
       .clientDelay( 5 * 1000)
       .start();
    
