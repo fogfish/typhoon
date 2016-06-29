@@ -44,13 +44,9 @@
          <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
       </ul>
    </div>
-
-<!--    
    <div class="progress">
-      <div class="progress-bar" style="width: 0%;">
-      </div>
+      <div class="progress-bar" style="width: 0%;"></div>
    </div>
- -->
 </nav>
 
 <!-- 
@@ -554,7 +550,7 @@ var state = (function()
    context = cubism.context()
       .step(1 * 1000)          // 1 second per value
       .size(width)
-      .serverDelay(60 * 1000)  // time to collect and process metrics by server
+      .serverDelay(30 * 1000)  // time to collect and process metrics by server
       .clientDelay( 5 * 1000)
       .start();
    
@@ -718,9 +714,9 @@ var state = (function()
          }
       )
 
-      var margin = {top: 5, right: 40, bottom: 20, left: 120};
+      var margin = {top: 25, right: 40, bottom: 20, left: 120};
       var width  = 800;
-      var height = 50 - margin.top - margin.bottom;
+      var height = 75 - margin.top - margin.bottom;
 
       var chart = d3.bullet()
          .width(width)
@@ -825,6 +821,20 @@ var chain = (function()
             x.transition()
                .duration(1000) 
                .tween("scroll", scrollTween(h))
+
+            d3.select("nav").select(".progress-bar")     
+               .transition()      
+               .style("width", "100%")     
+               // .duration(65000)      
+               .duration(model.scenario.t)      
+               .ease("linear")    
+               .each("end",       
+                  function()      
+                  {      
+                     d3.select(this).style("width", "0%");      
+                     self.analysis();      
+                  }      
+               )
          }
       ])
    }

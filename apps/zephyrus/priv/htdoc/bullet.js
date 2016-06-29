@@ -3,6 +3,9 @@
 // Chart design based on the recommendations of Stephen Few. Implementation
 // based on the work of Clint Ivy, Jamie Love, and Jason Davies.
 // http://projects.instantcognition.com/protovis/bulletchart/
+//
+// modified by to support extra labels
+//
 d3.bullet = function() {
   var orient = "left", // TODO top & bottom
       reverse = false,
@@ -58,6 +61,7 @@ d3.bullet = function() {
           .attr("x", reverse ? x1 : 0)
           .attr("width", w1)
           .attr("height", height);
+
 
       // Update the measure rects.
       var measure = g.selectAll("rect.measure")
@@ -153,8 +157,44 @@ d3.bullet = function() {
           .attr("transform", bulletTranslate(x1))
           .style("opacity", 1e-6)
           .remove();
-    });
-    d3.timer.flush();
+
+      var label = g.append("g")
+         .style("text-anchor", "middle")
+
+      label.selectAll("text") 
+         .data(ranges).enter()
+         .append("text")
+            .attr("y", -2)
+            .attr("x", function(d){return x1(d)})
+            .text(format)
+
+      var qlabel = [[], []]
+      measurez.forEach(function(val, i) {qlabel[i & 1].push(val)})
+
+      var label1 = g.append("g")
+         .attr("class", "label")
+         .style("text-anchor", "end")
+
+      label1.selectAll("text") 
+         .data(qlabel[0]).enter()
+         .append("text")
+            .attr("y", height / 3 - 2)
+            .attr("x", function(d){return x1(d) - 2})
+            .text(format)
+
+      var label2 = g.append("g")
+         .attr("class", "label")
+         .style("text-anchor", "end")
+
+      label2.selectAll("text") 
+         .data(qlabel[1]).enter()
+         .append("text")
+            .attr("y", height * 2 / 3 + 8)
+            .attr("x", function(d){return x1(d) - 2})
+            .text(format)
+
+   });
+   d3.timer.flush();
   }
 
   // left, right, top, bottom

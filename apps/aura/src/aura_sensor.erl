@@ -23,6 +23,9 @@
    handle/3
 ]).
 
+%% @todo: flush (otherwise history is lost)
+%% @todo: tx rate (scenario per second and latency)
+
 %% see 
 %%   https://en.wikipedia.org/wiki/Exponential_smoothing
 -define(A, 0.2).
@@ -61,11 +64,11 @@ free(_, _State) ->
 %%
 handle({get, _}, Pipe, #{x := X} = State) ->
    pipe:ack(Pipe, {ok, X}),
-   {next_state, handle, State};
+   {next_state, handle, State, 1000};
 
 handle({{A, B, _}, X}, Pipe, #{t := {A, B, _}} = State) ->
    pipe:ack(Pipe, ok),
-   {next_state, handle, update(X, State)};
+   {next_state, handle, update(X, State), 1000};
 
 handle({{A0, A1, _} = A, _} = X, Pipe, #{t := B} = State)
  when A > B ->
@@ -74,7 +77,11 @@ handle({{A0, A1, _} = A, _} = X, Pipe, #{t := B} = State)
 
 handle({_, _}, Pipe, State) ->
    pipe:ack(Pipe, ok),
-   {next_state, handle, State}.
+   {next_state, handle, State, 1000};
+
+handle(timeout, _Pipe, State) ->
+   {next_state, handle, append(State)}.
+
 
 
 %%
