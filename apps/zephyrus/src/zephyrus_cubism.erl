@@ -15,7 +15,7 @@
 %%
 %% @doc
 %%   rest api - time series data
--module(zephyrus_series).
+-module(zephyrus_cubism).
 -author('dmitry.kolesnikov@zalando.fi').
 
 
@@ -44,9 +44,9 @@ content_accepted(_Req) ->
    Urn = uri:new( lens:get(lens:pair(<<"urn">>), Env) ),
    A   = t(lens:get(lens:pair(<<"from">>), Env)),
    B   = t(lens:get(lens:pair(<<"to">>),   Env)),
-   stream(Id, id(Urn, {A, B})).
+   Chronon = scalar:i( uri:q(<<"chronon">>, 60, Url) ),
+   stream(Id, value(Urn, Chronon, {A, B})).
 
-%%
 %%
 stream(Id, Gen) ->
    case typhoon:stream(Id, Gen) of
@@ -57,23 +57,115 @@ stream(Id, Gen) ->
          {ok, jsx:encode(List)}
    end.
 
-%%
-%% identity stream
-id(Req, Range) ->
+%% transactions per time unit generator function
+value(Req, Chronon, Range) ->
    fun(FD) ->
-      stream:map(
-         fun({T, X}) -> 
-            [tempus:s(T), X] 
-         end,
-         chronolog:stream(FD, Req, Range)
-      )
+      cubism(
+         chronolog:join([
+            carrier(Chronon, Range),
+            mean(Chronon, chronolog:stream(FD, Req, Range) ) 
+         ])
+      )       
    end.
 
+%% calculate mean value on chronon
+mean(Chronon, Stream) ->
+   chronolog:scan(
+      fun(X) -> lists:sum(X) div length(X) end,
+      Chronon,
+      Stream
+   ).
+
+%% return time series stream compatible with cubism.js
+cubism(Stream) ->
+   stream:map(
+      fun({T, X}) -> 
+         [tempus:s(T), lists:max(X)] 
+      end,
+      Stream
+   ).
+
 %%
+%% built a carrier stream, stream filled by 0 at each chronon
+carrier(Chronon, {A, B}) -> 
+   Ta = tempus:discrete(A, Chronon),
+   Tb = tempus:discrete(B, Chronon),
+   stream:takewhile(
+      fun(X) -> X =/= eos end,
+      stream:unfold(
+         fun
+         (X) when X < Tb ->
+            {{X,0}, tempus:add(X, tempus:t(s, Chronon))};
+         (X) ->
+            {eos, {X,0}}
+         end,
+         Ta
+      )
+   ).
+
 %%
 t(T) ->
    tempus:t(s, scalar:i(T)).
 
+
+
+%    % case lens:get(lens:pair(<<"kpi">>), Env) of
+      
+%    %    %%
+%    %    %% http transaction per second
+%    %    <<"200">> ->
+%    %       stream(Id, tps(Urn, 200, Chronon, {A, B}));
+%    %    <<"300">> ->
+%    %       stream(Id, tps(Urn, 300, Chronon, {A, B}));
+%    %    <<"400">> ->
+%    %       stream(Id, tps(Urn, 400, Chronon, {A, B}));
+%    %    <<"500">> ->
+%    %       stream(Id, tps(Urn, 500, Chronon, {A, B}));
+
+%    %    %%
+%    %    %% any request per second
+%    %    <<"rps">> ->
+%    %       stream(Id, rps(Urn, Chronon, {A, B}));
+
+%    %    %%
+%    %    %% mean sampled value
+%    %    <<"mean">> ->
+%    %       stream(Id, mean(Urn, Chronon, {A, B}));
+
+%    %    %%
+%    %    %% max sampled value
+%    %    <<"max">> ->
+%    %       stream(Id, maxx(Urn, Chronon, {A, B}));
+
+%    %    %%
+%    %    %% percentile sampled value
+%    %    <<"p90">> ->
+%    %       stream(Id, pth(Urn, 0.90, Chronon, {A, B}));
+
+%    %    <<"p95">> ->
+%    %       stream(Id, pth(Urn, 0.95, Chronon, {A, B}));
+
+%    %    <<"p99">> ->
+%    %       stream(Id, pth(Urn, 0.99, Chronon, {A, B}));
+
+%    %    %% identity stream
+%    %    <<"id">> ->
+%    %       stream(Id, id(Urn, {A, B}))
+         
+%    % end.
+
+
+% %%
+% %% identity stream
+% id(Req, Range) ->
+%    fun(FD) ->
+%       stream:map(
+%          fun({T, X}) -> 
+%             [tempus:s(T), X] 
+%          end,
+%          chronolog:stream(FD, Req, Range)
+%       )
+%    end.
 
 % %%
 % %% transactions per time unit generator function
@@ -87,30 +179,7 @@ t(T) ->
 %       )       
 %    end.
 
-% %%
-% %% transactions per time unit generator function
-% rps(Req, Chronon, Range) ->
-%    fun(FD) ->
-%       cubism(
-%          chronolog:join([
-%             carrier(Chronon, Range),
-%             % chronolog:stream(FD, Req, Range)
-%             mean(Chronon, chronolog:stream(FD, Req, Range) ) 
-%          ])
-%       )       
-%    end.
 
-% %%
-% %% mean value per time unit generator function
-% mean(Req, Chronon, Range) ->
-%    fun(FD) ->
-%       cubism(
-%          chronolog:join([
-%             carrier(Chronon, Range),
-%             mean(Chronon, chronolog:stream(FD, Req, Range) ) 
-%          ])
-%       )       
-%    end.
 
 % %%
 % %% mean value per time unit generator function
@@ -156,13 +225,7 @@ t(T) ->
 %    ).
 
 % %%
-% %% calculate mean value on chronon
-% mean(Chronon, Stream) ->
-%    chronolog:scan(
-%       fun(X) -> lists:sum(X) div length(X) end,
-%       Chronon,
-%       Stream
-%    ).
+
 
 % %%
 % %% calculate max value on chronon
@@ -184,31 +247,7 @@ t(T) ->
 
 
 % %%
-% %% return time series stream compatible with cubism.js
-% cubism(Stream) ->
-%    stream:map(
-%       fun({T, X}) -> 
-%          [tempus:s(T), lists:max(X)] 
-%       end,
-%       Stream
-%    ).
 
-% %%
-% %% built a carrier stream, stream filled by 0 at each chronon
-% carrier(Chronon, {A, B}) -> 
-%    Ta = tempus:discrete(A, Chronon),
-%    Tb = tempus:discrete(B, Chronon),
-%    stream:takewhile(
-%       fun(X) -> X =/= eos end,
-%       stream:unfold(
-%          fun
-%          (X) when X < Tb ->
-%             {{X,0}, tempus:add(X, tempus:t(s, Chronon))};
-%          (X) ->
-%             {eos, {X,0}}
-%          end,
-%          Ta
-%       )
-%    ).
 
+%%
 

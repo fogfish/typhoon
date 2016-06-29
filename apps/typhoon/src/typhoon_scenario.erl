@@ -14,7 +14,7 @@
 %%   limitations under the License.
 %%
 %% @doc
-%%   load scenario controller
+%%   scenario coordinator process
 -module(typhoon_scenario).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
@@ -43,9 +43,7 @@ start_link(Vnode, Id, Spec) ->
 
 init([Vnode, Id, Spec]) ->
    clue:define(meter, Id, 60000),
-   {ok, Id, Code} = compile(Id, Spec),
-   code:purge(Id),
-   {module, Id} = code:load_binary(Id, undefined, Code),
+   {ok, Code} = compile(Id, Spec),
    {ok, handle, 
       #{
          vnode => Vnode,
@@ -58,13 +56,13 @@ init([Vnode, Id, Spec]) ->
 free(_, #{id := Id}) ->
    file:delete(file(Id)).
 
-ioctl(n, #{n := N}) ->
-   N;
-
-ioctl(attr, #{id := Scenario}) ->
+ioctl(attr, #{id := Scenario, n := Session}) ->
    [
-      {t,   Scenario:t()},
-      {n,   Scenario:n()},
+      {id,     Scenario},
+      {t,      Scenario:t()},
+      {n,      Scenario:n()},
+      {title,  scalar:s(Scenario:title())},
+      {session,  Session},
       {urn, [scalar:s(X) || X <- Scenario:urn()]}
    ].
 
@@ -123,7 +121,11 @@ compile(Id, Scenario) ->
    File = file(Id),
    ok = filelib:ensure_dir(File),
    ok = file:write_file(File, Scenario),
-   scenario:c(scalar:atom(Id), File).
+   {ok, Id, Code} = scenario:c(Id, File),
+   _  = code:purge(Id),
+   {module, Id} = code:load_binary(Id, undefined, Code),
+   {ok, Code}.
+
 
 %%
 %% deploy code to cluster nodes
@@ -154,12 +156,7 @@ run(N, K, Nodes, #{id := Scenario}=State) ->
 %%
 %% log milestone
 milestone(#{id := Scenario}) ->
-   Sock = aura:socket(),
-   Peer = typhoon:peer(Scenario),
-   Urn  = {urn, <<"scenario">>, Scenario},
-   Ta   = os:timestamp(),
-   Tb   = tempus:add(Ta, Scenario:t() div 1000),
-   aura:send(Sock, Peer, {Urn, Ta, tempus:s(Tb)}).
-
+   Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   aura:send(Urn, os:timestamp(), Scenario:t()).
 
 

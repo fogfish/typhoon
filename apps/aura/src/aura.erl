@@ -17,11 +17,10 @@
 
 -export([start/0]).
 -export([
-   socket/0
+   fd/0
   ,send/3
-  ,clue/3
-  ,clue/3
-  ,fd/0
+  ,clue/1
+  ,stream/2
 ]).
 
 %% udp port base
@@ -35,37 +34,43 @@ start() ->
    ).
 
 %%
-%% allocate egress socket
--spec socket() -> pid().
-
-socket() ->
-   Socks = [erlang:element(2, X) || X <- supervisor:which_children(aura_egress_sup)],
-   lists:nth( random:uniform(length(Socks)), Socks ).
-   
-%%
-%% send telemetry to peers
--spec send(pid(), [_], _) -> ok.
-
-send(Sock, Peers, {_, _, _} = Telemetry) ->
-   pipe:send(Sock, {Peers, Telemetry}).
-
-%%
-%% send KPI-counter to peers
--spec clue(pid(), [_], _) -> ok.
-
-clue(Sock, Peers, Key) ->
-   clue(Sock, Peers, Key, 1).
-   
-clue(Sock, Peers, Key, Val) ->
-   Urn = {urn, <<"clue">>, scalar:s(Key)},
-   send(Sock, Peers, {Urn, os:timestamp(), Val}).
-
-
-%%
 %% file descriptor to time series data-base
 -spec fd() -> chronolog:fd().
 
 fd() ->
    pipe:ioctl(aura_storage, fd).
+
+%%
+%% send telemetry for processing
+-spec send(uri:urn(), tempus:t(), number()) -> ok.
+
+send(Urn, T, X) ->
+   pts:send(aura_stream, Urn, {T, X}).
+
+%%
+%% 
+-spec clue(uri:urn()) -> ok.
+
+clue(Urn) ->
+   %% @todo: think about ambit instead of pure rpc
+   Node = hd(peer(Urn)),
+   rpc:call(Node, pts, get, [aura_sensor, Urn]).
+
+%%
+%%
+-spec stream(uri:urn(), _) -> [{_, _}].
+
+stream(Urn, Fun) ->
+   %% @todo: think about ambit instead of pure rpc
+   Node = hd(peer(Urn)),
+   pipe:call({aura_storage, Node}, {stream, Fun}, 300000).   
+
+
+peer(Urn) ->
+   [erlang:node(ek:vnode(peer, Vnode)) 
+      || Vnode <- ek:successors(aura, uri:s(Urn)), 
+         ek:vnode(type, Vnode) == primary].
+
+
 
 

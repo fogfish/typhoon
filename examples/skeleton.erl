@@ -3,12 +3,16 @@
 
 %% 
 %% exported functions
--export([t/0, n/0, urn/0, run/0]).
+-export([title/0, t/0, n/0, urn/0, run/0]).
 
 
 %%
 %% scenario attributes
 %%
+
+%% human readable scenario title
+title() ->
+   "Skeleton Workload Scenario".
 
 %% time to execute workload in milliseconds
 t() ->

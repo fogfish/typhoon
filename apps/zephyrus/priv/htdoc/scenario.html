@@ -17,180 +17,20 @@
 %%
 -->
 <meta charset="utf-8">
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://talkslab.github.io/metro-bootstrap/dist/css/metro-bootstrap.min.css">
+<link rel="stylesheet" href="/css/scenario.css" >
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src="http://square.github.com/cubism/cubism.v1.js?1.0.0"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+<script src="/js/bullet.js"></script>
 
-<!--
-%%
-%% Styles
-%%
--->
-<style>
-body 
-{
-   font-family: "Helvetica Neue", Helvetica, sans-serif;
-   padding-top: 80px;
-   padding-bottom: 20px;
-}
-
-.container
-{
-   width: 800px;
-   padding: 0px;
-   position: relative;
-}
-
-header 
-{
-  padding: 6px 0;
-}
-
-.group 
-{
-  margin-bottom: 1em;
-}
-
-.axis 
-{
-  font: 10px sans-serif;
-  position: fixed;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.axis text 
-{
-  -webkit-transition: fill-opacity 250ms linear;
-}
-
-.axis path 
-{
-  display: none;
-}
-
-.axis line 
-{
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
-
-.axis.top 
-{
-  position: relative;
-  background-image: linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -o-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -moz-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -webkit-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -ms-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
-  top: 0px;
-  padding: 0 0 24px 0;
-}
-
-.axis.bottom 
-{
-  position: relative;
-  background-image: linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -o-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -moz-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -webkit-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
-  background-image: -ms-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
-  bottom: 0px;
-  padding: 24px 0 0 0;
-}
-
-.horizon 
-{
-  border-bottom: solid 1px #000;
-  overflow: hidden;
-  position: relative;
-}
-
-.horizon 
-{
-  border-top: solid 1px #000;
-  border-bottom: solid 1px #000;
-}
-
-.horizon:hover
-{
-   background: #f8f8f8;
-}
-
-.horizon + .horizon 
-{
-  border-top: none;
-}
-
-.horizon canvas 
-{
-  display: block;
-}
-
-.horizon .title,
-.horizon .value 
-{
-  bottom: 0;
-  /*line-height: 30px;*/
-  margin: 0 6px;
-  position: absolute;
-  text-shadow: 0 1px 0 rgba(255,255,255,.5);
-  white-space: nowrap;
-}
-
-.horizon .title 
-{
-   left: 0;
-   font-size: 10px;
-   margin: 0 0 0 0;
-   width: 80px;
-}
-
-.horizon .value 
-{
-   right: 0;
-   font-size: 12px;
-   color: black;
-   text-shadow: 0px 0px 10px rgba(255,255,255,1);
-}
-
-.line 
-{
-   background: #000;
-   z-index: 2;
-}
-
-h1
-{
-   font-size: 12px;
-   font-weight: bold;
-}
-
-h2
-{
-   font-size: 10px;
-   font-weight: bold;
-   margin-top: 20px;
-}
-
-.progress
-{
-   margin: 0px;
-   height: 2px;
-   -webkit-box-shadow: none;
-   box-shadow: none;
-}
-
-</style>
+<script src="http://square.github.com/cubism/cubism.v1.js"></script>
+<script src="https://cdn.rawgit.com/fogfish/monad.js/master/src/monad.js"></script>
 
 
 <body>
 
-<!--
-%%
-%% View
-%%
--->
 <nav class="navbar navbar-default navbar-fixed-top">
    <div class="container-fluid">
       <div class="navbar-header">
@@ -198,60 +38,279 @@ h2
       </div>
       <ul class="nav navbar-nav">
          <li><p id="scenario-id" class="navbar-text"></p></li>
-         <li>
-            <button id="scenario-run" type="button" class="btn btn-primary navbar-btn">Run</button>
-         </li>
-         <li>
-            <p class="navbar-text">RPS <span id="scenario-rps" class="badge">0</span></p>
-         </li>
-         <li>
-            <p class="navbar-text">Processes <span id="scenario-processes" class="badge">0</span></p>
-         </li>
-         <li>
-            <p class="navbar-text">Nodes <span id="cluster-peer" class="badge">0</span></p>
-         </li>
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-         <li><a id="scenario-analysis" href="#"><span class="glyphicon glyphicon-stats"></span> Latest Analysis</a></li>
-         <li><a href="https://github.com/zalando/typhoon/blob/master/docs/howto.md"><span class="glyphicon glyphicon-link"></span> Tips and Hints</a></li>
          <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
       </ul>
    </div>
 
-   <!-- progress bar to visualize server delay -->
+<!--    
    <div class="progress">
       <div class="progress-bar" style="width: 0%;">
       </div>
    </div>
+ -->
 </nav>
 
+<!-- 
+//
+// 
+//
+-->
+<div class="jumbotron">
+   <div class="container">
+      <h1 class='scenario-title'></h1>
+      <p>
+      Latency is an important part of Quality of Service that determines the degree of consumer satisfaction. End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off the architecture to ensure competitive end-to-end latency of software solutions... <a href="#latency-challenge">Learn more &raquo;</a>
+      </p>
+      <p><a class="btn btn-primary btn-lg launch">Launch &raquo;</a></p>
+   </div>
+</div>
+
+
+<!-- 
+//
+// tiles
+//
+-->
+<div class="container">
+   <h1>System status</h1>
+   <div class="row">
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">Capacity</h2>
+            <h1 class="tile-text"><span id="tile-capacity"></span></h1>
+         </div>
+      </div>
+
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">Availability</h2>
+            <h1 class="tile-text"><span id="tile-availability"></span></h1>
+         </div>
+      </div>
+
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">Latency</h2>
+            <h1 class="tile-text"><span id="tile-latency"></span></h1>
+         </div>
+      </div>
+
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">Session</h2>
+            <h1 class="tile-text"><span id="tile-session"></span></h1>
+         </div>
+      </div>
+
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">Nodes</h2>
+            <h1 class="tile-text"><span id="tile-cluster"></span></h1>
+         </div>
+      </div>
+
+      <div class="col-sm-6 col-md-2">
+         <div class="thumbnail tile tile-medium tile-green-sea">
+            <h2 class="tile-text">History</h2>
+            <h1 class="tile-text"><span id="tile-history"></span></h1>
+         </div>
+      </div>
+   </div>
+   <hr>
+</div>
+
+<!-- 
+//
+// cubism
+//
+-->
+<div id="time-series-analysis" class="container cubism">
+   <h1>Time Series analysis</h1>
+   <div id="series" class="container">
+   </div>
+</div>
+
+
+<!-- 
+//
+// history
+//
+-->
+<div class="container">
+   <h1>History</h1>
+   <p>The section show past measurements within 30 days. Click on the milestone indicator to expand statistics.</p>
+   <div id="history"></div> 
+
+   <div class="archive">
+   <h2>Capacity</h2>
+   <div id="capacity"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>Time To First Byte (μs)</h2>
+   <div id="latency-ttfb"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>Time To Response (μs)</h2>
+   <div id="latency-ttmr"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>Network Round Trip (μs)</h2>
+   <div id="latency-tcp"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>SSL Handshake (μs)</h2>
+   <div id="latency-ssl"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>Packet Per Second</h2>
+   <div id="pps"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   <h2>Packet Size (byte)</h2>
+   <div id="packet"></div>
+   <div class="legend">
+   <span class="rect range-s2">&#x25A0;</span><span>min</span> 
+   <span class="rect range-s1">&#x25A0;</span><span>mean</span> 
+   <span class="rect range-s0">&#x25A0;</span><span>max</span> 
+   <span class="rect">&#x25A0;</span><span>50%</span> 
+   <span class="rect measure-s4">&#x25A0;</span><span>75%</span> 
+   <span class="rect measure-s3">&#x25A0;</span><span>80%</span> 
+   <span class="rect measure-s2">&#x25A0;</span><span>90%</span> 
+   <span class="rect measure-s1">&#x25A0;</span><span>95%</span> 
+   <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
+   </div>
+
+   </div>
+   <hr>
+</div>
+
+
+<!-- 
+//
+// help
+//
+-->
+<div id="latency-challenge" class="container subview">
+   <h1>Latency challenge</h1>
+   <p>
+   The latency challenge exists since the beginning of distributed computing. A transparent end-to-end communication involves various technologies and communication principles. We are looking on sources of latency through prism of infrastructure, protocol and application.
+   </p>
+
+   <div class="row">
+      <div class="col-md-4">
+         <h2>Infrastructure</h2>
+         <p>
+         Software architectural decisions shall account complexity of underlying network infrastructure. Internet is not a single network, this is heterogeneous systems composed from backbone networks, infrastructures managed by service providers, and various edge/access networks.
+         </p>
+         <p>
+         The infrastructure appears as a system that make peers wait. This time is composed from network and transmission delays: the network delay is time from when a message delivery is requested until that message begins delivery at the remote end; the transmission delay is time from when the message begins delivery until delivery is completed.
+         </p>
+         <p>
+         The short interactive scenarios such as client-service interaction concern network delay. The tool uses round-trip-time to estimate network delay.
+         </p>
+         <p>
+         The long interactive scenarios involves data transfer, streaming, etc. This interaction concern network transmission. We are using packet metrics to approximate latency experienced by application due to infrastructure. 
+         </p>
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
+      </div>
+
+      <div class="col-md-4">
+         <h2>Protocols</h2>
+         <p>
+         The raise of microservices architecture introduces a new challenges to deal with, such as network latency and overhead of communication protocols. The protocol internals has significant impact on end-to-end latency in heterogeneous network environment when communication is constrained by network delay, packet loss and capacity of network equipment.
+         </p>
+         <p>
+         Connection-oriented protocols requires a handshake procedure before data transmission. The tool measures a latency required to establish TCP and TLS connections and approximate a packet rate that shows efficiency of techniques used by protocol to provide value added service (e.g. reliable communication, data integrity, overflow, etc).
+         </p>
+         <p>
+         The time to display response is the most valuable metric from consumer perspective which is influenced by infrastructure, protocol and application environment. The tool provides analysis of application level protocol behavior. One of these metrics is Time to First Byte. This is concrete consumer oriented easily measurable indicator, it is defined independently of underlying solutions or technologies. It represents initial confirmation that remote host is responding and client application could procedure to rendering. Secondly, Time to Meaningful Response defines a network delay required to deliver application payload.
+         </p>
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
+      </div>
+      
+      <div class="col-md-4">
+         <h2>Application</h2>
+         <p>
+         The latency analysis of application requires techniques to investigate components behavior using information gathered as the service sustain the load. A series of technology derision problem arises concerning both short-term and long-term arrangements. The short term decisions include aspects of software configuration, capacity provisioning. The long term focuses on technological and architecture requirements, the system ability to handle amount of work and its potential to be enlarged to accommodate growing traffic requirements, etc.
+         </p>
+         <p>
+         The tool defines methods to control end-to-end latency requirements. Execute emergent actions required for system scalability. 
+         </p> 
+         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
+      </div>
+   </div>
+   <hr>
+</div>
 
 <div class="container">
-
-<h1><span id="url"></span> <small>click on following graph to expand details.</small></h1>
-<div id="case" class="chronolog"></div>
-
-<h1 id="urn"></h1>
-<h2> Request Per Second</h2>
-<div id="request" class="chronolog"></div>
-
-<h2> TCP/IP Latency (μs)</h2>
-<div id="tcp" class="chronolog"></div>
-
-<h2> SSL Latency (μs)</h2>
-<div id="ssl" class="chronolog"></div>
-
-<h2> Time To First Byte (μs)</h2>
-<div id="ttfb" class="chronolog"></div>
-
-<h2> Time To Meaningful Response (μs)</h2>
-<div id="ttmr" class="chronolog"></div>
-
-<h2> Packet Per Second</h2>
-<div id="pack" class="chronolog"></div>
-
+<footer>
+   <p>&copy; 2016 Zalando, SE</p>
+</footer>
 </div>
+
 
 <!--
 %%
@@ -259,44 +318,62 @@ h2
 %%
 -->
 <script type="text/javascript">
-
-
-var height  = 30;
-var pcolors = [
-   "#ffa500",
-   "#d88c00",
-   "#b17200",
-   "#9d6600",
-
-   "#00caec",
-   "#00a8c5",
-   "#00879e",
-   "#006576"
-];
-var scolors = [
-   "#00caec",
-   "#00a8c5",
-   "#00879e",
-   "#006576",
-
-   "#ffa500",
-   "#d88c00",
-   "#b17200",
-   "#9d6600"
-];
-
+var context = null;
+var model = {
+   scenario: {id: window.location.pathname.substring(1)},
+   runtime: {},
+   cluster: {peer: []},
+   archive: {
+      capacity: d3.map(),
+      ttfb: d3.map(),
+      ttmr: d3.map(),
+      tcp: d3.map(),
+      ssl: d3.map(),
+      pps: d3.map(),
+      pack: d3.map()
+   }
+};
 //--------------------------------------------------------------------------
 //
-// chronolog rest access
+// action
 //
 //--------------------------------------------------------------------------
-var chronolog = function(context, host) {
-   if (!host) host = "";
-   var source = {};
+var actionIO = (function()
+{
+   var self = {};
 
-   source.series = function(title, urn, kpi) {
+   //
+   self.scenario = function(id, accept)
+   {
+   }.curry();
+
+   //
+   self.attributes = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/attributes',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   //
+   self.cluster = function(accept)
+   {
+      d3.json('/health/peer',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   //
+   self.series = function(id, urn, title) 
+   {
       return context.metric(function(start, stop, step, callback) {
-         d3.json(host + "/scenario/" + ns + "/series/" +  urn + "/" + kpi
+         d3.json("/scenario/" + id + "/cubism/" + urn 
             + "/" + start.getTime() / 1000
             + "/" + stop.getTime() / 1000 
             + "?chronon=" + step / 1000, 
@@ -307,32 +384,181 @@ var chronolog = function(context, host) {
          }, title);
    };
 
-   return source;
-};
+   //
+   self.history = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/history',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
 
+   //
+   self.archive = function(id, urn, from, to, accept)
+   {
+      d3.json('/scenario/' + id + '/series/' + urn + '/' + from + '/' + to,
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
 
-//--------------------------------------------------------------------------
-//
-// time-series visualization
-//
-//--------------------------------------------------------------------------
-var timeseries = function(el, width)
+   //
+   self.spawn = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/spawn',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
+   return self;   
+})();
+
+var actionUI = (function()
 {
-   var self = {}
-   var context = cubism.context()
+   var self = {};
+
+   //
+   self.after = function(t, data, accept)
+   {
+      d3.timer(
+         function()
+         {
+            accept(data); 
+            return true;
+         }, 
+         t
+      );
+   }.curry();
+
+   //
+   self.launch = function(accept)
+   {
+      d3.selectAll('.launch').on('click',
+         function()
+         {
+            accept('launch')
+         }
+      )
+   }.curry()
+
+   return self;   
+})();
+
+//--------------------------------------------------------------------------
+//
+// presenter
+//
+//--------------------------------------------------------------------------
+var present = (function()
+{
+   var self = {};
+
+   //
+   self.attributes = function(model, json)
+   {
+      model.scenario.title = json.title
+      model.scenario.t = json.t
+      model.scenario.n = json.n
+      model.scenario.urn = json.urn
+      model.runtime.session  = json.session
+      model.runtime.capacity = json.capacity
+      model.runtime.latency  = (json.latency / 1000).toFixed(1)
+      model.runtime.availability = json.availability
+      return model
+   }.curry();
+
+   //
+   self.sensor = function(model)
+   {
+      model.scenario.sensor = model.scenario.urn.map(
+         function(urn)
+         {
+            var sid = model.scenario.id
+            return {
+               id: urn,
+               series: [
+                  {id: sid, urn: "urn:c:2xx:" + urn.substring(4), title: '2xx'}
+                 ,{id: sid, urn: "urn:c:3xx:" + urn.substring(4), title: '3xx'}
+                 ,{id: sid, urn: "urn:c:4xx:" + urn.substring(4), title: '4xx'}
+                 ,{id: sid, urn: "urn:c:5xx:" + urn.substring(4), title: '5xx'}
+                 ,{id: sid, urn: "urn:g:tcp:" + urn.substring(4), title: 'tcp (μs)'}
+                 ,{id: sid, urn: "urn:g:ssl:" + urn.substring(4), title: 'ssl (μs)'}
+                 ,{id: sid, urn: "urn:g:ttfb:" + urn.substring(4), title: 'ttfb (μs)'}
+                 ,{id: sid, urn: "urn:g:ttmr:" + urn.substring(4), title: 'ttmr (μs)'}
+                 ,{id: sid, urn: "urn:c:pack:" + urn.substring(4), title: 'packet / sec'}
+                 ,{id: sid, urn: "urn:g:pack:" + urn.substring(4), title: 'packet (byte)'}
+               ]
+            }
+         }
+      )
+      return model
+   }.curry();
+
+   //
+   self.cluster = function(model, json)
+   {
+      model.cluster.peer = json
+      return model
+   }.curry();
+
+   //
+   self.history = function(model, json)
+   {
+      model.scenario.history = json
+      return model
+   }.curry();
+
+   //
+   self.archive = function(model, type, urn, json)
+   {
+      var list = json.map(function(x){return x[1]}).sort(d3.ascending)
+      var stat = {
+         min: d3.min(list),
+         mean: d3.mean(list),
+         q25: d3.quantile(list, 0.25),
+         q50: d3.quantile(list, 0.50),
+         q75: d3.quantile(list, 0.75),
+         q80: d3.quantile(list, 0.80),
+         q90: d3.quantile(list, 0.90),
+         q95: d3.quantile(list, 0.95),
+         q99: d3.quantile(list, 0.99),
+         max: d3.max(list)
+      }
+
+      model.archive[type].set(urn, stat)
+      return model
+   }.curry();
+
+   return self;   
+})();
+
+//--------------------------------------------------------------------------
+//
+// state
+//
+//--------------------------------------------------------------------------
+var state = (function()
+{
+   var self   = {};
+   var width  = 960;
+   var height = 30;
+
+   // create cubism context
+   context = cubism.context()
       .step(1 * 1000)          // 1 second per value
       .size(width)
       .serverDelay(60 * 1000)  // time to collect and process metrics by server
       .clientDelay( 5 * 1000)
       .start();
    
-   d3.select(el).selectAll(".axis")
-      .data(["top", "bottom"])
-      .enter().append("div")
-      .attr("class", function(d) {return d + " axis"; })
-      .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
-
-   d3.select(el).append("div")
+   d3.select('.cubism').append("div")
       .attr("class", "rule")
       .call(context.rule());
 
@@ -343,43 +569,30 @@ var timeseries = function(el, width)
             .style("right", i == null ? null : context.size() - i + "px");
       }
    );
+
+   //
+   self.tiles = function(model)
+   {
+      d3.select("#tile-session").text(model.runtime.session)
+      d3.select("#tile-capacity").text(model.runtime.capacity)
+      d3.select("#tile-latency").text(model.runtime.latency)
+      d3.select("#tile-availability").text(model.runtime.availability)
+      d3.select("#tile-cluster").text(model.cluster.peer.length)
+      d3.select("#tile-history").text(model.scenario.history.length)
+      return model
+   }.curry();
    
    //
-   // visualize list of time series metrics
-   self.series = function(list)
+   var vmHorizon = function(ui, list)
    {
       var data = list.map(
          function(x)
          {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+            return actionIO.series(x.id, x.urn, x.title)
          }
       );
 
-      d3.select(el).selectAll(".horizon")
-         .data(data, function(d){return d.toString()})
-         .enter()
-            .insert("div", ".bottom")
-               .attr("class", "horizon")
-               .on("click", function(d){ viz("" + d) })
-               .call(
-                  context.horizon()
-                     .format(d3.format("+,.2d"))
-               );
-   }
-
-   //
-   // visualize primary metric
-   self.primary = function(id, list)
-   {
-      var data = list.map(
-         function(x)
-         {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
-         }
-      );
-
-      d3.select(id).selectAll("*").remove();
-      d3.select(id).selectAll(".horizon")
+      d3.select(ui).selectAll(".horizon")
          .data(data, function(d){return d.toString()})
          .enter()
             .insert("div", ".bottom")
@@ -388,308 +601,309 @@ var timeseries = function(el, width)
                   context.horizon()
                      .height( height )
                      .format(d3.format("+,.2d"))
-                     .colors(pcolors)
                );
    }
 
    //
-   // visualize secondary metric
-   self.secondary = function(id, list)
+   self.series = function(model)
    {
-      var data = list.map(
+      d3.select("#series").selectAll('div')
+         .data(model.scenario.urn)
+         .enter()
+            .append('div')
+            .attr('id', function(d){return d.split(':').join('_')})
+            .classed('chronolog', true)
+      
+      model.scenario.sensor.map(
          function(x)
          {
-            return chronolog(context).series("" + x.title, x.urn, x.kpi)
+            var ui = '#' + x.id.split(':').join('_')
+            d3.select(ui).selectAll("*").remove();
+            d3.select(ui).insert('h2').text(x.id)
+
+            d3.select(ui).selectAll(".axis")
+               .data(["top", "bottom"])
+               .enter().append("div")
+               .attr("class", function(d) {return d + " axis"; })
+               .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+
+            vmHorizon(ui, x.series)
+
+            d3.select(ui).insert('hr')
          }
-      );
+      )
 
-      d3.select(id).selectAll(".horizon")
-         .data(data, function(d){return d.toString()})
-         .enter()
-            .insert("div", ".bottom")
-               .attr("class", "horizon")
-               .call(
-                  context.horizon()
-                     .height( height / 2)
-                     .format(d3.format("+,.2d"))
-                     .colors(scolors)
-               );
-   }
-
-   return self;
-}
-
-
-//--------------------------------------------------------------------------
-//
-// cluster
-//
-//--------------------------------------------------------------------------
-var cluster = function()
-{
-   var self = {}
-   
-   // 
-   // check peer(s) status
-   self.peer = function()
-   {
-      d3.json("/health/peer", self.view)
-      return true;
-   }
+      return model;
+   }.curry();
 
    //
-   // visualize peer(s) status
-   self.view = function(json)
+   self.history = function(model)
    {
-      d3.select("#cluster-peer").text(json.length)
-      d3.timer(self.peer, 1000);
-   }
+      var margin = {top: 40, right: 40, bottom: 40, left:40}
+      var height = 150;
 
-   return self;
-}
-
-//--------------------------------------------------------------------------
-//
-// scenario
-//
-//--------------------------------------------------------------------------
-function unit(a, b, c) 
-{
-   return {title: a, urn: b, kpi: c}
-}
-
-var scenario = function(id, ts) 
-{
-   var self = {}
-   
-   //
-   // check scenario status
-   self.ping = function()
-   {
-      d3.json("/scenario/" + id + "/ping", self.view)
-      return true;
-   }
-
-   //
-   // visualize scenario status
-   self.view = function(json)
-   {
-      d3.select("#scenario-processes").text(json.processes)
-      d3.select("#scenario-rps").text(json.rps.toFixed(1))
-      d3.timer(self.ping, 1000);
-   }
-
-   //
-   // initialize scenario
-   self.init = function()
-   {
-      d3.select("#scenario-run").on("click",
-         function()
+      var data = model.scenario.history.map(
+         function(d) 
          {
-            d3.select("nav").select(".progress-bar")
-               .transition()
-               .style("width", "100%")
-               .duration(65000)
-               .ease("linear")
-               .each("end", 
-                  function()
-                  {
-                     d3.select(this).style("width", "0%");
-                     self.analysis();
-                  }
-               )
-
-            d3.text("/scenario/" + id + "/spawn", function(data){ })
-         }
-      );
-      d3.json("/scenario/" + id + "/attributes",
-         function(json)
-         {
-            var urn = json
-               .urn
-               .map(function(x){return unit(x, x, "rps")});
-            
-            // d3.select("#url").text(json.url);
-            d3.select("#url").text(id);
-            ts.series(urn, "rps");
-            self.latency("" + urn[0].urn);
-            self.analysis();
+            return {date: new Date(d[0] * 1000), t: ~~(d[1] / 1000)}
          }
       ) 
-   }
+
+      var ta = d3.time.minute.offset(data[0].date, -30)
+      var tb = d3.time.minute.offset(data[data.length - 1].date, 30)
+      var x  = d3.time.scale()
+         .domain([ta, tb])
+         .rangeRound([0, width - margin.left - margin.right]);
+
+      var y = d3.scale.linear()
+         .domain([0, d3.max(data, function(d) { return d.t; })])
+         .range([height - margin.top - margin.bottom, 0]);
+
+      var xAxis = d3.svg.axis()
+         .scale(x)
+         .orient('bottom')
+         .ticks(10)
+         .tickFormat(d3.time.format('%a %d %H:%M'))
+         .tickSize(4)
+         .tickPadding(4);
+
+      var tip = d3.tip()
+         .attr('class', 'd3-tip')
+         .offset([-10, 0])
+         .html(function(d) {return d.date;})
+
+      var svg = d3.select('#history').append('svg')
+         .attr('class', 'chart')
+         .attr('width', width)
+         .attr('height', height)
+         .append('g')
+            .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+      svg.call(tip)
+
+      svg.selectAll('.chart')
+         .data(data)
+         .enter().append('rect')
+            .attr('class', 'bar')
+            .attr('x', function(d) { return x(new Date(d.date)); })
+            .attr('y', function(d) { return y(d.t) })
+            .attr('width', 5.5)
+            .attr('height', function(d) {return height - margin.top - margin.bottom - y(d.t) })
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+            .on('click', chain.history);
+
+      svg.append('g')
+         .attr('class', 'x axis')
+         .attr('transform', 'translate(0, ' + (height - margin.top - margin.bottom) + ')')
+         .call(xAxis);
+
+      return model;
+   }.curry();
 
    //
-   // update latest analysis (7 days)
-   self.analysis = function()
+   self.bullet = function(ui, type, model)
    {
-      var tb  = Math.round(+new Date() / 1000);
-      var ta  = tb - 7 * 86400;
-      var req = ['scenario', id, 'series', 'urn:scenario:' + id, 'id', ta, tb].join("/");
-      d3.json('/' + req,
-         function(list)
+      d3.select('.archive').style('display', 'block')
+      var data = model.scenario.urn.map(
+         function(urn)
          {
-            var t    = list.pop();
-            var path = ['analysis', id, t[0], t[1]].join("/");
-            d3.select("#scenario-analysis").attr("href", '/' + path);
+            var stat = model.archive[type].get(urn)
+            return {
+               title: urn,
+               subtitle: '',
+               ranges: [stat.min, stat.mean, stat.max],
+               measures: [stat.q75, stat.q80, stat.q90, stat.q95, stat.q99],
+               markers: [stat.q50]
+            }
          }
-      );
+      )
+
+      var margin = {top: 5, right: 40, bottom: 20, left: 120};
+      var width  = 800;
+      var height = 50 - margin.top - margin.bottom;
+
+      var chart = d3.bullet()
+         .width(width)
+         .height(height);
+      
+      d3.select(ui).selectAll('*').remove();
+      var svg = d3.select(ui).selectAll("svg")
+         .data(data)
+         .enter().append("svg")
+            .attr("class", "bullet")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+               .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+               .call(chart);
+
+      var title = svg.append("g")
+         .style("text-anchor", "end")
+         .attr("transform", "translate(-6," + height / 2 + ")");
+
+      title.append("text")
+         .attr("class", "title")
+         .text(function(d) { return d.title; });
+
+      title.append("text")
+         .attr("class", "subtitle")
+         .attr("dy", "1em")
+         .text(function(d) { return d.subtitle; });
+
+      return model;
+   }.curry();
+
+   return self;   
+})();
+
+
+//--------------------------------------------------------------------------
+//
+// chain
+//
+//--------------------------------------------------------------------------
+var chain = (function()
+{
+   var self = {};
+
+   //
+   self.bootstrap = function()
+   {
+      monad.do([
+         monad.IO(actionIO.cluster),
+         present.cluster(model),
+         function(_)
+         {
+            return monad.IO(actionIO.attributes(model.scenario.id))
+         },
+         present.attributes(model),
+         present.sensor(),
+         function(x)
+         {
+            d3.selectAll('.scenario-title').text(x.scenario.title)
+            return x
+         },
+         function(_)
+         {
+            return monad.IO(actionIO.history(model.scenario.id))
+         },         
+         present.history(model),
+         state.tiles(),
+         state.series(),
+         state.history()
+      ])
+      self.launch()
+      self.poll_attributes()
+      self.poll_cluster()
    }
 
    //
-   // visualize latency details
-   self.latency = function(urn)
+   self.launch = function()
    {
-      d3.select("#urn").text(urn);
-      d3.select("#unit").selectAll("*").remove();
-      self.http(urn);
-      self.tcp(urn);
-      self.ssl(urn);
-      self.ttfb(urn);
-      self.ttmr(urn);
-      self.packet(urn);
+
+      var scrollTween = function (offset) 
+      {
+         return function() 
+         {
+            var i = d3.interpolateNumber(window.pageYOffset || document.documentElement.scrollTop, offset);
+            return function(t) { scrollTo(0, i(t)); };
+         };
+      }
+
+      monad.do([
+         monad.UI(actionUI.launch),
+         function(_)
+         {
+            return monad.IO(actionIO.spawn(model.scenario.id))
+         },
+         function(_)
+         {
+            var x = d3.select('#time-series-analysis')
+            var h = x[0][0].getBoundingClientRect().top - 60
+            console.log(x)
+            console.log(h)
+            x.transition()
+               .duration(1000) 
+               .tween("scroll", scrollTween(h))
+         }
+      ])
    }
 
    //
-   // visualize http status code
-   self.http = function(urn)
+   self.poll_attributes = function()
    {
-      ts.primary('#request', 
-         [
-            unit("rps", urn, "rps")
-         ]
-      );
-      ts.secondary('#request',
-         [
-            unit("http 2xx", urn, "200"),
-            unit("http 3xx", urn, "300"),
-            unit("http 4xx", urn, "400"),
-            unit("http 5xx", urn, "500")
-         ]
-      );
+      monad.do([
+         monad.UI(actionUI.after(5000, 'tick')),
+         function(_) 
+         {
+            return monad.IO(actionIO.attributes(model.scenario.id))
+         },
+         present.attributes(model),
+         state.tiles(),
+         chain.poll_attributes
+      ])
    }
    
    //
-   // visualize tcp latency
-   self.tcp = function(urn)
+   self.poll_cluster = function()
    {
-      ts.primary('#tcp', 
-         [
-            unit("mean", urn.replace("urn:http", "urn:tcp"), "mean")
-         ]
-      );
-      ts.secondary('#tcp', 
-         [
-            unit("90%", urn.replace("urn:http", "urn:tcp"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:tcp"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:tcp"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:tcp"), "max")
-         ]
-      );
+      monad.do([
+         monad.UI(actionUI.after(60000, 'tick')),
+         function(_) 
+         {
+            return monad.IO(actionIO.cluster)
+         },
+         present.cluster(model),
+         state.tiles(),
+         chain.poll_cluster
+      ])
    }
 
    //
-   // visualize ssl latency
-   self.ssl = function(urn)
+   self.history = function(x)
    {
-      ts.primary('#ssl',
-         [
-            unit("mean", urn.replace("urn:http", "urn:ssl"), "mean")
-         ]
-      );
-      ts.secondary('#ssl',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ssl"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ssl"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ssl"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ssl"), "max")
-         ]
-      );
+      var ta = x.date.getTime() / 1000
+      var tb = ta + x.t
+
+      self.archive('#capacity', 'capacity', "urn:c:2xx:", ta, tb)
+      self.archive('#latency-ttfb', 'ttfb', "urn:g:ttfb:", ta, tb)
+      self.archive('#latency-ttmr', 'ttmr', "urn:g:ttmr:", ta, tb)
+      self.archive('#latency-tcp', 'tcp', "urn:g:tcp:", ta, tb)
+      self.archive('#latency-ssl', 'ssl', "urn:g:ssl:", ta, tb)
+
+      self.archive('#pps', 'pps', "urn:c:pack:", ta, tb)
+      self.archive('#packet', 'pack', "urn:g:pack:", ta, tb)
    }
 
-   //
-   // visualize time to first byte
-   self.ttfb = function(urn)
+   self.archive = function(ui, type, prefix, ta, tb)
    {
-      ts.primary('#ttfb',
-         [
-            unit("mean", urn.replace("urn:http", "urn:ttfb"), "mean")
-         ]
-      );
-      ts.secondary('#ttfb',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ttfb"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ttfb"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ttfb"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ttfb"), "max")
-         ]
-      );
+
+      var fn = model.scenario.urn.map(
+         function(urn)
+         {
+            var id = prefix + urn.substring(4)
+            return [
+               monad.IO(actionIO.archive(model.scenario.id, id, ta, tb)),
+               present.archive(model, type, urn)
+            ]
+         }
+      )
+      var head = fn.shift()
+      var list = fn.reduce(
+         function(acc, x)
+         {
+            return acc.concat([function(_){return x[0]}, x[1]])
+         },
+         head
+      )
+      monad.do(
+         list.concat([state.bullet(ui, type)])
+      )
    }
 
-   //
-   // visualize time to meaningful response
-   self.ttmr = function(urn)
-   {
-      ts.primary('#ttmr',
-         [
-            unit("mean", urn.replace("urn:http", "urn:ttmr"), "mean")
-         ]
-      );
-      ts.secondary('#ttmr',
-         [
-            unit("90%", urn.replace("urn:http", "urn:ttmr"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:ttmr"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:ttmr"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:ttmr"), "max")
-         ]
-      );
-   }
+   return self;   
+})();
 
-   //
-   // visualize packet rate
-   self.packet = function(urn)
-   {
-      ts.primary('#pack',
-         [
-            unit("pps",  urn.replace("urn:http", "urn:pack"), "rps"),
-            unit("size", urn.replace("urn:http", "urn:pack"), "mean")
-         ]
-      );
-      ts.secondary('#pack',
-         [
-            unit("90%", urn.replace("urn:http", "urn:pack"), "p90"),
-            unit("95%", urn.replace("urn:http", "urn:pack"), "p95"),
-            unit("99%", urn.replace("urn:http", "urn:pack"), "p99"),
-            unit("max", urn.replace("urn:http", "urn:pack"), "max")
-         ]
-      );
-   }
-
-   return self;
-}
-
-//--------------------------------------------------------------------------
-//
-// entry point / global state
-//
-//--------------------------------------------------------------------------
-var ns = window.location.pathname.substring(1);
-d3.select("#scenario-id").text(ns);
-
-var ts = timeseries("#case", 800);
-var sc = scenario(ns, ts);
-var cc = cluster();
-
-function viz(urn)
-{
-   sc.latency(urn)
-} 
-
-
-sc.init();
-sc.ping();
-
-cc.peer();
+chain.bootstrap();
 </script>
-
-
 </body>

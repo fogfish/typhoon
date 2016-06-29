@@ -20,7 +20,7 @@
 -export([
    start_link/0, init/1
 ]).
--export([spawn/2]).
+-export([spawn/3]).
 
 -define(CHILD(Type, I),            {I,  {I, start_link,   []}, transient, 5000, Type, dynamic}).
 -define(CHILD(Type, I, Args),      {I,  {I, start_link, Args}, transient, 5000, Type, dynamic}).
@@ -47,22 +47,32 @@ init([]) ->
 
 %%
 %% spawn new socket pool
-spawn(Id, Uri) ->
+spawn(Id, 'keep-alive', Uri) ->
    pid(
       supervisor:start_child(?MODULE, 
-         ?CHILD(supervisor, Id, pq, [Id, netpool(Uri)])
+         ?CHILD(supervisor, Id, pq, [Id, netpool(Uri, lifo)])
       )
-   ). 
+   );
+
+spawn(Id, disposable, Uri) ->
+   pid(
+      supervisor:start_child(?MODULE, 
+         ?CHILD(supervisor, Id, pq, [Id, netpool(Uri, spawn)])
+      )
+   ).
+
 
 pid({ok, _}) -> ok;
 pid({error, {already_started, _}}) -> ok.
 
 
 %%
-netpool(Uri) ->
+netpool(Uri, Type) ->
    [
       {capacity,  inf},
       {worker,    {typhoon_net, [Uri]}},
-      {strategy,  lifo}
+      {strategy,  Type}
    ].
+
+
 

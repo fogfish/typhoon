@@ -215,7 +215,7 @@ stream(Id, Gen) ->
       {ok, Entity} ->
          Vnode = ambitz:entity(vnode, Entity),
          Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
-         pipe:call({typhoon_peer, Node}, {stream, Gen}, 30000)
+         pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000)
    end.
 
 

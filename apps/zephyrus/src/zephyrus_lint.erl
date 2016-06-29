@@ -48,7 +48,7 @@ content_accepted(_Req) ->
          {module, Id} = code:load_binary(Id, undefined, Code),
          try
             Fun = Id:run(),
-            Val = Fun(#{pool => fun netpool/1, peer => []}),
+            Val = Fun(#{pool => fun netpool/2, peer => []}),
             {ok, scalar:s(Val)}
          catch Error:Reason ->
             {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}
@@ -74,11 +74,11 @@ compile(Id, Scenario) ->
 
 %%
 %% selector of net i/o pool (hack uses lint pool)
-netpool(Url) ->
+netpool(Url, Header) ->
    case erlang:whereis(lint) of
       undefined ->
-         typhoon_net_sup:spawn(lint, Url),
-         netpool(Url);
+         typhoon_net_sup:spawn(lint, 'keep-alive', Url),
+         netpool(Url, Header);
       Pid ->
          Pid
    end.   

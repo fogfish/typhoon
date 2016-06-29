@@ -145,7 +145,7 @@ docker: rel/Dockerfile scm-source.json
 		--build-arg APP=${APP} \
 		--build-arg VSN=${VSN} \
 		-t ${URL}/${APP}:${VSN} -f $< .
-	docker tag -f ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
+	docker tag ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
 
 
 

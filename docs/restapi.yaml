@@ -278,7 +278,7 @@ paths:
 
    ##
    ## scenario read telemetry - time series measurement
-   /scenario/{id}/series/{urn}/{kpi}/{from}/{to} :
+   /scenario/{id}/series/{urn}/{from}/{to} :
       get:
          summary: |
             Read telemetry of key-performance-indicator (kpi) for given request within 
@@ -288,7 +288,6 @@ paths:
          parameters:
             - $ref: '#/parameters/id'
             - $ref: '#/parameters/urn'
-            - $ref: '#/parameters/kpi'
             - $ref: '#/parameters/from'
             - $ref: '#/parameters/to'
             - $ref: '#/parameters/chronon'
@@ -406,40 +405,7 @@ parameters:
       type: string
       required: true
       description: |
-         the identity of telemetry produced by request(s) of workload scenario. Typhoon supports 
-         following classes of telemetry:
-         
-          * urn:http:xxx - http status code produced by stress test.
-          * urn:ttmr:xxx - time to meaningful response 
-          * urn:ttfb:xxx - time to first byte
-          * urn:pack:xxx - size of received packet(s) 
-          * urn:ssl:xxx  - ssl handshake latency
-          * urn:tcp:xxx  - tcp connection latency
-         
-         For example scenation.json file defined a request with identity `urn:http:httpbin.org`.
-         The tool collects and persists all other metrics underhood. The client can obtain these 
-         measurments using `urn:ttmr:httpbin.org`, `urn:ttfb:httpbin.org`, etc.
-
-   ##
-   ##
-   kpi:
-      name: kpi
-      in:   path
-      type: string
-      required: true
-      description: |
-         key-performance-indicator is the aggregation filter applied to raw telemetry:
-         
-          * rps  - amount of sampled data per second (e.g. the filter returns HTTP TPS)   
-          * 200  - http specific, amount of transactions completed with 2xx status code
-          * 300  - http specific, amount of transactions completed with 3xx status code
-          * 400  - http specific, amount of transactions completed with 4xx status code
-          * 500  - http specific, amount of transactions completed with 5xx status code
-          * mean - roll-up multiple sampled values to mean on the aggregation interval
-          * max  - return maximum value on the aggregation interval
-          * p90  - return percentile 90 on the aggregation interval
-          * p95  - return percentile 95 on the aggregation interval
-          * p99  - return percentile 99 on the aggregation interval
+         the identity of telemetry produced by request(s) of workload scenario. 
 
    ##
    ##
