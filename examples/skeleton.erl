@@ -1,14 +1,20 @@
 -module(skeleton).
 -compile({parse_transform, monad}).
 
-%% 
-%% exported functions
--export([title/0, t/0, n/0, urn/0, run/0]).
-
-
 %%
 %% scenario attributes
+-export([title/0, t/0, n/0, urn/0]).
+
 %%
+%% scenario entry point
+-export([init/0, run/1]).
+
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% attributes
+%%%
+%%%----------------------------------------------------------------------------   
 
 %% human readable scenario title
 title() ->
@@ -27,11 +33,26 @@ urn() ->
    [
       "urn:http:example"
    ].
-   
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% actions
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% scenario configuration
+%%
+init() ->
+   [{do, 'Mio'} ||
+      A <- request(),
+      return(A)
+   ].
+
 %%
 %% scenario entry-point
 %%
-run() ->
+run(_Config) ->
    [{do, 'Mio'} ||
       A <- request(),
       return(A)

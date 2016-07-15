@@ -47,9 +47,16 @@ content_accepted(_Req) ->
          code:purge(Id),
          {module, Id} = code:load_binary(Id, undefined, Code),
          try
-            Fun = Id:run(),
-            Val = Fun(#{pool => fun netpool/2, peer => []}),
-            {ok, scalar:s(Val)}
+            Conf = case lens:get(lens:pair(init, undefined), Id:module_info(exports)) of
+               0 ->
+                  Cfun = Id:init(),
+                  Cfun(#{pool => fun netpool/2, peer => []});
+               _ ->
+                  undefined
+            end,
+            Efun = Id:run(Conf),
+            Data = Efun(#{pool => fun netpool/2, peer => []}),
+            {ok, scalar:s(Data)}
          catch Error:Reason ->
             {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}
          end;
@@ -77,7 +84,7 @@ compile(Id, Scenario) ->
 netpool(Url, Header) ->
    case erlang:whereis(lint) of
       undefined ->
-         typhoon_net_sup:spawn(lint, 'keep-alive', Url),
+         typhoon_net_sup:spawn(lint, disposable, Url),
          netpool(Url, Header);
       Pid ->
          Pid

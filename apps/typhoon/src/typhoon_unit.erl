@@ -40,11 +40,13 @@ start_link(Scenario) ->
 init([Scenario]) ->
    random:seed(os:timestamp()),
    tempus:timer(Scenario:t(), expired),
+   Peer = typhoon:peer(Scenario),
    erlang:send(self(), request),
    {ok, handle, 
       #{
          scenario  => Scenario,
-         peer      => typhoon:peer(Scenario)
+         peer      => Peer,
+         config    => config(Scenario, Peer)
       }
    }.
 
@@ -59,9 +61,9 @@ free(_Reason, _) ->
 
 %%
 %%
-handle(request, _, #{scenario := Scenario, peer := Peer} = State) ->
+handle(request, _, #{scenario := Scenario, peer := Peer, config := Config} = State) ->
    Ta  = os:timestamp(),
-   Fun = Scenario:run(),
+   Fun = Scenario:run(Config),
    Fun(#{pool => fun netpool/2, peer => Peer}),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
@@ -102,5 +104,17 @@ netpool(Url, Header) ->
             Pid ->
                Pid
          end
+   end.
+
+%%
+%% configure scenario execution
+config(Scenario, Peer) ->
+   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
+      0 ->
+         Fun = Scenario:init(),
+         Fun(#{pool => fun netpool/2, peer => Peer});
+
+      _ ->
+         undefined
    end.
 

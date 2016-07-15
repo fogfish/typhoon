@@ -24,7 +24,7 @@
 
 %%
 %% scenario entry point
--export([run/0]).
+-export([run/1]).
 
 
 %%%----------------------------------------------------------------------------   
@@ -70,7 +70,7 @@ urn() ->
 %% operation (e.g. HTTP request), the result of protocol operation is returned to next 
 %% function and so on. We are using IO-monad to isolate side-effect and protocol stack 
 %% from scenario developers.
-run() -> 
+run(_) -> 
    [{do, 'Mio'} ||
       % the first action is HTTP GET request
       A <- get_ip(),
