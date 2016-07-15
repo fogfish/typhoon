@@ -25,7 +25,7 @@ Each load scenario is valid Erlang module. The [skeleton scenario](../examples/s
 %% Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called 
 %% `run()`. These functions shall be exported `-export([...]).` from the module.
 %%
--export([t/0, n/0, urn/0, run/0]).
+-export([t/0, n/0, urn/0, run/1]).
 
 %%
 %% scenario attributes - pure function returns scalar values.
@@ -47,7 +47,7 @@ urn() ->
    
 %%
 %% scenario entry-point, IO-monads 
-run() ->
+run(_) ->
    [{do, 'Mio'} ||       %% define sequence of requests to execute as IO monadic type
       _ <- request(),    %% execute HTTP request and discard results
       A <- request(),    %% execute HTTP request and assign response to variable A

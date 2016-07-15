@@ -199,7 +199,7 @@ lens({pareto, A}) ->
 -spec join([_]) -> binary().
 
 join(Terms) ->
-   scalar:s([scalar:s(X) || X <- Terms]).
+   scalar:ls([scalar:ls(X) || X <- Terms]).
 
 %%
 %% generate globally unique sequential (k-order) identity
@@ -217,7 +217,7 @@ uniform(N)
    scalar:s(random:uniform(N));
 uniform(List)
  when is_list(List) ->
-   scalar:s(
+   scalar:ls(
       lists:nth(
          random:uniform(length(List)), 
          List
@@ -233,7 +233,7 @@ pareto(A, N)
    scalar:s(pdf:pareto(A, N));
 pareto(A, List)
  when is_list(List) ->
-   scalar:s(
+   scalar:ls(
       lists:nth(
          pdf:pareto(A, length(List)),
          List
