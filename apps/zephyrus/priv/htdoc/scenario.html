@@ -141,6 +141,7 @@
    <div id="history"></div> 
 
    <div class="archive">
+   <p>You can <a class="export" target="_new">export</a> following bullet graphs to csv file.
    <h2>Capacity</h2>
    <div id="capacity"></div>
    <div class="legend">
@@ -155,7 +156,7 @@
    <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
    </div>
 
-   <h2>Time To First Byte (μs)</h2>
+   <h2>Time To First Byte (ms)</h2>
    <div id="latency-ttfb"></div>
    <div class="legend">
    <span class="rect range-s2">&#x25A0;</span><span>min</span> 
@@ -169,7 +170,7 @@
    <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
    </div>
 
-   <h2>Time To Response (μs)</h2>
+   <h2>Time To Response (ms)</h2>
    <div id="latency-ttmr"></div>
    <div class="legend">
    <span class="rect range-s2">&#x25A0;</span><span>min</span> 
@@ -183,7 +184,7 @@
    <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
    </div>
 
-   <h2>Network Round Trip (μs)</h2>
+   <h2>Network Round Trip (ms)</h2>
    <div id="latency-tcp"></div>
    <div class="legend">
    <span class="rect range-s2">&#x25A0;</span><span>min</span> 
@@ -197,7 +198,7 @@
    <span class="rect measure-s0">&#x25A0;</span><span>99%</span> 
    </div>
 
-   <h2>SSL Handshake (μs)</h2>
+   <h2>SSL Handshake (ms)</h2>
    <div id="latency-ssl"></div>
    <div class="legend">
    <span class="rect range-s2">&#x25A0;</span><span>min</span> 
@@ -515,18 +516,27 @@ var present = (function()
    self.archive = function(model, type, urn, json)
    {
       var list = json.map(function(x){return x[1]}).sort(d3.ascending)
+      var norm = 1
+      if (['ttfb', 'ttmr', 'tcp', 'ssl'].indexOf(type) > -1)
+         norm = 1000
+
       var stat = {
-         min: d3.min(list),
-         mean: d3.mean(list),
-         q25: d3.quantile(list, 0.25),
-         q50: d3.quantile(list, 0.50),
-         q75: d3.quantile(list, 0.75),
-         q80: d3.quantile(list, 0.80),
-         q90: d3.quantile(list, 0.90),
-         q95: d3.quantile(list, 0.95),
-         q99: d3.quantile(list, 0.99),
-         max: d3.max(list)
+         min: d3.min(list) / norm,
+         mean: d3.mean(list) / norm,
+         std: d3.deviation(list) / norm,
+         q25: d3.quantile(list, 0.25) / norm,
+         q50: d3.quantile(list, 0.50) / norm,
+         q75: d3.quantile(list, 0.75) / norm,
+         q80: d3.quantile(list, 0.80) / norm,
+         q90: d3.quantile(list, 0.90) / norm,
+         q95: d3.quantile(list, 0.95) / norm,
+         q99: d3.quantile(list, 0.99) / norm,
+         max: d3.max(list) / norm
       }
+
+      model.csv += [type, urn, stat.min, stat.mean, stat.std, stat.q25, stat.q50, stat.q75, stat.q80, stat.q90, stat.q95, stat.q99, stat.max].join(',') 
+      model.csv += "\n"
+      d3.select('.export').attr('href', encodeURI(model.csv))
 
       model.archive[type].set(urn, stat)
       return model
@@ -874,6 +884,8 @@ var chain = (function()
    {
       var ta = x.date.getTime() / 1000
       var tb = ta + x.t
+      model.csv  = 'data:text/csv;charset=utf-8,'
+      model.csv += 'type,urn,min,mean,std,25%,50%,75%,80%,90%,95%,99%,max\n'
 
       self.archive('#capacity', 'capacity', "urn:c:2xx:", ta, tb)
       self.archive('#latency-ttfb', 'ttfb', "urn:g:ttfb:", ta, tb)
