@@ -19,7 +19,7 @@ VSN    ?= $(shell test -z "`git status --porcelain`" && git describe --tags --lo
 REL     = ${APP}-${VSN}
 TEST   ?= ${APP}
 S3     ?=
-VMI    ?= fogfish/erlang:18.2.1
+VMI    ?= fogfish/erlang:latest
 NET    ?= lo0
 URL    ?= registry.opensource.zalan.do/hunt
 LATEST ?= latest
@@ -136,7 +136,7 @@ ${PKG}.tar.gz: _build/dockermake
 	test -f $@ && echo "==> tarball: $@"
 
 _build/dockermake:
-	@mkdir _build && echo "${BUILDER}" > $@
+	@echo "${BUILDER}" > $@
 endif
 
 ## build docker image

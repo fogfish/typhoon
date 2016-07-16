@@ -25,6 +25,8 @@
    handle/3
 ]).
 
+-define(A, 0.2).
+
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -43,7 +45,9 @@ init([Ns, {urn, _, _} = Urn]) ->
       #{
          urn  => Urn,
          sock => socket(),
-         peer => peer(Urn)
+         peer => peer(Urn),
+         t    => {0, 0, 0},
+         x    => 0.0
       }
    }.
 
@@ -60,9 +64,23 @@ free(_, _State) ->
 
 %%
 %%
-handle({T, X}, _, #{urn := Urn, sock := Sock, peer := Peer} = State) ->
-   pipe:send(Sock, {Peer, {Urn, T, X}}),   
-   {next_state, handle, State}.
+handle({{A, B, _}, X}, Pipe, #{t := {A, B, _}} = State) ->
+   pipe:ack(Pipe, ok),
+   {next_state, handle, update(X, State), 500};
+
+handle({{A0, A1, _} = A, _} = X, Pipe, #{t := B} = State)
+ when A > B ->
+   State0 = append(State),
+   handle(X, Pipe, State0#{t := {A0, A1, 0}});
+
+handle({{_, _, _}, _}, Pipe, State) ->
+   %% ignore out-dated
+   pipe:ack(Pipe, ok),
+   {next_state, handle, State, 500};
+
+handle(timeout, _Pipe, State) ->
+   {next_state, handle, append(State)}.
+
 
 
 %%%----------------------------------------------------------------------------   
@@ -89,3 +107,25 @@ addr(Vnode) ->
 socket() ->
    Socks = [erlang:element(2, X) || X <- supervisor:which_children(aura_egress_sup)],
    lists:nth( random:uniform(length(Socks)), Socks ).
+
+
+%%
+update(X, #{urn := {urn, <<"g">>, _}, x := X0} = State) ->
+   State#{x => ?A * X + (1 - ?A) * X0};
+
+update(X, #{urn := {urn, <<"c">>, _}, x := X0} = State) ->
+   State#{x => X0 + X};
+
+update(_, State) ->
+   State.
+
+
+%%
+append(#{t := {0, 0, 0}} = State) ->
+   State;
+append(#{urn := Urn, sock := Sock, peer := Peer, t := T, x := X} = State) ->
+   pipe:send(Sock, {Peer, {Urn, T, erlang:trunc(X)}}), 
+   State#{t => {0, 0, 0}, x => 0.0}.
+
+
+

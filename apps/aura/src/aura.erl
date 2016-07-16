@@ -44,6 +44,9 @@ fd() ->
 %% send telemetry for processing
 -spec send(uri:urn(), tempus:t(), number()) -> ok.
 
+
+send(Urn, T, {_, _, _} = X) ->
+   pts:send(aura_stream, Urn, {T, tempus:u(X)});
 send(Urn, T, X) ->
    pts:send(aura_stream, Urn, {T, X}).
 
