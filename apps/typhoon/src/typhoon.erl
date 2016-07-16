@@ -141,7 +141,7 @@ run(Id) ->
 
 %%
 %% return number of active load units
--spec(unit/1 :: (id()) -> {ok, integer()} | {error, any()}).
+-spec unit(id()) -> {ok, integer()} | {error, any()}.
 
 unit(Id) ->
    case
@@ -164,7 +164,7 @@ unit(Id) ->
 
 %%
 %% return number of active load units
--spec(attr/1 :: (id()) -> {ok, [_]} | {error, any()}).
+-spec attr(id()) -> {ok, [_]} | {error, any()}.
 
 attr(Id) ->
    case
