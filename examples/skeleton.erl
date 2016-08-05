@@ -1,27 +1,27 @@
 %%
 %% The mandatory header(s) for each scenario file:
 %%  * `-module(...).` identity of module
-%%  * `-compile({parse_transform, monad}).` enable monads  
+%%  * `-compile({parse_transform, monad}).` enable monads
 -module(skeleton).
 -compile({parse_transform, monad}).
 
 %% 
-%% The workload scenario consists of attributes and actions. 
-%% Attributes are functions that returns a scalar values, 
+%% The workload scenario consists of attributes and actions 
+%% Attributes are functions that return scalar values 
 %% Action returns pure IO-monadic computations. 
-%% Actions and attributes are exported using `-export([...]).` 
+%% Actions and attributes are exported using `-export([...]).`
 
-%% Typhoon requires each scenario to defined attributes:
+%% Typhoon requires each scenario to define attributes:
 %%  * `title()` a human readable scenario name
 %%  * `t()` time in milliseconds to execute workload
-%%  * `n()` number of concurrent session globally spawned in the cluster
-%%  * `urn()` list of requests identifiers produced by workload scenario
+%%  * `n()` number of concurrent sessions globally spawned in the cluster
+%%  * `urn()` list of request identifiers produced by workload scenario
 -export([title/0, t/0, n/0, urn/0]).
 
 %% Scenario shall provide actions:
-%%  * `init()` an optional computation to be executed once by scenario session. 
-%%             the result of computation is feed to main entry point.
-%%  * `run(_)` executes workload scenario, 
+%%  * `init()` an optional computation to be executed once by scenario session 
+%%             the result of computation is fed to main entry point
+%%  * `run(_)` executes workload scenario 
 -export([init/0, run/1]).
 
 %%%----------------------------------------------------------------------------   
@@ -38,7 +38,7 @@ title() ->
 t() ->
    60000.
 
-%% number of concurrent session to spawn in the cluster.
+%% number of concurrent sessions to spawn in the cluster.
 n() ->
    2.
 
@@ -61,7 +61,7 @@ init() ->
    do(['Mio' ||        %% sequence of requests to execute as IO-monadic computation
       _ <- request(),  %% execute HTTP request and discard results
       A <- request(),  %% execute HTTP request and assign response to variable A
-      return(A)        %% it just takes a value A and puts it in a IO context.
+      return(A)        %% it just takes a value A and puts it in an IO context.
    ]).
 
 %%
@@ -77,7 +77,7 @@ run(_Config) ->
 %%
 %% create HTTP request using nested function call syntax
 request() ->
-   % 4. return IO-monad, it promise HTTP response 
+   % 4. return IO-monad, it promises HTTP response 
    scenario:request(
       % 3. set request header 
       scenario:header("Accept-Language", "de-DE",   
@@ -98,6 +98,6 @@ article() ->
    B = scenario:url("https://api.zalando.com/articles", A), 
    % 3. set request header
    C = scenario:header("Accept-Language", "de-DE", B),
-   % 4. return IO-monad that focus lens on JSON field in HTTP response 
+   % 4. return IO-monad with focus lens on JSON field in HTTP response 
    scenario:request([content, {uniform}, id], C). 
 
