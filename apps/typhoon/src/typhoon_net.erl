@@ -28,7 +28,7 @@ free(_Reason, #{sock := Sock}) ->
    knet:close(Sock).
 
 %%
-idle({request, Urn, Peer, Req}=Xx, Pipe, #{sock := _Sock} = State) ->
+idle({request, Urn, Peer, Req}, Pipe, #{sock := _Sock} = State) ->
    lists:foreach(fun(X) -> pipe:b(Pipe, X) end, Req),
    {next_state, wire, State#{urn => Urn, peer => Peer, pipe => Pipe}};
 
