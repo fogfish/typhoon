@@ -30,8 +30,10 @@ SenzaInfo:
          Description: "Initial cluster size"
          Default: "3"
       - AppId:
-         Description: "Yourturn application id"
+         Description: "Yourturn application id (see stups.io)"
          Default: typhoon
+      - Mint:
+         Description: "Mint bucket identity (see stups.io)"
 
 SenzaComponents:
    - Configuration:
@@ -55,6 +57,7 @@ SenzaComponents:
          root: true
          application_id: "{{Arguments.AppId}}"
          application_version: "{{Arguments.ImageVersion}}"
+         mint_bucket: "{{Arguments.Mint}}"
          runtime: Docker
          networking: host
          source: "registry.opensource.zalan.do/hunt/typhoon:{{Arguments.ImageVersion}}"
@@ -116,7 +119,14 @@ Resources:
                PolicyDocument:
                   Version: "2012-10-17"
                   Statement:
+                  
+                  ## give permissions to discover cluster nodes
                   -  Effect: Allow
                      Action: ec2:Describe*
                      Resource: "*"
-
+                  
+                  ## give permissions to read application config
+                  -  Effect: Allow
+                     Action:
+                        - s3:GetObject
+                     Resource: arn:aws:s3:::{{Arguments.Mint}}/{{Arguments.AppId}}/*

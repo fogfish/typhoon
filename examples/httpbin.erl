@@ -23,7 +23,7 @@
 -export([title/0, t/0, n/0, urn/0]).
 
 %%
-%% scenario entry point
+%% scenario actions
 -export([run/1]).
 
 
@@ -71,7 +71,7 @@ urn() ->
 %% function and so on. We are using IO-monad to isolate side-effect and protocol stack 
 %% from scenario developers.
 run(_) -> 
-   [{do, 'Mio'} ||
+   do(['Mio' ||
       % the first action is HTTP GET request
       A <- get_ip(),
 
@@ -79,10 +79,10 @@ run(_) ->
       B <- usecase_a(),
       C <- usecase_b(),
       return(C)
-   ].
+   ]).
 
 usecase_a() ->
-   [{do, 'Mio'} ||
+   do(['Mio' ||
       % the use-case executes three HTTP GET requests 
       A <- get_ip(),
       B <- get_ip(),
@@ -91,10 +91,10 @@ usecase_a() ->
       % the result of last HTTP GET request is feed to HTTP POST request
       Y <- post(C),
       return(Y)
-   ].
+   ]).
 
 usecase_b() ->
-   [{do, 'Mio'} ||
+   do(['Mio' ||
       % the use-case executes three HTTP GET requests 
       A <- get_ip(),
       B <- get_ip(),
@@ -106,26 +106,22 @@ usecase_b() ->
       % the result of previous HTTP POST request is fed again to HTTP POST request
       Z <- post(Y),
       return(Z)
-   ].
+   ]).
 
 
 get_ip() ->
-   [{do, 'Mid'} ||
-      A <- scenario:new("urn:http:httpbin:get"),
-      B <- scenario:method('GET', A),
-      C <- scenario:url("http://127.0.0.1:8888/ip", B),
-      D <- scenario:header("Connection", "keep-alive", C),
-      scenario:request([origin], D)
-   ].
+   A = scenario:new("urn:http:httpbin:get"),
+   B = scenario:method('GET', A),
+   C = scenario:url("http://127.0.0.1:8888/ip", B),
+   D = scenario:header("Connection", "keep-alive", C),
+   scenario:request([origin], D).
 
 post(Y) ->
-   [{do, 'Mid'} ||
-      A <- scenario:new("urn:http:httpbin:post"),
-      B <- scenario:method('POST', A),
-      C <- scenario:url("http://127.0.0.1:8888/post", B),
-      D <- scenario:header("Content-Type", "text/plain", C),
-      E <- scenario:header("Connection", "keep-alive", D),
-      G <- scenario:payload(Y, E),
-      scenario:request(D)
-   ].
+   A = scenario:new("urn:http:httpbin:post"),
+   B = scenario:method('POST', A),
+   C = scenario:url("http://127.0.0.1:8888/post", B),
+   D = scenario:header("Content-Type", "text/plain", C),
+   E = scenario:header("Connection", "keep-alive", D),
+   G = scenario:payload(Y, E),
+   scenario:request(D).
 

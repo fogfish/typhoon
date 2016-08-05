@@ -56,7 +56,7 @@ content_accepted(_Req) ->
             end,
             Efun = Id:run(Conf),
             Data = Efun(#{pool => fun netpool/2, peer => []}),
-            {ok, scalar:s(Data)}
+            {ok, jsx:encode(Data)}
          catch Error:Reason ->
             {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}
          end;
@@ -82,9 +82,10 @@ compile(Id, Scenario) ->
 %%
 %% selector of net i/o pool (hack uses lint pool)
 netpool(Url, Header) ->
-   case erlang:whereis(lint) of
+   Id = scalar:atom(uri:s(uri:suburi(<<"lint">>, Url))),
+   case erlang:whereis(Id) of
       undefined ->
-         typhoon_net_sup:spawn(lint, disposable, Url),
+         typhoon_net_sup:spawn(Id, disposable, Url),
          netpool(Url, Header);
       Pid ->
          Pid

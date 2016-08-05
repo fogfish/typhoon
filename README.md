@@ -78,7 +78,8 @@ Open the link `http://192.168.99.100:8080/example` in web browser to manage the 
 You have successfully started an typhoon, written a stress test scenario, deployed it to cluster and analyze the system behavior.
 
 ### deploying typhoon
-tbd
+
+
 
 
 ### running local typhoon cluster
