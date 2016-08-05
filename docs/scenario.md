@@ -19,17 +19,31 @@ Each load scenario is valid Erlang module. The [skeleton scenario](../examples/s
 -compile({parse_transform, monad}).
 
 %% 
-%% 
-%% The workload scenario consists of attributes and actions. The attribute is a function that
-%% returns a scalar value, the action returns a pure IO-monadic computation.  Current version of
-%% Typhoon requires three attributes `t()`, `n()` and `urn()` and entry point action, called 
-%% `run()`. These functions shall be exported `-export([...]).` from the module.
-%%
--export([t/0, n/0, urn/0, run/1]).
+%% The workload scenario consists of attributes and actions. 
+%% Attributes are functions that returns a scalar values, 
+%% Action returns pure IO-monadic computations. 
+%% Actions and attributes are exported using `-export([...]).` 
+
+%% Typhoon requires each scenario to defined attributes:
+%%  * `title()` a human readable scenario name
+%%  * `t()` time in milliseconds to execute workload
+%%  * `n()` number of concurrent session globally spawned in the cluster
+%%  * `urn()` list of requests identifiers produced by workload scenario
+-export([title/0, t/0, n/0, urn/0]).
+
+%% Scenario shall provide actions:
+%%  * `init()` an optional computation to be executed once by scenario session. 
+%%             the result of computation is feed to main entry point.
+%%  * `run(_)` executes workload scenario, 
+-export([run/1]).
 
 %%
 %% scenario attributes - pure function returns scalar values.
 %%
+
+%% human readable scenario title
+title() ->
+   "Skeleton Workload Scenario".
 
 %% time to execute workload in milliseconds
 t() ->
@@ -61,11 +75,9 @@ run(_) ->
 %% pure functional languages. Thus, identity monad is used to chain configuration actions 
 %% over data structure
 request() ->
-   [{do, 'Mid'} ||
-      A <- scenario:new("urn:http:example"),         %% create new request and set unique id
-      B <- scenario:url("http://example.com/", A),   %% define end-point
-      scenario:request(B)                            %% return request
-   ].
+   A = scenario:new("urn:http:example"),         %% create new request and set unique id
+   B = scenario:url("http://example.com/", A),   %% define end-point
+   scenario:request(B).                          %% return request
 ```
 
 ### Validate scenario
