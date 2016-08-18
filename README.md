@@ -1,8 +1,10 @@
 ## Typhoon
 
-Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). Built with Erlang, it uses pure functional expressions to define load scenarios. It's operable as a standalone application and scales up to dozens of individual nodes hosted in any cloud environment.
+[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
-###Key Features and Functionality
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). For scalability and accuracy, its runtime environment Erlang-based, and it uses pure functional expressions to define load scenarios. Typhoon is operable as a standalone application and scales up to dozens of individual nodes hosted in any cloud environment.
+
+### Key Features and Functionality
 
 Typhoon:
 - Provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies
@@ -13,49 +15,22 @@ Typhoon:
 - Estimates application performance
 - Validates system performance and scalability while spawning a huge number of concurrent sessions
 
-Typhoon's incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
+### Inspiration
 
+Typhoon's architecture is defined by the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
 
-[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
+## Getting Started
 
-
-## inspiration
-
-The tool is a continuation of scalability and latency analysis efforts driven by tech companies within the mobile application domain. For example Nokia's contribution to latency analysis on cellular networks... Google's proposals on web protocol enchantment and evolutions...  
-
-It uses Erlang as runtime environment due to massive scalability and soft real-time properties (accuracy on measurements). It recommended itself as indispensable technology in similar solution Tsung suitable to test scalability and performance of IP based applications.
-
-Typhoon focuses on **visualization**, **protocol metric** and **usability**. The time-series data visualization crisis is well depicted [here](https://bost.ocks.org/mike/cubism/intro/#0), the usage of proposed visualization technique (cubism.js) improves readability and analysis of latencies experienced by SUT. The design of distributed systems and micro-services requires deep-dive understanding of latencies introduced by infrastructure, protocol and application. Typhoon captures and visualize them. It allows to solve a series of decision problem concerning both short-term and long-term arrangements: short term decisions include for example the determination of optimal software configuration, the number of servers, the number of concurrent connections; long term decisions include for example decisions concerning the development and extension of data and service architecture, choice of technology, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
-
-
-
-
-## getting started
-
-### changelog
-The project uses [semantic versions](http://semver.org) to identity stable releases. 
-
-* [0.7.2](https://github.com/zalando/typhoon/releases/tag/0.7.2) - improve performance on sample analysis  
-* [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling  
-* [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - uses pure functional expressions to define load scenarios.
-
-<!--
-* [0.5.0](https://github.com/zalando/typhoon/releases/tag/0.5.0) - re-do UI and report analysis
-* [0.4.1](https://github.com/zalando/typhoon/releases/tag/0.4.1) - stability at distributed environment 
-* [0.3.0](https://github.com/zalando/typhoon/releases/tag/0.3.0) - storage improvements 
-* [0.2.1](https://github.com/zalando/typhoon/releases/tag/0.2.1) - minimum viable product 
--->
-
-### getting typhoon
+### Getting Typhoon
 
 The project supplies pre-build release for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](https://github.com/zalando/typhoon/releases).
 
 The latest version of `typhoon` can be build from `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on `master` branch using forking and pull requests as described in [contribution guideline](docs/contribution.md).
 
 
-### running typhoon
+### Running Typhoon
 
-The docker container is easiest way to run standalone instance of the application. The option is viable only if either [docker toolbox](https://www.docker.com/products/docker-toolbox) or docker daemon is configured at your environment. Use latest release version instead of `x.y.z`
+The Docker container is easiest way to run standalone instance of the application. The option is viable only if either [docker toolbox](https://www.docker.com/products/docker-toolbox) or docker daemon is configured at your environment. Use latest release version instead of `x.y.z`
 ```
 docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
 ```
@@ -86,22 +61,11 @@ Open the link `http://192.168.99.100:8080/example` in web browser to manage the 
 
 You have successfully started an typhoon, written a stress test scenario, deployed it to cluster and analyze the system behavior.
 
-### deploying typhoon
-
-
-
-
-### running local typhoon cluster
-tbd
-
-
-### continue to...
+### Continue to...
 
 * specification of [workload scenario](docs/scenario.md)
 * explore [rest interface](docs/restapi.yaml)
 * read [hints and code snippets](docs/howto.md) of workload scenarios 
-
-
 
 
 
