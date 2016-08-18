@@ -9,7 +9,7 @@ Typhoon is a stress and load testing tool for distributed systems that simulates
 Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize infrastructure-, protocol- and application-related latencies experienced by a given SUT. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
- - uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
+- uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
 - defines methods for controlling that actual end-to-end latencies fulfill your requirements.
 - specifies emergency actions when systems are overloaded or technical faults occur.
 - scales up to dozens of individual nodes hosted in any cloud environment.
@@ -22,49 +22,51 @@ Typhoon also:
 
 ### Inspiration
 
-Typhoon's architecture is defined by the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
+Typhoon's [architecture](docs/arch.md) reflects the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
 
-## Getting Started
+### Getting Started
 
-### Getting Typhoon
+Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](https://github.com/zalando/typhoon/releases).
 
-The project supplies pre-build release for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](https://github.com/zalando/typhoon/releases).
-
-The latest version of `typhoon` can be build from `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on `master` branch using forking and pull requests as described in [contribution guideline](docs/contribution.md).
+Build the latest version of Typhoon from the `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on `master` branch using forking and pull requests as described in [contribution guideline](docs/contribution.md).
 
 
 ### Running Typhoon
 
-The Docker container is easiest way to run standalone instance of the application. The option is viable only if either [docker toolbox](https://www.docker.com/products/docker-toolbox) or docker daemon is configured at your environment. Use latest release version instead of `x.y.z`
+The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest release version instead of `x.y.z`:
+
 ```
 docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
 ```
 
-This will start single typhoon node as docker container. It exposes services using rest api on port 8080 (by default it is bound to following ip address 192.168.99.100 on MacOS, please check your docker configuration on other platforms).  
+This A) starts a single Typhoon node as a Docker container and B) exposes services using the REST API on port 8080. By default it is bound to following the IP address 192.168.99.100 on MacOS. If you're using a different platform, please check your Docker configuration.  
 
-It is possible to spawn the tool using native platform binaries, see the installation instructions on the [GitHub releases page](https://github.com/zalando/typhoon/releases). 
+You can also spawn Typhoon using native platform binaries. See the installation instructions on the [GitHub releases page](https://github.com/zalando/typhoon/releases):
 ```
 /usr/local/typhoon-x.y.z foreground
 ```
 
-This bring typhoon up and running. The application uses local ip 127.0.0.1 and port 8080 to offer services.
+This brings Typhoon up and running. The application uses local IP address 127.0.0.1 and port 8080 to offer services. To double-check, and also make sure the REST API is exposed, use this command:  
 
-Use following command to check if the application is up and running and the rest api is exposed. The application should return list of cluster peers `["typhoon@127.0.0.1"]`.   
 ```
 curl http://192.168.99.100:8080/health/peer
 ```
+The application should return list of cluster peers `["typhoon@127.0.0.1"]`.   
 
-Next define a simple workload scenario, publish it to typhoon.
+Next, define a simple workload scenario and publish it to Typhoon:
 ```
 curl -XPUT http://192.168.99.100:8080/scenario/example \
    -H 'Content-Type: application/erlang' \
    --data-binary @examples/skeleton.erl
 ```  
 
-Open the link `http://192.168.99.100:8080/example` in web browser to manage the workload and analyze the results. User interface should look similar to following screen shot. Click `run` button to kick-off stress testing. The tool has about 60 second delay before it renders the first result. The tool renders Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
+Open the link `http://192.168.99.100:8080/example` in your web browser to manage the workload and analyze the results. The user interface should look similar to this:  
+
 ![User interface screenshot](screenshot.png)
 
-You have successfully started an typhoon, written a stress test scenario, deployed it to cluster and analyze the system behavior.
+Click the `run` button to kick off stress testing. Typhoon has a 60-second delay (approximately) before it renders the first result: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
+
+Congrats! You have successfully started a Typhoon, written a stress test scenario, deployed it to a cluster and analyzed your system's behavior.
 
 ### Continue to...
 
@@ -72,26 +74,10 @@ You have successfully started an typhoon, written a stress test scenario, deploy
 * explore [rest interface](docs/restapi.yaml)
 * read [hints and code snippets](docs/howto.md) of workload scenarios 
 
+### Contributing/Bugs
+See our [contribution guidelines](docs/contribution.md) for details on PR submission. See [bug reporting](docs/bugs.md) for guidelines on raising issues. 
 
-
-## project details
-
-### architecture
-[See specification](docs/arch.md)
-
-
-
-## contributing
-See [contribution guideline](docs/contribution.md) for details on PR submission.
-
-
-
-## bugs
-See [bug reporting](docs/bugs.md) for guidelines on raising issues. 
-
-
-
-## contacts
+### Contacts
 
 * email: dmitry.kolesnikov@zalando.fi
 * bugs: [here](https://github.com/zalando/typhoon/issues) 
