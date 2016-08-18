@@ -2,18 +2,19 @@
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
-Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). It provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/)-based, and it uses pure functional expressions to define load scenarios.
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/)-based.  
 
 ### Key Features and Functionality
 
-Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize infrastructure-, protocol- and application-related latencies experienced by a given SUT. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
+Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
-- uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
+- offers a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml)
+- uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md)
 - defines methods for controlling that actual end-to-end latencies fulfill your requirements.
 - specifies emergency actions when systems are overloaded or technical faults occur.
 - scales up to dozens of individual nodes hosted in any cloud environment.
-- offers a REST interface for building, defining and spawning workload scenarios.
+- uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
 - approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response.
 - evaluates protocol overhead by approximating packet metrics.
 - estimates application performance.
@@ -67,12 +68,6 @@ Open the link `http://192.168.99.100:8080/example` in your web browser to manage
 Click the `run` button to kick off stress testing. Typhoon has a 60-second delay (approximately) before it renders the first result: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
 
 Congrats! You have successfully started a Typhoon, written a stress test scenario, deployed it to a cluster and analyzed your system's behavior.
-
-### Continue to...
-
-* specification of [workload scenario](docs/scenario.md)
-* explore [rest interface](docs/restapi.yaml)
-* read [hints and code snippets](docs/howto.md) of workload scenarios 
 
 ### Contributing/Bugs
 See our [contribution guidelines](docs/contribution.md) for details on PR submission. See [bug reporting](docs/bugs.md) for guidelines on raising issues. 
