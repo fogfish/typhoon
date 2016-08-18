@@ -19,11 +19,10 @@ Typhoon also:
 - evaluates protocol overhead by approximating packet metrics.
 - estimates application performance.
 - validates system performance and scalability while spawning a huge number of concurrent sessions.
-- reflects optimistic replication in its design.
 
 ### Inspiration
 
-Typhoon's [architecture](docs/arch.md) incorporates the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
+Typhoon's [architecture](docs/arch.md) and design reflect the principles of incremental scalability, decentralization and  optimistic replication. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
 
 ### Getting Started
 
