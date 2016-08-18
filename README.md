@@ -9,8 +9,8 @@ Typhoon is a stress and load testing tool for distributed systems that simulates
 Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
-- offers a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml)
-- uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md)
+- includes a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml).
+- uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md).
 - defines methods for controlling that actual end-to-end latencies fulfill your requirements.
 - specifies emergency actions when systems are overloaded or technical faults occur.
 - scales up to dozens of individual nodes hosted in any cloud environment.
