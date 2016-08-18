@@ -2,14 +2,14 @@
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
-Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). For scalability and accuracy, its runtime environment Erlang-based, and it uses pure functional expressions to define load scenarios. Typhoon is operable as a standalone application and scales up to dozens of individual nodes hosted in any cloud environment.
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). It provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/)-based, and it uses pure functional expressions to define load scenarios.
 
 ### Key Features and Functionality
 
-Typhoon:
-- Provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies
+Informed by Mike Bostock's presentation on [Time Series Visualization with Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0), Typhoon captures infrastructure-, protocol- and application-related latencies and visualizes them. This helps you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, it helps inform your decisions on developing and extending your data and service architecture, technology choice, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
+
+- Scales up to dozens of individual nodes hosted in any cloud environment
 - Offers a REST interface for building, defining and spawning workload scenarios
-- Collects telemetry and visualizes the results
 - Approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response
 - Evaluates protocol overhead by approximating packet metrics
 - Estimates application performance
