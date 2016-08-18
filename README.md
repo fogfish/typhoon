@@ -22,7 +22,7 @@ Typhoon also:
 
 ### Inspiration
 
-Typhoon's [architecture](docs/arch.md) reflects the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
+Typhoon's [architecture](docs/arch.md) incorporates the principles of incremental scalability and decentralization. It derives inspiration from related efforts driven by Nokia (latency analysis on cellular networks), Google (web protocol enhancement and evolution), and other companies working in the mobile app space.
 
 ### Getting Started
 
