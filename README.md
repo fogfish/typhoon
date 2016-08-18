@@ -1,10 +1,19 @@
-# typhoon
+## Typhoon
 
-Typhoon is a distributed system stress and load testing tool. The tool simulates a traffic from test cluster towards system-under-test (SUT). The purposes of tool is validation of systems performance and scalability, while spawning huge number of concurrent sessions. The tool provides out-of-box cross-platform solution to investigate protocol and latencies of microservices. It approximates Network delay, Round Trip Time, TLS Handshake, Time-to-First-Byte and Time-to-Meaningful-Response; evaluates protocol overhead by approximating packet metrics and estimates application performance.
-      
-Typhoon is operable as standalone application and scalable up to dozens of individual nodes hosted in cloud environment. The incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT). Built with Erlang, it uses pure functional expressions to define load scenarios. It's operable as a standalone application and scales up to dozens of individual nodes hosted in any cloud environment.
 
-Typhoon uses pure functional expressions to define load scenario and provides REST interface to build, define and spawn workload scenarios; collect the telemetry and visualize results. 
+###Key Features and Functionality
+
+Typhoon:
+- Provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies
+- Offers a REST interface for building, defining and spawning workload scenarios
+- Collects telemetry and visualizes the results
+- Approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response
+- Evaluates protocol overhead by approximating packet metrics
+- Estimates application performance
+- Validates system performance and scalability while spawning a huge number of concurrent sessions
+
+Typhoon's incremental scalability and decentralization are key principles used to define the architecture. The peer-to-peer clustering based on consistent hashing, this is a key technology to assembles and orchestrates load toward SUT. It helps the system to deal with possible network failures and provide hight availability for synthetic load and telemetry collections (the optimistic technique to replicate data has been employed by the design). 
 
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
