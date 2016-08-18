@@ -6,14 +6,19 @@ Typhoon is a stress and load testing tool for distributed systems that simulates
 
 ### Key Features and Functionality
 
-Informed by Mike Bostock's presentation on [Time Series Visualization with Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0), Typhoon captures infrastructure-, protocol- and application-related latencies and visualizes them. This helps you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, it helps inform your decisions on developing and extending your data and service architecture, technology choice, runtime environment, etc. The tools defines methods for controlling that the actual end-to-end latency is fulfilling the requirements, and also to specify emergency actions when systems are overloaded or technical faults occur.
+Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize infrastructure-, protocol- and application-related latencies experienced by a given SUT. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
-- Scales up to dozens of individual nodes hosted in any cloud environment
-- Offers a REST interface for building, defining and spawning workload scenarios
-- Approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response
-- Evaluates protocol overhead by approximating packet metrics
-- Estimates application performance
-- Validates system performance and scalability while spawning a huge number of concurrent sessions
+Typhoon also:
+ - uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
+- defines methods for controlling that actual end-to-end latencies fulfill your requirements.
+- specifies emergency actions when systems are overloaded or technical faults occur.
+- scales up to dozens of individual nodes hosted in any cloud environment.
+- offers a REST interface for building, defining and spawning workload scenarios.
+- approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response.
+- evaluates protocol overhead by approximating packet metrics.
+- estimates application performance.
+- validates system performance and scalability while spawning a huge number of concurrent sessions.
+- reflects optimistic replication in its design.
 
 ### Inspiration
 
