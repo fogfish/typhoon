@@ -80,7 +80,6 @@ See our [contribution guidelines](docs/contribution.md) for details on PR submis
 
 Typhoon uses [semantic versions](http://semver.org) to identify stable releases. 
  
-* [0.7.1](https://github.com/zalando/typhoon/releases/tag/0.7.1) - improve performance on sample analysis
 * [0.7.2](https://github.com/zalando/typhoon/releases/tag/0.7.2) - improve performance on sample analysis
 * [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
