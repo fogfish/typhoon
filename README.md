@@ -2,23 +2,23 @@
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
-Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes related infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating microservice protocols and latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/)-based.  
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating protocols and microservice latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/).  
 
 ### Key Features and Functionality
 
 Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
-- includes a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml).
+- provides a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml).
 - uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md).
-- defines methods for controlling that actual end-to-end latencies fulfill your requirements.
-- specifies emergency actions when systems are overloaded or technical faults occur.
 - scales up to dozens of individual nodes hosted in any cloud environment.
 - uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
 - approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response.
 - evaluates protocol overhead by approximating packet metrics.
 - estimates application performance.
 - validates system performance and scalability while spawning a huge number of concurrent sessions.
+
+You can read more about [Typhoon features in the blog post.](https://tech.zalando.de/blog/end-to-end-latency-challenges-in-a-microservices-architecture/)
 
 ### Inspiration
 
@@ -33,7 +33,7 @@ Build the latest version of Typhoon from the `master` branch. The build process 
 
 ### Running Typhoon
 
-The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest release version instead of `x.y.z`:
+The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest [release version](https://github.com/zalando/typhoon/releases) instead of `x.y.z`:
 
 ```
 docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
