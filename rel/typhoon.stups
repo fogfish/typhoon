@@ -14,7 +14,7 @@
 ##   limitations under the License.
 ##
 ## @doc
-##   aws deployment template for stups.io
+##   aws deployment template for stups (see http://stups.io)
 SenzaInfo:
    StackName: typhoon
    Parameters:

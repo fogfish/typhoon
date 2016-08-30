@@ -70,7 +70,8 @@ Congrats! You have successfully started a Typhoon, written a stress test scenari
 
 ### Next steps
 
-* [Typhoon deployment](docs/deploy.md)
+* [Typhoon deployment](docs/install.md)
+* [Understanding Typhoon scenario file](docs/scenario.md)
 
 ### Contributing/Bugs
 
@@ -119,76 +120,6 @@ Typhoon uses [semantic versions](http://semver.org) to identify stable releases.
 * [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
   
-<!-- 
-
-## build
-
-The project requires Erlang/OTP development environment [check here instructions](docs/erlang.md) and essential development tool sets such as `git`, `make`, etc. The project provides binary files for Linux x86_64 and MacOS 10.10.x platforms (see releases).
-
-Use following commands to compile and make distributable package for your platform. The output is self-deployable bundle package ```typhoon-{vsn}+{head}.{arch}.{plat}.bundle```
-
-```
-   make
-   make pkg
-```
-
-It is possible to assemble cross platform packages on MacOS. However it requires docker tool kit and docker image with Erlang/OTP environment. 
-
-```
-   make
-   make pkg PLAT=Linux 
-```
-
-## configuration
-
-[See config file](docs/config.md)
-
-
-## usage
-
-The tool provides rest api to manage load and stress test scenarios using curl command line
-utility and implement html interface to visualize measurements. The load scenario is [json file](docs/unit.md)
-
-Use browser to inspect the progress of the executed test ```http://localhost:8080/:id``` once test specification is defined to the cluster.
-
-![User interface screenshot](screenshot.png)
-
-### define load scenario
-
-```
-curl -XPUT \
-   http://localhost:8080/scenario/:id \
-   -H 'Content-Type: application/json' \
-   -d @myload.json
-```
-
-### remove load scenario
-
-```
-curl -XDELETE \
-   http://localhost:8080/scenario/:id
-```
-
-### read load scenario
-
-```
-curl -XGET \
-   http://localhost:8080/scenario/:id
-```
-
-### execute load scenario
-
-```
-curl -XGET \
-   http://localhost:8080/scenario/:id/spawn
-```
-
-## known issues
-
-* The current version is optimized for http(s) protocol only, support for other protocols and protocol plug-in interface is planned for future releases
-
-* Scenario files are stored in-memory. However cluster manages 3 replicas.
- -->
 
 # License
 

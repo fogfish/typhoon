@@ -1,0 +1,229 @@
+##
+##   Copyright 2015 Zalando SE
+##
+##   Licensed under the Apache License, Version 2.0 (the "License");
+##   you may not use this file except in compliance with the License.
+##   You may obtain a copy of the License at
+##
+##       http://www.apache.org/licenses/LICENSE-2.0
+##
+##   Unless required by applicable law or agreed to in writing, software
+##   distributed under the License is distributed on an "AS IS" BASIS,
+##   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+##   See the License for the specific language governing permissions and
+##   limitations under the License.
+##
+## @doc
+##   aws cloud formation template (spot fleet)
+AWSTemplateFormatVersion: "2010-09-09"
+Description: | 
+  Typhoon cluster. 
+
+Parameters:
+  ##
+  ## define ami config (default 2016.03)
+  ## see https://aws.amazon.com/amazon-linux-ami/ 
+  AMI:
+    Description: ec2 ami 
+    Type: String
+    Default: ami-f9dd458a
+
+  ##
+  ## define instance type
+  EC2: 
+    Description: ec2 instance type
+    Type: String
+    Default : t2.micro
+    AllowedValues : 
+      - t2.micro
+      - m3.medium
+      - m3.large
+
+  ##
+  ##
+  CAPACITY:
+    Description: cluster compute capacity (number of nodes) 
+    Type: Number
+    Default: 1
+
+  ##
+  ## name of ssh key associated with instances
+  SSH:
+    Description: ssh key
+    Type: String
+
+  ##
+  ## environment prefix (e.g. dev, stage, live, etc)
+  ENV:
+    Description: environment
+    Type: String
+    Default: dev
+
+  ##
+  ## typhoon version
+  VSN:
+    Description: typhoon version
+    Type: String
+    Default: "0.7.2"
+
+  ##
+  ## typhoon version
+  SUBNET:
+    Description: vpc subnet
+    Type: String
+
+
+Resources:
+
+  ##
+  ##
+  AutoScale:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName:
+        Ref: NodeConfig
+      MinSize:
+        Ref: CAPACITY
+      MaxSize:
+        Ref: CAPACITY
+      VPCZoneIdentifier: 
+        - Ref: SUBNET
+
+  ##
+  ## typhoon cluster is defined using spot fleet resource
+  NodeConfig:
+    Type: "AWS::AutoScaling::LaunchConfiguration"
+    Properties:
+      ImageId:
+        Ref: AMI
+      KeyName:
+        Ref: SSH
+      InstanceType:
+        Ref: EC2
+      SecurityGroups:
+        - 
+          Fn::GetAtt:
+            - ClusterSg
+            - GroupId
+      IamInstanceProfile:
+        Fn::GetAtt:
+          - ClusterProfile
+          - Arn
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - 
+              ""
+            -
+              - "#!/bin/sh -xe\n"
+              - "yum update -y aws-cfn-bootstrap\n"
+              - "/opt/aws/bin/cfn-init -v "
+              - " --region "
+              - Ref: AWS::Region
+              - " --stack  "
+              - Ref: AWS::StackName
+              - " --resource Cluster "
+              - " --configsets Bootstrap"
+
+    Metadata:
+      ##
+      ## node bootstrap process
+      ## http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
+      AWS::CloudFormation::Init:
+        configSets:
+          Bootstrap:
+            - Typhoon
+
+          ##
+          ## Typhoon node configuration 
+          Typhoon:
+            files:
+              ## config file, installs Typhoon application 
+              /config.sh:
+                content:
+                  Fn::Join:
+                    -
+                      ""
+                    -
+                      - "#!/bin/sh -xe\n"
+                      - "curl -L -o /typhoon.bundle https://github.com/zalando/typhoon/releases/download/"
+                      - Ref: VSN
+                      - "/typhoon-"
+                      - Ref: VSN
+                      - ".x86_64.Linux.bundle"
+                      - "\n"
+                      - "bash /typhoon.bundle"
+                      - "\n"
+                      - "/etc/init.d/typhoon start"
+                      - "\n"
+
+            commands:
+              01-init:
+                command: "sh /config.sh"
+
+  ##
+  ##
+  ClusterSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Typhoon cluster network security
+      SecurityGroupIngress:
+        -
+          IpProtocol: tcp 
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp 
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp
+          FromPort: 4369
+          ToPort: 4369
+          CidrIp: 0.0.0.0/0
+        -
+          IpProtocol: tcp
+          FromPort: 32100
+          ToPort: 32199
+          CidrIp: 0.0.0.0/0
+
+  ##
+  ##
+  ClusterRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        -
+          PolicyName: ClusterPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: Allow
+                Action: ec2:*
+                Resource: "*"
+              -  
+                Effect: Allow
+                Action: elasticloadbalancing:*
+                Resource: "*"
+
+  ##
+  ##
+  ClusterProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+        -
+          Ref: ClusterRole
