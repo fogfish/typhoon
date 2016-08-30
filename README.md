@@ -6,13 +6,13 @@ Typhoon is a stress and load testing tool for distributed systems that simulates
 
 ### Key Features and Functionality
 
-Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to capture and visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
+Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
 - provides a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml).
 - uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md).
 - scales up to dozens of individual nodes hosted in any cloud environment.
-- uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. This helps your system deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
+- uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. It helps to deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
 - approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response.
 - evaluates protocol overhead by approximating packet metrics.
 - estimates application performance.
