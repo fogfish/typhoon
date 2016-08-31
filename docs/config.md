@@ -5,7 +5,7 @@ The tool uses Erlang [config file format](http://www.erlang.org/doc/man/config.h
 
 ## node discovery
 
-The list of cluster seed nodes is defined in ```seed``` option of ```ambit``` application.
+The list of cluster seed nodes is defined in `seed` option of `ambit` application.
 
 ```
 {ambit, [
@@ -16,7 +16,7 @@ The list of cluster seed nodes is defined in ```seed``` option of ```ambit``` ap
 
 ## http
 
-rest api port and backlog pool is defined in ```restd``` application
+rest api port and backlog pool is defined in `restd` application
 
 ```
 {restd, [

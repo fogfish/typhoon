@@ -1,3 +1,0 @@
-# how to contribute
-
-tbd

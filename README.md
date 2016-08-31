@@ -68,8 +68,44 @@ Click the `run` button to kick off stress testing. Typhoon has a 60-second delay
 
 Congrats! You have successfully started a Typhoon, written a stress test scenario, deployed it to a cluster and analyzed your system's behavior.
 
+### Next steps
+
+* [Typhoon deployment](docs/install.md)
+* [Understanding Typhoon scenario file](docs/scenario.md)
+
 ### Contributing/Bugs
-See our [contribution guidelines](docs/contribution.md) for details on PR submission. See [bug reporting](docs/bugs.md) for guidelines on raising issues. 
+
+Typhoon is Apache 2.0 licensed and accepts contributions via GitHub pull requests:
+
+* Fork the repository on GitHub
+* Read the README.md for build instructions
+
+### commit message
+
+The commit message helps us to write a good release note, speed-up review process. The message should address two question what changed and why. The project follows the template defined by chapter [Contributing to a Project](http://git-scm.com/book/ch5-2.html) of Git book.
+
+>
+> Short (50 chars or less) summary of changes
+>
+> More detailed explanatory text, if necessary. Wrap it to about 72 characters or so. In some contexts, the first line is treated as the subject of an email and the rest of the text as the body. The blank line separating the summary from the body is critical (unless you omit the body entirely); tools like rebase can get confused if you run the two together.
+> 
+> Further paragraphs come after blank lines.
+> 
+> Bullet points are okay, too
+> 
+> Typically a hyphen or asterisk is used for the bullet, preceded by a single space, with blank lines in between, but conventions vary here
+>
+
+
+### bugs
+If you experience any issues with Typhoon, please let us know via [GitHub issues](https://github.com/zalando/typhoon/issue). We appreciate detailed and accurate reports that help us to identity and replicate the issue. 
+
+* **Specify** the configuration of your environment. Include which operating system you use and the versions of runtime environments. 
+
+* **Attach** logs, screenshots and exceptions, in possible.
+
+* **Reveal** the steps you took to reproduce the problem.
+
 
 ### Contacts
 
@@ -84,76 +120,6 @@ Typhoon uses [semantic versions](http://semver.org) to identify stable releases.
 * [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
   
-<!-- 
-
-## build
-
-The project requires Erlang/OTP development environment [check here instructions](docs/erlang.md) and essential development tool sets such as `git`, `make`, etc. The project provides binary files for Linux x86_64 and MacOS 10.10.x platforms (see releases).
-
-Use following commands to compile and make distributable package for your platform. The output is self-deployable bundle package ```typhoon-{vsn}+{head}.{arch}.{plat}.bundle```
-
-```
-   make
-   make pkg
-```
-
-It is possible to assemble cross platform packages on MacOS. However it requires docker tool kit and docker image with Erlang/OTP environment. 
-
-```
-   make
-   make pkg PLAT=Linux 
-```
-
-## configuration
-
-[See config file](docs/config.md)
-
-
-## usage
-
-The tool provides rest api to manage load and stress test scenarios using curl command line
-utility and implement html interface to visualize measurements. The load scenario is [json file](docs/unit.md)
-
-Use browser to inspect the progress of the executed test ```http://localhost:8080/:id``` once test specification is defined to the cluster.
-
-![User interface screenshot](screenshot.png)
-
-### define load scenario
-
-```
-curl -XPUT \
-   http://localhost:8080/scenario/:id \
-   -H 'Content-Type: application/json' \
-   -d @myload.json
-```
-
-### remove load scenario
-
-```
-curl -XDELETE \
-   http://localhost:8080/scenario/:id
-```
-
-### read load scenario
-
-```
-curl -XGET \
-   http://localhost:8080/scenario/:id
-```
-
-### execute load scenario
-
-```
-curl -XGET \
-   http://localhost:8080/scenario/:id/spawn
-```
-
-## known issues
-
-* The current version is optimized for http(s) protocol only, support for other protocols and protocol plug-in interface is planned for future releases
-
-* Scenario files are stored in-memory. However cluster manages 3 replicas.
- -->
 
 # License
 
