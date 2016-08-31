@@ -81,7 +81,7 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       LaunchConfigurationName:
-        Ref: NodeConfig
+        Ref: Cluster
       MinSize:
         Ref: CAPACITY
       MaxSize:
@@ -91,7 +91,7 @@ Resources:
 
   ##
   ## typhoon cluster is defined using spot fleet resource
-  NodeConfig:
+  Cluster:
     Type: "AWS::AutoScaling::LaunchConfiguration"
     Properties:
       ImageId:

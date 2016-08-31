@@ -66,8 +66,9 @@ Generate on-demand ec2 compute capacity cloud formation template
 yaml2json < rel/typhoon.aws  > typhoon.json
 ``` 
 
-Use AWS Console / Cloud Formation Service to deploy the service on your AWS account. 
-
-
+The output is a valid AWS Cloud Formation JSON file. You can use AWS Console/Cloud Formation Service to deploy the stack into cloud. The automated deployment procedure is optimized form [Amazon Linux distribution](https://aws.amazon.com/amazon-linux-ami). You need to parametrize stack with
+* desired ami
+* deployment subnet
+* ssh key 
 
 
