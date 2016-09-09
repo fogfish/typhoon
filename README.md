@@ -30,6 +30,7 @@ Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker p
 
 Build the latest version of Typhoon from the `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in these [contribution guidelines](docs/contribution.md).
 
+Install directions with AWS-related details are [here](https://github.com/zalando/typhoon/blob/master/docs/install.md).
 
 ### Running Typhoon
 
