@@ -18,7 +18,7 @@ Typhoon also:
 - estimates application performance.
 - validates system performance and scalability while spawning a huge number of concurrent sessions.
 
-You can read more about Typhoon's features in [this blog post](https://tech.zalando.de/blog/end-to-end-latency-challenges-in-a-microservices-architecture/).
+You can read more about Typhoon's features in [this blog post](https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/).
 
 ### Inspiration
 
