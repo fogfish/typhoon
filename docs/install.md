@@ -1,10 +1,10 @@
-# Typhoon installation
+# Typhoon Installation
 
-The application has been tested on Linux and Mac OS X. It should work on Erlang supported platforms.
+This application has been tested on Linux and Mac OS X. It should work on Erlang-supported platforms.
 
 ## Compilation
 
-Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](https://github.com/zalando/typhoon/releases). The compilation is only required to assemble a custom package
+Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker platforms. Instructions for using these binaries are on the [GitHub releases page](https://github.com/zalando/typhoon/releases). The compilation is only required to assemble a custom package.
 
 ```
 git clone https://github.com/zalando/typhoon
@@ -12,17 +12,18 @@ cd typhoon
 make && make pkg
 ```
 
-The result is bundle tar-ball archive as-is deployable to any host. It contains both Erlang VM, all required dependencies and Typhoon application `typhoon-{vsn}.{arch}.{plat}.bundle`.
+The result is bundle tar-ball archive as-is deployable to any host. It contains both a Erlang VM, all required dependencies and the Typhoon application `typhoon-{vsn}.{arch}.{plat}.bundle`.
 
-It is possible to assemble cross-platform packages on MacOS but this requires a docker run-time. 
+It is possible to assemble cross-platform packages on MacOS, but this requires a Docker run-time.
+
 ```
 make && make pkg PLAT=Linux 
 ```
 
-
 ## Installation
 
-Copy the bundle archive to destination host and execute it
+Copy the bundle archive to destination host and execute it:
+
 ```
 sudo bash typhoon-x.y.z+x86_64.Linux.bundle
 ```
@@ -34,13 +35,12 @@ The command installs
 
 ## Configuration
 
-The tool uses Erlang [config file format](http://www.erlang.org/doc/man/config.html).
+The tool uses Erlang's [config file format](http://www.erlang.org/doc/man/config.html).
 ```
 /usr/local/typhoon/releases/x.y.z/sys.config
 ```
 
-The user configurable options and possible values are defined at [configuration guideline](config.md).
-
+The user-configurable options and possible values are defined in the [configuration guidelines](config.md).
 
 ## Running
 
@@ -49,26 +49,24 @@ The user configurable options and possible values are defined at [configuration 
 /etc/init.d/typhoon stop
 ```
 
-
 ## Experimental: Deployment to Amazon
 
-The application provides [cloud formation](https://aws.amazon.com/cloudformation/) templates to automate the cloud deployment.
+The application provides [CloudFormation](https://aws.amazon.com/cloudformation/) templates to automate cloud deployment:
 * [rel/typhoon.aws](../rel/typhoon.aws) uses on-demand ec2 compute capacity 
 * [rel/typhoon.spot](../rel/typhoon.spot) uses spot ec2 compute capacity
 
-We have used YAML syntax to define these template. You need to convert them to json prior deployment using following utility:
+We have used YAML syntax to define these templates. You need to convert them to JSON prior to deployment, using the following utility:
+
 ```
 curl -O -L https://github.com/bronze1man/yaml2json/raw/master/builds/darwin_amd64/yaml2json
 ```
 
-Generate on-demand ec2 compute capacity cloud formation template
+Generate on-demand an EC2 compute-capacity CloudFCormation template:
 ```
 yaml2json < rel/typhoon.aws  > typhoon.json
 ``` 
 
-The output is a valid AWS Cloud Formation JSON file. You can use AWS Console/Cloud Formation Service to deploy the stack into cloud. The automated deployment procedure is optimized form [Amazon Linux distribution](https://aws.amazon.com/amazon-linux-ami). You need to parametrize stack with
-* desired ami
+The output is a valid AWS CloudFormation JSON file. You can use AWS's Console/Cloud Formation service to deploy the stack to the cloud. The automated deployment procedure is optimized from [Amazon Linux distribution](https://aws.amazon.com/amazon-linux-ami). You need to parameter-ize your stack with:
+* desired AMI
 * deployment subnet
-* ssh key 
-
-
+* SSH key
