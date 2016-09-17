@@ -18,7 +18,8 @@
 -module(m_http).
 
 -export([return/1, fail/1, '>>='/2]).
--export([new/0, new/1, method/1, url/1, header/2, payload/1, request/0]).
+-export([new/0, new/1, method/1, url/1, header/2, payload/1]).
+-export([request/0]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -78,14 +79,13 @@ payload(Pckt) ->
    end.   
 
 %%
-%% 
+%%
 request() ->
    fun(#{http := Http} = State) ->
       Sock = socket(State),
       knet:send(Sock, lens:get(lens:t2(), Http)),
-      Pckt = recv(Sock),
       %% @todo: remove authority if connection is not keep/alive
-      [Pckt|maps:remove(http, State#{authority(State) => Sock})]   
+      [recv(Sock)|maps:remove(http, State#{authority(State) => Sock})]
    end.
 
 
@@ -94,6 +94,7 @@ request() ->
 %%% private
 %%%
 %%%----------------------------------------------------------------------------   
+
 
 %%
 %%

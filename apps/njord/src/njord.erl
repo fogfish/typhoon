@@ -22,7 +22,7 @@
 
 -export([start/0]).
 -export([t/0]).
--export([http/0]).
+
 
 %%
 %% start application
@@ -43,23 +43,19 @@ a() ->
       _ /= url("https://api.zalando.com/"),
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "keep-alive"),
-      njord:http()
+      _ /= request(),
+      return(_)
    ]).
 
-b(I) ->
+b(_) ->
    do([m_http || 
       _ /= new("urn:http:yyy"),
       _ /= url("https://api.zalando.com/articles"),
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "keep-alive"),
-      njord:http()
+      _ /= request(),
+      return(_)
    ]).
-
-
-%%
-%% network i/o  
-http() ->
-   m_http:request().
 
 
 
