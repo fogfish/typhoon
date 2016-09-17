@@ -32,8 +32,9 @@ start() ->
 
 t() ->
    do([m_state ||
-      X <- a(),
-      Y <- b(X),
+      % X <- a(),
+      % Y <- b(X),
+      Y <- c(),
       return(Y)
    ]).
 
@@ -58,6 +59,20 @@ b(_) ->
    ]).
 
 
-
+c() ->
+   do([m_sock ||
+      _ /= new(),
+      % _ /= url("tcp://www.google.com"),
+      _ /= url("ssl://api.zalando.com"),
+      _ /= thinktime(10),
+      _ /= send(<<"GET / HTTP/1.1\r\n">>),
+      _ /= thinktime(10),      
+      _ /= send(<<"Host: api.zalando.com\r\n">>),
+      _ /= thinktime(10),
+      _ /= send(<<"\r\n">>),
+      _ /= thinktime(10),
+      _ /= recv(),
+      return(_)
+   ]).
 
 

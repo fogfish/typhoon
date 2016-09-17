@@ -55,7 +55,7 @@ content_accepted(_Req) ->
                   undefined
             end,
             Efun = Id:run(Conf),
-            Data = Efun(#{pool => fun netpool/2, peer => []}),
+            [Data|_] = Efun(#{pool => fun netpool/2, peer => []}),
             {ok, jsx:encode(Data)}
          catch Error:Reason ->
             {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}

@@ -52,7 +52,6 @@ url()     -> lens:c([lens:map(fd), lens:t2(), lens:t2()]).
 header(X) -> lens:c([lens:map(fd), lens:t2(), lens:t3(), lens:pair(X, none)]).
 payload() -> lens:c([lens:map(fd), lens:t2(), lens:tuple(4)]).
 
-
 new() ->
    m_state:put(id(), undefined).
 
@@ -71,7 +70,17 @@ header(Head, Value) ->
    m_state:put(header(scalar:atom(Head)), scalar:s(Value)).
 
 %%
-%%
+%% http actions
+thinktime(T) ->
+   fun(State) ->
+      [timer:sleep(T)|State]
+   end.
+
+request() ->
+   fun(State) ->
+      http(State)
+   end.
+
 request(Pckt) ->
    fun(State) ->
       http(
@@ -79,11 +88,6 @@ request(Pckt) ->
             lens:put(header('Transfer-Encoding'), <<"chunked">>, State)
          )
       )
-   end.
-
-request() ->
-   fun(State) ->
-      http(State)
    end.
 
 %%%----------------------------------------------------------------------------   

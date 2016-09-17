@@ -3,7 +3,7 @@
 -module(m_sock).
 
 -export([return/1, fail/1, '>>='/2]).
--export([new/0, new/1, url/1]).
+-export([new/0, new/1, url/1, thinktime/1]).
 -export([send/1, recv/0, request/1]).
 
 
@@ -25,14 +25,14 @@ fail(X) ->
 
 %%%----------------------------------------------------------------------------   
 %%%
-%%% tcp monad
+%%% socket monad
 %%%
 %%%----------------------------------------------------------------------------   
 
 %%
-%% tcp connection specification
-id()      -> lens:c([lens:map(fd,  {none, none}), lens:t1()]).
-url()     -> lens:c([lens:map(fd), lens:t2()]).
+%% socket specification
+id()   -> lens:c([lens:map(fd,  {none, none}), lens:t1()]).
+url()  -> lens:c([lens:map(fd), lens:t2()]).
 
 new() ->
    m_state:put(id(), undefined).
@@ -42,6 +42,13 @@ new(Id) ->
 
 url(Url) ->
    m_state:put(url(), uri:new(Url)).
+
+%%
+%% socket actions
+thinktime(T) ->
+   fun(State) ->
+      [timer:sleep(T)|State]
+   end.
 
 %%
 %% send packet
