@@ -56,7 +56,7 @@ payload() -> lens:c([lens:map(fd), lens:t2(), lens:tuple(4)]).
 new() ->
    m_state:put(id(), undefined).
 
-new("urn:http:" ++ _ = Id) -> 
+new(Id) -> 
    m_state:put(id(), scalar:s(Id)).
 
 method(Mthd) ->
@@ -114,12 +114,12 @@ socket(State) ->
       maps:get(authority(State), State, undefined)  
    of
       undefined ->
-         socket_new(State);
+         connect(State);
       Sock ->
          Sock
    end.
 
-socket_new(State) ->
+connect(State) ->
    %% @todo: configurable io timeout
    Sock = knet:socket(lens:get(url(), State)),
    {ioctl, b, Sock} = knet:recv(Sock),
