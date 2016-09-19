@@ -4,7 +4,7 @@
 
 -export([return/1, fail/1, '>>='/2]).
 -export([new/0, new/1, url/1, thinktime/1]).
--export([send/1, recv/0, request/1]).
+-export([send/1, recv/0, recv/1]).
 
 
 %%%----------------------------------------------------------------------------   
@@ -14,7 +14,8 @@
 %%%----------------------------------------------------------------------------   
 
 return(X) -> 
-   m_state:return(X).
+   % m_state:return(X).
+   fun(State) -> [X|maps:remove(fd, State)] end.
 
 fail(X) ->
    m_state:fail(X).
@@ -53,28 +54,27 @@ thinktime(T) ->
 %%
 %% send packet
 send(Pckt) ->
-   fun(State) ->
-      Sock = socket(State),
-      [knet:send(Sock, Pckt)|State#{authority(State) => Sock}]
+   fun(State0) ->
+      {Sock, State1} = socket(State0),
+      [knet:send(Sock, Pckt)|State1]
    end.
 
 %%
 %% recv packet
 recv() ->
-   fun(State) ->
-      Sock = socket(State),
-      [recv(Sock)|State#{authority(State) => Sock}]
+   recv(30000).
+
+recv(Timeout) ->
+   fun(State0) ->
+      {Sock, State1} = socket(State0),
+      [recv(Sock, Timeout)|State1]
    end.
 
-%%
-%% send / recv packet
-request(Pckt) ->
-   fun(State) ->
-      Sock = socket(State),
-      knet:send(Sock, Pckt),
-      %% @todo: remove authority if connection is not keep/alive
-      [recv(Sock)|maps:remove(fd, State#{authority(State) => Sock})]
-   end.
+%%%----------------------------------------------------------------------------   
+%%%
+%%% private
+%%%
+%%%----------------------------------------------------------------------------   
 
 %%
 %%
@@ -88,21 +88,23 @@ socket(State) ->
       maps:get(authority(State), State, undefined)  
    of
       undefined ->
-         connect(State);
+         Sock = connect(State),
+         {Sock, State#{authority(State) => Sock}};
       Sock ->
-         Sock
+         {Sock, State}
    end.
 
 connect(State) ->
-   %% @todo: configurable io timeout
-   Sock = knet:connect(lens:get(url(), State)),
-   {ioctl, b, Sock} = knet:recv(Sock),
-   {_, Sock, {established, _}} = knet:recv(Sock, 30000),
+   %% @todo: configurable i/o timeout
+   Uri = lens:get(url(), State),
+   {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
+   pipe:bind(a, Sock),
+   pipe:send(Sock, {connect, Uri}),
+   {_, Sock, {established, _}} = pipe:recv(Sock, 30000, []),
    Sock.
 
 %%
 %%
-recv(Sock) ->
-   %% @todo: customizable timeout by client
-   {_, Sock, Pckt} = knet:recv(Sock, 30000),
+recv(Sock, Timeout) ->
+   {_, Sock, Pckt} = knet:recv(Sock, Timeout),
    Pckt.

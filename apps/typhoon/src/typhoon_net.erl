@@ -51,7 +51,7 @@ wire({http, _, Pckt}, _, #{recv := Recv} = State) ->
 
 wire({trace, T, Msg}, _, State) ->
    trace(T, Msg, State),
-   {next_state, wire, State#{}};
+   {next_state, wire, State};
 
 wire(_, _, State) ->
    {next_state, wire, State}.

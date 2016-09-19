@@ -21,9 +21,9 @@
    start_link/0, init/1
 ]).
 
--define(CHILD(Type, I),            {I,  {I, start_link,   []}, permanent, 5000, Type, dynamic}).
--define(CHILD(Type, I, Args),      {I,  {I, start_link, Args}, permanent, 5000, Type, dynamic}).
--define(CHILD(Type, ID, I, Args),  {ID, {I, start_link, Args}, permanent, 5000, Type, dynamic}).
+-define(CHILD(Type, I),            {I,  {I, start_link,   []}, temporary, 5000, Type, dynamic}).
+-define(CHILD(Type, I, Args),      {I,  {I, start_link, Args}, temporary, 5000, Type, dynamic}).
+-define(CHILD(Type, ID, I, Args),  {ID, {I, start_link, Args}, temporary, 5000, Type, dynamic}).
 
 %%-----------------------------------------------------------------------------
 %%
@@ -37,8 +37,9 @@ start_link() ->
 init([]) ->   
    {ok,
       {
-         {one_for_one, 10000, 1},
+         {simple_one_for_one, 10000, 1},
          [
+            ?CHILD(worker, njord_adapter)
          ]
       }
    }.

@@ -23,6 +23,8 @@
 -export([start/0]).
 -export([t/0]).
 
+%% @todo: make thinktime global service of njord
+%% @todo: how to handle trace ?
 
 %%
 %% start application
@@ -62,7 +64,6 @@ b(_) ->
 c() ->
    do([m_sock ||
       _ /= new(),
-      % _ /= url("tcp://www.google.com"),
       _ /= url("ssl://api.zalando.com"),
       _ /= thinktime(10),
       _ /= send(<<"GET / HTTP/1.1\r\n">>),

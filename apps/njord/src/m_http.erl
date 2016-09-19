@@ -19,7 +19,7 @@
 
 -export([return/1, fail/1, '>>='/2]).
 -export([new/0, new/1, method/1, url/1, header/2]).
--export([request/1, request/0]).
+-export([request/1, request/0, thinktime/1]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -27,8 +27,8 @@
 %%%
 %%%----------------------------------------------------------------------------   
 
-return(X) -> 
-   m_state:return(X).
+return(X) ->
+   fun(State) -> [X|maps:remove(fd, State)] end.
 
 fail(X) ->
    m_state:fail(X).
@@ -44,13 +44,12 @@ fail(X) ->
 
 %%
 %% http request specification
--define(HTTP, {'GET', undefined, [], <<>>}).
+-define(HTTP, {'GET', undefined, []}).
 
 id()      -> lens:c([lens:map(fd,  {none, ?HTTP}), lens:t1()]).
 method()  -> lens:c([lens:map(fd), lens:t2(), lens:t1()]).
 url()     -> lens:c([lens:map(fd), lens:t2(), lens:t2()]).
 header(X) -> lens:c([lens:map(fd), lens:t2(), lens:t3(), lens:pair(X, none)]).
-payload() -> lens:c([lens:map(fd), lens:t2(), lens:tuple(4)]).
 
 new() ->
    m_state:put(id(), undefined).
@@ -58,6 +57,8 @@ new() ->
 new(Id) -> 
    m_state:put(id(), scalar:s(Id)).
 
+%% @todo: stream as tcp
+%% @todo: method for method (method triggers request)
 method(Mthd) ->
    % @todo: validate and normalize method
    m_state:put(method(), Mthd).
@@ -77,17 +78,22 @@ thinktime(T) ->
    end.
 
 request() ->
-   fun(State) ->
-      http(State)
+   fun(#{fd := Http} = State0) ->
+      {Sock, State1} = socket(State0),
+      knet:send(Sock, lens:get(lens:t2(), Http)),
+      %% @todo: remove authority if connection is not keep/alive
+      [recv(Sock)|State1]
    end.
 
 request(Pckt) ->
-   fun(State) ->
-      http(
-         lens:put(payload(), Pckt,
-            lens:put(header('Transfer-Encoding'), <<"chunked">>, State)
-         )
-      )
+   fun(State0) ->
+      #{fd := Http} = State1 = lens:put(header('Transfer-Encoding'), <<"chunked">>, State0),
+      {Sock, State2} = socket(State1),
+      knet:send(Sock, lens:get(lens:t2(), Http)),
+      knet:send(Sock, Pckt),
+      knet:send(Sock, eof),
+      %% @todo: remove authority if connection is not keep/alive
+      [recv(Sock)|State2]
    end.
 
 %%%----------------------------------------------------------------------------   
@@ -95,16 +101,6 @@ request(Pckt) ->
 %%% private
 %%%
 %%%----------------------------------------------------------------------------   
-
-%%
-%%
-http(#{fd := Http} = State) ->
-   %% @todo: url schema validation
-   Sock = socket(State),
-   knet:send(Sock, lens:get(lens:t2(), Http)),
-   %% @todo: remove authority if connection is not keep/alive
-   [recv(Sock)|maps:remove(http, State#{authority(State) => Sock})].
-
 
 %%
 %%
@@ -118,15 +114,20 @@ socket(State) ->
       maps:get(authority(State), State, undefined)  
    of
       undefined ->
-         connect(State);
+         Sock = connect(State),
+         {Sock, State#{authority(State) => Sock}};
       Sock ->
-         Sock
+         {Sock, State}
    end.
 
 connect(State) ->
    %% @todo: configurable io timeout
-   Sock = knet:socket(lens:get(url(), State)),
-   {ioctl, b, Sock} = knet:recv(Sock),
+   % % Sock = knet:socket(lens:get(url(), State), [{trace, self()}]),
+   % Sock = knet:socket(lens:get(url(), State), []),
+   % {ioctl, b, Sock} = knet:recv(Sock),
+   Uri = lens:get(url(), State),
+   {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
+   pipe:bind(a, Sock),
    Sock.
 
 %%
