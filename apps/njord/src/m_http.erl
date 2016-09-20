@@ -18,8 +18,8 @@
 -module(m_http).
 
 -export([return/1, fail/1, '>>='/2]).
--export([new/0, new/1, method/1, url/1, header/2]).
--export([request/1, request/0, thinktime/1]).
+-export([new/0, new/1, url/1, header/2]).
+-export([thinktime/1, get/0, put/1, post/1, delete/0, request/1, request/2]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -44,24 +44,17 @@ fail(X) ->
 
 %%
 %% http request specification
--define(HTTP, {'GET', undefined, []}).
+id()      -> lens:c([lens:map(fd, #{}), lens:map(id,  none)]).
+url()     -> lens:c([lens:map(fd, #{}), lens:map(url, none)]).
+header()  -> lens:c([lens:map(fd, #{}), lens:map(header, [])]).
+header(X) -> lens:c([lens:map(fd, #{}), lens:map(header, []), lens:pair(X, none)]).
 
-id()      -> lens:c([lens:map(fd,  {none, ?HTTP}), lens:t1()]).
-method()  -> lens:c([lens:map(fd), lens:t2(), lens:t1()]).
-url()     -> lens:c([lens:map(fd), lens:t2(), lens:t2()]).
-header(X) -> lens:c([lens:map(fd), lens:t2(), lens:t3(), lens:pair(X, none)]).
-
+%% @todo: use id as container for request description ?
 new() ->
    m_state:put(id(), undefined).
 
 new(Id) -> 
    m_state:put(id(), scalar:s(Id)).
-
-%% @todo: stream as tcp
-%% @todo: method for method (method triggers request)
-method(Mthd) ->
-   % @todo: validate and normalize method
-   m_state:put(method(), Mthd).
 
 url(Url) ->
    m_state:put(url(), uri:new(Url)).
@@ -77,23 +70,41 @@ thinktime(T) ->
       [timer:sleep(T)|State]
    end.
 
-request() ->
-   fun(#{fd := Http} = State0) ->
+
+get() ->
+   request('GET').
+
+put(Payload) ->
+   request('PUT', Payload).
+
+post(Payload) ->
+   request('POST', Payload).
+
+delete() ->
+   request('DELETE').
+
+
+% @todo: validate and normalize method
+request(Mthd) ->
+   fun(State0) ->
       {Sock, State1} = socket(State0),
-      knet:send(Sock, lens:get(lens:t2(), Http)),
+      Url  = lens:get(url(), State1),
+      Head = lens:get(header(), State1),
+      knet:send(Sock, {Mthd, Url, Head}),
       %% @todo: remove authority if connection is not keep/alive
       [recv(Sock)|State1]
    end.
 
-request(Pckt) ->
+request(Mthd, Payload) ->
    fun(State0) ->
-      #{fd := Http} = State1 = lens:put(header('Transfer-Encoding'), <<"chunked">>, State0),
-      {Sock, State2} = socket(State1),
-      knet:send(Sock, lens:get(lens:t2(), Http)),
-      knet:send(Sock, Pckt),
+      {Sock, State1} = socket(State0),
+      Url  = lens:get(url(), State1),
+      Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State1)],
+      knet:send(Sock, {Mthd, Url, Head}),
+      knet:send(Sock, Payload),
       knet:send(Sock, eof),
       %% @todo: remove authority if connection is not keep/alive
-      [recv(Sock)|State2]
+      [recv(Sock)|State1]
    end.
 
 %%%----------------------------------------------------------------------------   

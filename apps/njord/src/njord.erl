@@ -34,9 +34,9 @@ start() ->
 
 t() ->
    do([m_state ||
-      % X <- a(),
-      % Y <- b(X),
-      Y <- c(),
+      X <- a(),
+      Y <- b(X),
+      % Y <- c(),
       return(Y)
    ]).
 
@@ -46,7 +46,7 @@ a() ->
       _ /= url("https://api.zalando.com/"),
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "keep-alive"),
-      _ /= request(),
+      _ /= get(),
       return(_)
    ]).
 
@@ -56,7 +56,7 @@ b(_) ->
       _ /= url("https://api.zalando.com/articles"),
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "keep-alive"),
-      _ /= request(),
+      _ /= get(),
       return(_)
    ]).
 

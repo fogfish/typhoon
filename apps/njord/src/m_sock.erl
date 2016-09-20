@@ -14,7 +14,6 @@
 %%%----------------------------------------------------------------------------   
 
 return(X) -> 
-   % m_state:return(X).
    fun(State) -> [X|maps:remove(fd, State)] end.
 
 fail(X) ->
@@ -32,8 +31,8 @@ fail(X) ->
 
 %%
 %% socket specification
-id()   -> lens:c([lens:map(fd,  {none, none}), lens:t1()]).
-url()  -> lens:c([lens:map(fd), lens:t2()]).
+id()   -> lens:c([lens:map(fd, #{}), lens:map(id,  none)]).
+url()  -> lens:c([lens:map(fd, #{}), lens:map(url, none)]).
 
 new() ->
    m_state:put(id(), undefined).
