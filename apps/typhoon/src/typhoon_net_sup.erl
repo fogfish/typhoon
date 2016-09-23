@@ -13,6 +13,9 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 -module(typhoon_net_sup).
 -behaviour(supervisor).
 -author('dmitry.kolesnikov@zalando.fi').

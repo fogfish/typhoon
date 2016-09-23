@@ -29,7 +29,8 @@
    payload/2,
    request/2,
    request/1,
-   thinktime/2
+   thinktime/2,
+   lens/1
 ]).
 %% script utility interface
 -export([
@@ -142,12 +143,12 @@ request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
    fun(IO) ->
       Pckt = send(IO, Http),
       Lens = lens(Ln),
-      lens:get(Lens, jsx:decode(Pckt))
+      [lens:get(Lens, jsx:decode(Pckt))|IO]
    end.
 
 request(#{id := {urn, <<"http">>, _}} = Http) ->
    fun(IO) -> 
-      send(IO, Http)
+      [send(IO, Http)|IO]
    end.
 
 %%

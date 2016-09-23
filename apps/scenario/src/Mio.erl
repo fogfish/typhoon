@@ -1,5 +1,8 @@
 %% @doc
 %%   used only for scenario compatibility with 0.7.x release
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 -module('Mio').
 
 -export([return/1, fail/1, '>>='/2]).

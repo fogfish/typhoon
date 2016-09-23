@@ -47,16 +47,7 @@ content_accepted(_Req) ->
          code:purge(Id),
          {module, Id} = code:load_binary(Id, undefined, Code),
          try
-            Conf = case lens:get(lens:pair(init, undefined), Id:module_info(exports)) of
-               0 ->
-                  Cfun = Id:init(),
-                  Cfun(#{pool => fun netpool/2, peer => []});
-               _ ->
-                  undefined
-            end,
-            Efun = Id:run(Conf),
-            [Data|_] = Efun(#{pool => fun netpool/2, peer => []}),
-            {ok, jsx:encode(Data)}
+            {ok, lint(Id, config(Id))}
          catch Error:Reason ->
             {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}
          end;
@@ -65,6 +56,29 @@ content_accepted(_Req) ->
          {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}
    end.
 
+%%
+%% @deprecated, 'Mio' support is over at 0.10.x release
+config(Scenario) ->
+   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
+      0 ->
+         State = #{pool => fun netpool/2, peer => []},
+         [Conf|_] = (Scenario:init())(State),
+         Conf;
+      _ ->
+         undefined
+   end.
+
+%%
+%% @deprecated, 'Mio' support is over at 0.10.x release
+lint(Scenario, Conf) ->
+   State = #{pool => fun netpool/2, peer => []},
+   case (Scenario:run(Conf))(State) of
+      [[_Http|Data]|_] ->
+         jsx:encode(erlang:iolist_to_binary(Data));
+
+      [Data|_] ->
+         jsx:encode(Data)
+   end.
 
 %%
 %%

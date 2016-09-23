@@ -49,12 +49,13 @@ url()     -> lens:c([lens:map(fd, #{}), lens:map(url, none)]).
 header()  -> lens:c([lens:map(fd, #{}), lens:map(header, [])]).
 header(X) -> lens:c([lens:map(fd, #{}), lens:map(header, []), lens:pair(X, none)]).
 
-%% @todo: use id as container for request description ?
+%% @todo: use pipe stream concept to return stream of element from socket
+
 new() ->
    m_state:put(id(), undefined).
 
 new(Id) -> 
-   m_state:put(id(), scalar:s(Id)).
+   m_state:put(id(), uri:new(scalar:s(Id))).
 
 url(Url) ->
    m_state:put(url(), uri:new(Url)).
@@ -90,6 +91,7 @@ request(Mthd) ->
       {Sock, State1} = socket(State0),
       Url  = lens:get(url(), State1),
       Head = lens:get(header(), State1),
+      knet:send(Sock, {trace, lens:get(id(), State1)}),
       knet:send(Sock, {Mthd, Url, Head}),
       %% @todo: remove authority if connection is not keep/alive
       [recv(Sock)|State1]
@@ -100,6 +102,7 @@ request(Mthd, Payload) ->
       {Sock, State1} = socket(State0),
       Url  = lens:get(url(), State1),
       Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State1)],
+      knet:send(Sock, {trace, lens:get(id(), State1)}),
       knet:send(Sock, {Mthd, Url, Head}),
       knet:send(Sock, Payload),
       knet:send(Sock, eof),
@@ -133,9 +136,6 @@ socket(State) ->
 
 connect(State) ->
    %% @todo: configurable io timeout
-   % % Sock = knet:socket(lens:get(url(), State), [{trace, self()}]),
-   % Sock = knet:socket(lens:get(url(), State), []),
-   % {ioctl, b, Sock} = knet:recv(Sock),
    Uri = lens:get(url(), State),
    {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
    pipe:bind(a, Sock),
