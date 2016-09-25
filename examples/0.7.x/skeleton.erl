@@ -58,7 +58,7 @@ urn() ->
 %%
 %% init scenario configuration
 init() ->
-   do([m_state ||        %% sequence of requests to execute as IO-monadic computation
+   do(['Mio' ||        %% sequence of requests to execute as IO-monadic computation
       _ <- request(),  %% execute HTTP request and discard results
       A <- request(),  %% execute HTTP request and assign response to variable A
       return(A)        %% it just takes a value A and puts it in an IO context.
@@ -67,7 +67,7 @@ init() ->
 %%
 %% execute scenario, the operation is repeated  until `t()` is expired. 
 run(_Config) ->
-   do([m_state ||
+   do(['Mio' ||
       _ <- request(),  %% execute HTTP request 
       A <- article(),  %% execute another type of HTTP request
       return(A)
@@ -77,42 +77,27 @@ run(_Config) ->
 %%
 %% create HTTP request using nested function call syntax
 request() ->
-   do([m_http ||
-      % 1. create new HTTP request
-      _ /= new("urn:http:zalando:api"),
-      
-      % 2. set destination url
-      _ /= url("https://api.zalando.com/"),
-
+   % 4. return IO-monad, it promises HTTP response 
+   scenario:request(
       % 3. set request header 
-      _ /= header("Accept-Language", "de-DE"),
-      _ /= header("Connection", "close"),
-
-      % 4. build HTTP promise
-      _ /= get(),
-
-      %% 5. return results
-      return(_)
-   ]).
+      scenario:header("Accept-Language", "de-DE",   
+         % 2. set destination url
+         scenario:url("https://api.zalando.com/",   
+            % 1. create new HTTP request
+            scenario:new("urn:http:zalando:api")    
+         )
+      )
+   ).
 
 %%
 %% create HTTP request using chained function call syntax
 article() ->
-   do([m_http ||
-      % 1. create new HTTP request
-      _ /= new("urn:http:zalando:articles"),
-      
-      % 2. set destination url     
-      _ /= url("https://api.zalando.com/articles"), 
-
-      % 3. set request header
-      _ /= header("Accept-Language", "de-DE"),
-      _ /= header("Connection", "close"),
-
-      % 4. build HTTP promise
-      [_|Json] /= get(),
-
-      %% 5. return results
-      return(lens:get(scenario:lens([content, {uniform}, id]), jsx:decode(erlang:iolist_to_binary(Json))))
-   ]).
+   % 1. create new HTTP request
+   A = scenario:new("urn:http:zalando:articles"),
+   % 2. set destination url     
+   B = scenario:url("https://api.zalando.com/articles", A), 
+   % 3. set request header
+   C = scenario:header("Accept-Language", "de-DE", B),
+   % 4. return IO-monad with focus lens on JSON field in HTTP response 
+   scenario:request([content, {uniform}, id], C). 
 

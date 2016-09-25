@@ -73,7 +73,7 @@ config(Scenario) ->
 lint(Scenario, Conf) ->
    State = #{pool => fun netpool/2, peer => []},
    case (Scenario:run(Conf))(State) of
-      [[_Http|Data]|_] ->
+      [[{_, _, _, _}|Data]|_] ->
          jsx:encode(erlang:iolist_to_binary(Data));
 
       [Data|_] ->
