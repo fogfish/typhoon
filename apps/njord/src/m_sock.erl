@@ -54,7 +54,8 @@ thinktime(T) ->
 %% send packet
 send(Pckt) ->
    fun(State0) ->
-      {Sock, State1} = socket(State0),
+      Url  = lens:get(url(), State0),
+      {Sock, State1} = socket(Url, State0),
       [knet:send(Sock, Pckt)|State1]
    end.
 
@@ -65,7 +66,8 @@ recv() ->
 
 recv(Timeout) ->
    fun(State0) ->
-      {Sock, State1} = socket(State0),
+      Url  = lens:get(url(), State0),
+      {Sock, State1} = socket(Url, State0),
       [recv(Sock, Timeout)|State1]
    end.
 
@@ -76,26 +78,23 @@ recv(Timeout) ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%%
-authority(State) ->
-   uri:authority(lens:get(url(), State)).
+%% 
+socket(Uri, State) ->
+   socket(uri:authority(Uri), Uri, State).
 
-%%
-%%
-socket(State) ->
-   case 
-      maps:get(authority(State), State, undefined)  
-   of
-      undefined ->
-         Sock = connect(State),
-         {Sock, State#{authority(State) => Sock}};
-      Sock ->
-         {Sock, State}
+socket(Authority, Uri, State) ->
+   case State of
+      %% re-use existed connection 
+      #{Authority := Sock} ->
+         {Sock, State};
+
+      %% create new connection
+      _ ->
+         Sock = socket(Uri),
+         {Sock, State#{Authority => Sock}}
    end.
 
-connect(State) ->
-   %% @todo: configurable i/o timeout
-   Uri = lens:get(url(), State),
+socket(Uri) ->
    {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
    pipe:bind(a, Sock),
    pipe:send(Sock, {connect, Uri}),

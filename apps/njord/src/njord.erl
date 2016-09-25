@@ -34,9 +34,9 @@ start() ->
 
 t() ->
    do([m_state ||
-      X <- a(),
-      Y <- b(X),
-      % Y <- c(),
+      % X <- a(),
+      % Y <- b(X),
+      Y <- c(),
       return(Y)
    ]).
 
@@ -45,7 +45,7 @@ a() ->
       _ /= new("urn:http:xxx"),
       _ /= url("https://api.zalando.com/"),
       _ /= header("Accept-Language", "de-DE"),
-      _ /= header("Connection", "keep-alive"),
+      _ /= header("Connection", "close"),
       _ /= get(),
       return(_)
    ]).
@@ -55,7 +55,7 @@ b(_) ->
       _ /= new("urn:http:yyy"),
       _ /= url("https://api.zalando.com/articles"),
       _ /= header("Accept-Language", "de-DE"),
-      _ /= header("Connection", "keep-alive"),
+      _ /= header("Connection", "close"),
       _ /= get(),
       return(_)
    ]).

@@ -40,7 +40,8 @@ free(_Reason, #{sock := Sock}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle({trace, Urn}, _Pipe, State) ->
+handle({trace, Urn}, Pipe, State) ->
+   pipe:ack(Pipe, ok),
    {next_state, handle, State#{urn => Urn}};
 
 handle({trace, _,   _}, _Pipe, #{urn := undefined} = State) ->

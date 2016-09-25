@@ -71,7 +71,8 @@ thinktime(T) ->
       [timer:sleep(T)|State]
    end.
 
-
+%%
+%%
 get() ->
    request('GET').
 
@@ -85,28 +86,29 @@ delete() ->
    request('DELETE').
 
 
-% @todo: validate and normalize method
+%%
+%% @todo: validate and normalize method
 request(Mthd) ->
    fun(State0) ->
-      {Sock, State1} = socket(State0),
-      Url  = lens:get(url(), State1),
-      Head = lens:get(header(), State1),
+      Url  = lens:get(url(), State0),
+      Head = lens:get(header(), State0),
+      {Sock, State1} = socket(Url, State0),
       knet:send(Sock, {trace, lens:get(id(), State1)}),
       knet:send(Sock, {Mthd, Url, Head}),
-      %% @todo: remove authority if connection is not keep/alive
+      knet:send(Sock, eof),
       [recv(Sock)|State1]
    end.
 
 request(Mthd, Payload) ->
    fun(State0) ->
-      {Sock, State1} = socket(State0),
-      Url  = lens:get(url(), State1),
-      Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State1)],
+      Url  = lens:get(url(), State0),
+      %% @todo: check if TE exists already
+      Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State0)],
+      {Sock, State1} = socket(Url, State0),
       knet:send(Sock, {trace, lens:get(id(), State1)}),
       knet:send(Sock, {Mthd, Url, Head}),
       knet:send(Sock, Payload),
       knet:send(Sock, eof),
-      %% @todo: remove authority if connection is not keep/alive
       [recv(Sock)|State1]
    end.
 
@@ -117,26 +119,28 @@ request(Mthd, Payload) ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%%
-authority(State) ->
-   uri:authority(lens:get(url(), State)).
+%% 
+socket(Uri, State) ->
+   socket(uri:authority(Uri), Uri, State).
 
-%%
-%%
-socket(State) ->
-   case 
-      maps:get(authority(State), State, undefined)  
-   of
-      undefined ->
-         Sock = connect(State),
-         {Sock, State#{authority(State) => Sock}};
-      Sock ->
-         {Sock, State}
+socket(Authority, Uri, State) ->
+   case State of
+      %% re-use existed connection 
+      #{Authority := Sock} ->
+         {Sock, State};
+
+      %% create new connection
+      _ ->
+         Sock = socket(Uri),
+         case lens:get(header('Connection'), State) of
+            <<"close">> ->
+               {Sock, State};
+            _           ->
+               {Sock, State#{Authority => Sock}}   
+         end
    end.
 
-connect(State) ->
-   %% @todo: configurable io timeout
-   Uri = lens:get(url(), State),
+socket(Uri) ->
    {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
    pipe:bind(a, Sock),
    Sock.
@@ -145,7 +149,7 @@ connect(State) ->
 %%
 recv(Sock) ->
    %% @todo: customizable timeout by client
-   case knet:recv(Sock, 30000) of
+   case knet:recv(Sock, 30000, []) of
       {http, Sock,  eof} ->
          [];
       {http, Sock, Pckt} ->
