@@ -63,7 +63,8 @@ handle(Egress, Pipe, State) ->
 
 
 %%
-%% @todo: how to abstract telemetry aggregation from connection management ?   
+%% @todo: how to abstract telemetry aggregation from connection management ?
+%%        we need to abstract aura api so that we can tunnel telemetry
 trace(Urn, T, {tcp, connect, X}) ->
    aura:send(urn({urn, <<"g">>, <<"tcp">>}, Urn), T, X);
 
