@@ -98,13 +98,13 @@ usecase_b() ->
       % the use-case executes three HTTP GET requests 
       _ <- get_ip(),
       _ <- get_ip(),
-      _ <- get_ip(),
+      X <- get_ip(),
 
       % the result of last HTTP GET request is fed to HTTP POST request
-      _ <- post(_),
+      _ <- post(X),
 
       % the result of previous HTTP POST request is fed again to HTTP POST request
-      _ <- post(_),
+      _ <- post(X),
       return(_)
    ]).
 
@@ -114,25 +114,19 @@ get_ip() ->
       _ /= new("urn:http:httpbin:get"),
       _ /= url("http://127.0.0.1:8888/ip"),
       _ /= header("Connection", "keep-alive"),
-      [_|Json] /= get(),
-      return(lens:get(scenario:lens([origin]), jsx:decode(erlang:iolist_to_binary(Json))))
+      _ /= get(),
+      _ /= decode(_),
+      return( scenario:lens([origin], _) )
    ]).
 
-post(Y) ->
+post(IP) ->
    do([m_http ||
       _ /= new("urn:http:httpbin:post"),
       _ /= url("http://127.0.0.1:8888/post"),
       _ /= header("Content-Type", "text/plain"),
       _ /= header("Connection", "keep-alive"),
-      [_|Json] /= post(Y),
-      return(erlang:iolist_to_binary(Json))
+      _ /= post(IP),
+      _ /= decode(_), 
+      return( scenario:lens([data], _) )
    ]).
-
-   % A = scenario:new(),
-   % B = scenario:method('POST', A),
-   % C = scenario:url(, B),
-   % D = scenario:header(, C),
-   % E = scenario:header("Connection", "keep-alive", D),
-   % G = scenario:payload(Y, E),
-   % scenario:request(D).
 

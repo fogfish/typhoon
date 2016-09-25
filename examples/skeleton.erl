@@ -109,10 +109,11 @@ article() ->
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "close"),
 
-      % 4. build HTTP promise
-      [_|Json] /= get(),
+      % 4. build HTTP promise and decode result
+      _ /= get(),
+      _ /= decode(_),
 
       %% 5. return results
-      return(lens:get(scenario:lens([content, {uniform}, id]), jsx:decode(erlang:iolist_to_binary(Json))))
+      return( scenario:lens([content, {uniform}, id], _) )
    ]).
 

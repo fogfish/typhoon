@@ -19,7 +19,11 @@
 
 -export([return/1, fail/1, '>>='/2]).
 -export([new/0, new/1, url/1, header/2]).
--export([thinktime/1, get/0, put/1, post/1, delete/0, request/1, request/2]).
+-export([
+   get/0, put/1, post/1, delete/0, request/1, request/2,
+   thinktime/1, 
+   decode/1
+]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -111,6 +115,21 @@ request(Mthd, Payload) ->
       knet:send(Sock, eof),
       [recv(Sock)|State1]
    end.
+
+%%
+%% decode http payload using mime-type
+decode([{_, _, Head, _} | Payload]) ->
+   fun(State) ->
+      Mime   = lens:get(lens:pair('Content-Type'), Head),
+      Entity = decode(Mime, erlang:iolist_to_binary(Payload)),
+      [Entity|State]
+   end.
+
+decode({_, <<"json">>}, Payload) ->
+   jsx:decode(erlang:iolist_to_binary(Payload));
+
+decode(_, Payload) ->
+   erlang:iolist_to_binary(Payload).
 
 %%%----------------------------------------------------------------------------   
 %%%
