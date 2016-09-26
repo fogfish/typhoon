@@ -108,6 +108,9 @@ trace(_T, {ssl, ca, _X}, #{urn := _Urn}) ->
 trace(_T, {ssl, peer, _X}, #{urn := _Urn}) ->
    ok;
 
+trace(_T, {http, code, _X}, #{urn := _Urn}) ->
+   ok;
+
 trace(T, {http, ttfb, X}, #{urn := Urn}) ->
    aura:send(urn({urn, <<"g">>, <<"ttfb">>}, Urn), T, X);
 

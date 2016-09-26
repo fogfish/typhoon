@@ -21,9 +21,10 @@ ARG   APP=typhoon
 ARG   VSN=
 
 ##
-## install dependencies
+## install dependencies required for bundle deployment
 RUN \
    yum -y install \
+      iproute \
       tar  \
       git  \
       make \
