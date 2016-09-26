@@ -17,4 +17,5 @@ log/
 tests/
 relx.config
 scm-source.json
+compile_commands.json
 

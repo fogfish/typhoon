@@ -52,7 +52,7 @@ This brings Typhoon up and running. The application uses local IP address 127.0.
 ```
 curl http://192.168.99.100:8080/health/peer
 ```
-The application should return list of cluster peers `["typhoon@127.0.0.1"]`.   
+The application should return list of cluster peers `["typhoon@172.17.0.2"]`.   
 
 Next, define a simple workload scenario and publish it to Typhoon:
 ```
@@ -68,6 +68,33 @@ Open the link `http://192.168.99.100:8080/example` in your web browser to manage
 Click the `run` button to kick off stress testing. Typhoon has a 60-second delay (approximately) before it renders the first result: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
 
 Congrats! You have successfully started a Typhoon, written a stress test scenario, deployed it to a cluster and analyzed your system's behavior.
+
+### Running a local Typhoon cluster 
+
+Use docker containers to spawn three node cluster on local environment. The following examples shows how to spawn cluster seeder and other nodes. Use the latest [release version](https://github.com/zalando/typhoon/releases) instead of `x.y.z`
+
+Let's spawn a seeder node, this node is used by other Typhoon peers to discover each other.
+```
+docker run -d -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
+``` 
+
+Next, the identity of seeder node is needed to spawn other peers. We can use health check api for this 
+```
+curl http://192.168.99.100:8080/health/peer
+```
+The application should return list of cluster peers `["typhoon@172.17.0.2"]`. This identity shall be passed to other containers within `EK_SEED` environment variable. The following example spawn more cluster peers: 
+```
+docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:x.y.z
+docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:x.y.z
+``` 
+
+We can validate that all peers joins the cluster using health check api 
+```
+curl http://192.168.99.100:8080/health/peer
+```
+The application should return list of cluster peers 
+`["typhoon@172.17.0.2","typhoon@172.17.0.3","typhoon@172.17.0.4"]`.   
+
 
 ### Next steps
 
@@ -117,7 +144,7 @@ If you experience any issues with Typhoon, please let us know via [GitHub issues
 
 Typhoon uses [semantic versions](http://semver.org) to identify stable releases. 
  
-* [0.7.2](https://github.com/zalando/typhoon/releases/tag/0.7.2) - improve performance on sample analysis
+* [0.7.3](https://github.com/zalando/typhoon/releases/tag/0.7.3) - support local clustering
 * [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
   
