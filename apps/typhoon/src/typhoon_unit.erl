@@ -64,7 +64,7 @@ free(_Reason, _) ->
 %%
 handle(request, _, #{scenario := Scenario, peer := Peer, config := Config, context := Context0} = State) ->
    Ta  = os:timestamp(),
-   [_|Context1] = (Scenario:run(Config))(Context0),
+   [_|Context1] = ( Scenario:run(hd(Config)) )(Context0),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
    aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
