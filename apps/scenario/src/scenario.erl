@@ -20,7 +20,10 @@
 
 -export([start/0]).
 -export([c/2]).
+
 %% script definition interface
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 -export([
    new/1,
    method/2,
@@ -33,6 +36,7 @@
 ]).
 %% script utility interface
 -export([
+   lens/1, lens/2,
    join/1,
    uid/0,
    uniform/1,
@@ -85,80 +89,14 @@ cc_mod(_, []) ->
 
 %%%----------------------------------------------------------------------------   
 %%%
-%%% http protocol
+%%% script interface
 %%%
 %%%----------------------------------------------------------------------------   
 
 %%
-%% 
--spec new(string()) -> _.
-
-new({urn, <<"http">>, _} = Id) ->
-   #{
-      id     => Id, 
-      method => 'GET', 
-      header => []
-   };
-
-new(Id) ->
-   new( uri:new(scalar:s(Id)) ).
-
-%%
-%% 
--spec method(atom() | string() | binary(), _) -> _.
-
-method(Method, #{id := {urn, <<"http">>, _}} = Http) ->
-   % @todo: validate and normalize method
-   Http#{method => Method}.
-
-%%
-%% 
--spec url(string() | binary(), _) -> _.
-
-url(Url, #{id := {urn, <<"http">>, _}} = Http) ->
-   Http#{url => uri:new(Url)}.
-
-%%
-%% 
--spec header(string(), string(), _) -> _.
- 
-header(Head, Value, #{id := {urn, <<"http">>, _}, header := List} = Http) -> 
-   % @todo: fix htstream to accept various headers
-   Http#{header => [{scalar:atom(Head), scalar:s(Value)} | List]}.
-
-%%
-%% 
--spec payload(string() | binary(), _) -> _.
-
-payload(Pckt, #{id := {urn, <<"http">>, _}, header := List} = Http) ->
-   Http#{payload => Pckt, header => [{'Transfer-Encoding', <<"chunked">>} | List]}.
-
-%%
-%% 
--spec request(_) -> _.
--spec request([atom()], _) -> _.
-
-request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
-   fun(IO) ->
-      Pckt = send(IO, Http),
-      Lens = lens(Ln),
-      lens:get(Lens, jsx:decode(Pckt))
-   end.
-
-request(#{id := {urn, <<"http">>, _}} = Http) ->
-   fun(IO) -> 
-      send(IO, Http)
-   end.
-
-%%
-%%
--spec thinktime(_, integer()) -> _.
-
-thinktime(X, T) ->
-   fun(_IO) ->
-      timer:sleep(T),
-      X
-   end.
+%%  
+lens(Ln, Content) ->
+   lens:get(scenario:lens(Ln), Content).
 
 %%
 %%
@@ -188,11 +126,6 @@ lens({pareto, A}) ->
       lens:fmap(fun(_) -> List end, Fun(Value))
    end.
 
-%%%----------------------------------------------------------------------------   
-%%%
-%%% script interface
-%%%
-%%%----------------------------------------------------------------------------   
 
 %%
 %% join terms to string
@@ -289,12 +222,96 @@ text() ->
    ).
 
 %%
-%% converts list of tuples into json
--spec json([{atom, _}]) -> binary().
+%% converts list of tuples or map into json
+-spec json([{atom, _}] | #{}) -> binary().
 
 json(Json) ->
    jsx:encode(Json).
 
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% http protocol
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
+-spec new(string()) -> _.
+
+new({urn, <<"http">>, _} = Id) ->
+   #{
+      id     => Id, 
+      method => 'GET', 
+      header => []
+   };
+
+new(Id) ->
+   new( uri:new(scalar:s(Id)) ).
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release 
+-spec method(atom() | string() | binary(), _) -> _.
+
+method(Method, #{id := {urn, <<"http">>, _}} = Http) ->
+   % @todo: validate and normalize method
+   Http#{method => Method}.
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release 
+-spec url(string() | binary(), _) -> _.
+
+url(Url, #{id := {urn, <<"http">>, _}} = Http) ->
+   Http#{url => uri:new(Url)}.
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
+-spec header(string(), string(), _) -> _.
+ 
+header(Head, Value, #{id := {urn, <<"http">>, _}, header := List} = Http) -> 
+   % @todo: fix htstream to accept various headers
+   Http#{header => [{scalar:atom(Head), scalar:s(Value)} | List]}.
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
+-spec payload(string() | binary(), _) -> _.
+
+payload(Pckt, #{id := {urn, <<"http">>, _}, header := List} = Http) ->
+   Http#{payload => Pckt, header => [{'Transfer-Encoding', <<"chunked">>} | List]}.
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
+-spec request(_) -> _.
+-spec request([atom()], _) -> _.
+
+request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
+   fun(IO) ->
+      Pckt = send(IO, Http),
+      Lens = lens(Ln),
+      [lens:get(Lens, jsx:decode(Pckt))|IO]
+   end.
+
+request(#{id := {urn, <<"http">>, _}} = Http) ->
+   fun(IO) -> 
+      [send(IO, Http)|IO]
+   end.
+
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
+-spec thinktime(_, integer()) -> _.
+
+thinktime(X, T) ->
+   fun(_IO) ->
+      timer:sleep(T),
+      X
+   end.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -304,6 +321,8 @@ json(Json) ->
 
 %%
 %% send request
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := Url, header := Head} = Http) ->
    NetIO = Pool(Url, Head),
    {ok, Sock} = pq:lease( NetIO ),
@@ -314,6 +333,8 @@ send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := U
 
 %%
 %% build request
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 encode(#{id := {urn, <<"http">>, _}} = Http) ->
    lists:flatten([
       encode_http_req(Http), 

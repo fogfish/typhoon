@@ -47,3 +47,13 @@
    debug_info,
    {parse_transform, lager_transform}
 ]}.
+
+{"apps/njord/src/*", [
+   report, 
+   verbose, 
+   {i, "include"}, 
+   {outdir, "_build/default/lib/njord/ebin"},
+   debug_info,
+   {parse_transform, lager_transform}
+]}.
+

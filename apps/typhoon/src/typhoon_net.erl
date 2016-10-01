@@ -1,5 +1,8 @@
 %% @doc
 %%   network i/o state machine
+%%
+%% @deprecated, 
+%%   'Mio' support is over at 0.10.x release
 -module(typhoon_net).
 -behaviour(pipe).
 
@@ -51,7 +54,7 @@ wire({http, _, Pckt}, _, #{recv := Recv} = State) ->
 
 wire({trace, T, Msg}, _, State) ->
    trace(T, Msg, State),
-   {next_state, wire, State#{}};
+   {next_state, wire, State};
 
 wire(_, _, State) ->
    {next_state, wire, State}.

@@ -46,7 +46,8 @@ init([Scenario]) ->
       #{
          scenario  => Scenario,
          peer      => Peer,
-         config    => config(Scenario, Peer)
+         config    => config(Scenario, Peer),
+         context   => #{pool => fun netpool/2, peer => Peer}
       }
    }.
 
@@ -61,15 +62,14 @@ free(_Reason, _) ->
 
 %%
 %%
-handle(request, _, #{scenario := Scenario, peer := Peer, config := Config} = State) ->
+handle(request, _, #{scenario := Scenario, peer := Peer, config := Config, context := Context0} = State) ->
    Ta  = os:timestamp(),
-   Fun = Scenario:run(Config),
-   Fun(#{pool => fun netpool/2, peer => Peer}),
+   [_|Context1] = ( Scenario:run(hd(Config)) )(Context0),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
    aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
    erlang:send(self(), request),
-   {next_state, handle, State};
+   {next_state, handle, State#{context => Context1}};
 
 handle(expired, _, State) ->
    {stop, normal, State}.
@@ -115,6 +115,6 @@ config(Scenario, Peer) ->
          Fun(#{pool => fun netpool/2, peer => Peer});
 
       _ ->
-         undefined
+         [undefined]
    end.
 
