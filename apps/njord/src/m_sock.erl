@@ -38,7 +38,7 @@ new() ->
    m_state:put(id(), undefined).
 
 new(Id) -> 
-   m_state:put(id(), scalar:s(Id)).
+   m_state:put(id(), uri:new(scalar:s(Id))).
 
 url(Url) ->
    m_state:put(url(), uri:new(Url)).
@@ -56,6 +56,7 @@ send(Pckt) ->
    fun(State0) ->
       Url  = lens:get(url(), State0),
       {Sock, State1} = socket(Url, State0),
+      knet:send(Sock, {trace, lens:get(id(), State1)}),
       [knet:send(Sock, Pckt)|State1]
    end.
 
@@ -68,6 +69,7 @@ recv(Timeout) ->
    fun(State0) ->
       Url  = lens:get(url(), State0),
       {Sock, State1} = socket(Url, State0),
+      knet:send(Sock, {trace, lens:get(id(), State1)}),
       [recv(Sock, Timeout)|State1]
    end.
 
@@ -91,14 +93,15 @@ socket(Authority, Uri, State) ->
       %% create new connection
       _ ->
          Sock = socket(Uri),
+         knet:send(Sock, {trace,   lens:get(id(), State)}),
+         knet:send(Sock, {connect, Uri}),
+         {_, Sock, {established, _}} = pipe:recv(Sock, 30000, []),
          {Sock, State#{Authority => Sock}}
    end.
 
 socket(Uri) ->
    {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
    pipe:bind(a, Sock),
-   pipe:send(Sock, {connect, Uri}),
-   {_, Sock, {established, _}} = pipe:recv(Sock, 30000, []),
    Sock.
 
 %%

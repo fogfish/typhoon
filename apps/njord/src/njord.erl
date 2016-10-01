@@ -65,13 +65,9 @@ c() ->
    do([m_sock ||
       _ /= new(),
       _ /= url("ssl://api.zalando.com"),
-      _ /= thinktime(10),
       _ /= send(<<"GET / HTTP/1.1\r\n">>),
-      _ /= thinktime(10),      
       _ /= send(<<"Host: api.zalando.com\r\n">>),
-      _ /= thinktime(10),
       _ /= send(<<"\r\n">>),
-      _ /= thinktime(10),
       _ /= recv(),
       return(_)
    ]).

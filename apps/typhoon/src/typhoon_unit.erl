@@ -115,6 +115,6 @@ config(Scenario, Peer) ->
          Fun(#{pool => fun netpool/2, peer => Peer});
 
       _ ->
-         undefined
+         [undefined]
    end.
 
