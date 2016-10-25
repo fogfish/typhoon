@@ -18,13 +18,21 @@
 -module(typhoon).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-include_lib("ambitz/include/ambitz.hrl").
+
 -export([start/0]).
 %%
 %% management interface
 -export([
-   define/3
+   signup/2
+  ,profile/2
+  ,scenario/2
+
+
+  ,define/3
   ,lookup/2
   ,remove/2
+
   ,peer/1
   ,run/1
   ,unit/1
@@ -39,9 +47,13 @@
 
 
 %%
-%%
--type(id()     :: binary()).
--type(json()   :: [{binary(), _}]).
+%% data types
+-type urn()    :: {urn, _, _}.
+-type spec()   :: binary().  %% application/erlang
+-type opts()   :: [_].
+
+
+% -type(json()   :: [{binary(), _}]).
 
 %%
 %% RnD node start
@@ -55,58 +67,79 @@ start() ->
 %%%----------------------------------------------------------------------------   
 
 %%
+%% sign up a new user
+-spec signup(urn(), opts()) -> ok.
+
+signup({urn, user, _} = User, Opts) ->
+   Profile = crdts:update(uri:path(User), crdts:new(lwwreg)),
+   Spec    = {typhoon_user, start_link, [Profile]},
+   {ok, _} = ambitz:spawn(typhoon, uri:s(User), Spec, Opts),
+   ok.
+
+%%
+%% check user profile
+-spec profile(urn(), opts()) -> {ok, _} | {error, not_found}.
+
+profile({urn, user, _} = User, Opts) ->
+   case ambitz:get(typhoon, uri:s(User), profile, Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Profile}} ->
+         {ok, crdts:value(Profile)}
+   end.
+
+%%
+%% check user scenario
+-spec scenario(urn(), opts()) -> {ok, _} | {error, not_found}.
+
+scenario({urn, user, _} = User, Opts) ->
+   case ambitz:get(typhoon, uri:s(User), scenario, Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Scenario}} ->
+         {ok, crdts:value(Scenario)}
+   end.
+
+%%
 %% defines load scenario to the cluster, 
 %% takes unique name of test scenario and its specification,
 %% returns cluster descriptor entity
-%% @todo: id is converted to atom, scalar:atom(Id)
--spec define(id(), json(), list()) -> {ok, ambitz:entity()} | {error, _}.
+-spec define(urn(), spec(), opts()) -> {ok, _}.
 
-define(Id, Spec, Opts) ->
-   ambitz:spawn(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(service, {typhoon_scenario, start_link, [scalar:atom(Id), Spec]},
-            ambitz:entity(Id)
-         )
-      ),
-      Opts
-   ).
+define({urn, _, _} = Id, Spec, Opts) ->
+   User  = {urn, user, uri:schema(Id)},
+   ScenarioA = crdts:update(Id, crdts:new(gsets)),
+   Actor = {typhoon_scenario, start_link, [scalar:atom(uri:path(Id)), Spec]},
+   {ok, _} = ambitz:spawn(typhoon, uri:s(Id), Actor, Opts),
+   {ok, #entity{val = ScenarioB}} = ambitz:put(typhoon, uri:s(User), scenario, ScenarioA, Opts),
+   {ok, crdts:value(ScenarioB)}.
 
 
 %%
 %% lookup load scenario using it's unique name
 %% returns cluster descriptor entity, including scenario specification
--spec lookup(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
+-spec lookup(urn(), opts()) -> {ok, ambitz:entity()}.
 
-lookup(Id, Opts) ->
-   ambitz:lookup(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(Id)
-      ),
-      Opts
-   ).
+lookup({urn, _, _} = Id, Opts) ->
+   ambitz:lookup(typhoon, uri:s(Id), Opts).
+
 
 %%
 %% remove load scenario from cluster
--spec remove(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
+-spec remove(urn(), opts()) -> ok.
 
-remove(Id, Opts) ->
-   case    
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, 
-            ambitz:entity(Id)
-         ),
-         Opts
-      )
-   of
-      {error, _} = Error ->
-         Error;
-      {ok, Entity} ->
-         ambitz:free(Entity, Opts)
-   end.
+remove({urn, _, _} = Id, Opts) ->
+   ambitz:free(typhoon, uri:s(Id), Opts).
+
+
+
+
+
+
 
 %%
 %% return list of peer(s) nodes (ip addresses) 
--spec peer(id()) -> [_].
+-spec peer(urn()) -> [_].
 
 peer(Id) ->
    [addr(Vnode) || Vnode <- ek:successors(typhoon, scalar:s(Id)), 
@@ -121,7 +154,7 @@ addr(Vnode) ->
 
 %%
 %% run load scenario, the scenario will terminate automatically after timeout
--spec run(id()) -> ok | {error, _}.
+-spec run(urn()) -> ok | {error, _}.
 
 run(Id) ->
    case
@@ -141,7 +174,7 @@ run(Id) ->
 
 %%
 %% return number of active load units
--spec unit(id()) -> {ok, integer()} | {error, any()}.
+-spec unit(urn()) -> {ok, integer()} | {error, any()}.
 
 unit(Id) ->
    case
@@ -164,7 +197,7 @@ unit(Id) ->
 
 %%
 %% return number of active load units
--spec attr(id()) -> {ok, [_]} | {error, any()}.
+-spec attr(urn()) -> {ok, [_]} | {error, any()}.
 
 attr(Id) ->
    case
@@ -198,7 +231,7 @@ fd() ->
 
 %%
 %% takes a generator function and produce telemetry stream
--spec stream(id(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
+-spec stream(urn(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
 
 stream(Id, Gen) ->
    case
@@ -216,4 +249,10 @@ stream(Id, Gen) ->
          Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
          pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000)
    end.
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% private
+%%%
+%%%----------------------------------------------------------------------------   
 
