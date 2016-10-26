@@ -17,6 +17,8 @@
 %%   rest api - 
 -module(zephyrus_dashboard).
 -author('dmitry.kolesnikov@zalando.fi').
+-include_lib("ambitz/include/ambitz.hrl").
+
 
 -export([
    allowed_methods/1,
@@ -38,11 +40,12 @@ content_provided(_Req) ->
 %%
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   case typhoon:lookup({urn, root, Id}, [{r, 1}]) of
-      {error, not_found} ->
+   {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, 1}]),
+   case crdts:value(Val) of
+      undefined ->
          404;
 
-      {ok,   Entity} ->
+      _Entity ->
          case uri:segments(Url) of
             [<<"analysis">> | _] ->
                file:read_file(

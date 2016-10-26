@@ -45,36 +45,29 @@ content_accepted(_Req) ->
 %%
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   R  = scalar:i(uri:q(<<"r">>, 1, Url)),   
-   case typhoon:lookup({urn, root, Id}, [{r, R}]) of
-      {error, not_found} ->
-         {404, [], <<>>};
+   R  = scalar:i(uri:q(<<"r">>, 1, Url)), 
+   {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, R}]),
+   case crdts:value(Val) of
+      undefined ->
+         404;
       
-      {ok, #entity{} = Entity} ->
-         %% @todo: return binary content  
-         {200, [], json(Entity)}
+      {_, _, [_, Spec]} ->
+         {200, Spec}
    end.
 
 %%
 %%
-'PUT'(_, {Url, _Head, Env}, Scenario) ->
+'PUT'(_, {Url, _Head, Env}, Spec) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
-   {ok, _List} = typhoon:define({urn, root, Id}, Scenario, [{w, W}]),
-   {201, jsx:encode(Id)}.
+   {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
+   {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
+   201.
 
 %%
 %%
 'DELETE'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
-   {ok, Entity} = typhoon:remove({urn, root, Id}, [{w, W}]),
-   {200, json(Entity)}.
-
-%%
-%% return status descriptor
-json(Entity) ->
-   Primary = length([X || X <- ambitz:entity(vnode, Entity), ek:vnode(type, X) =:= primary]),
-   Handoff = length([X || X <- ambitz:entity(vnode, Entity), ek:vnode(type, X) =:= handoff]),
-   jsx:encode([{primary, Primary}, {handoff, Handoff}]).
-
+   {ok,_} = typhoon:remove({urn, root, Id}, [{w, W}]),
+   200.

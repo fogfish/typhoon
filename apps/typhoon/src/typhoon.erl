@@ -24,14 +24,19 @@
 %%
 %% management interface
 -export([
-   signup/2
+   put/3
+  ,get/2
+  ,remove/2
+
+  ,signup/2
   ,profile/2
   ,scenario/2
+  ,scenario/3
 
 
-  ,define/3
-  ,lookup/2
-  ,remove/2
+  % ,define/3
+  % ,lookup/2
+  % ,remove/2
 
   ,peer/1
   ,run/1
@@ -53,8 +58,6 @@
 -type opts()   :: [_].
 
 
-% -type(json()   :: [{binary(), _}]).
-
 %%
 %% RnD node start
 start() ->
@@ -67,6 +70,33 @@ start() ->
 %%%----------------------------------------------------------------------------   
 
 %%
+%% create a new workload scenario
+-spec put(urn(), binary(), opts()) -> {ok, ambitz:entity()}.
+
+put({urn, _, _} = Key, Spec, Opts) ->
+   ambitz:spawn(typhoon, uri:s(Key),
+      {typhoon_scenario, start_link, [scalar:atom(uri:path(Key)), Spec]},
+      Opts
+   ).
+
+
+%%
+%% read content of workload scenario
+-spec get(urn(), opts()) -> {ok, ambitz:entity()}.
+
+get({urn, _, _} = Key, Opts) ->
+   ambitz:lookup(typhoon, uri:s(Key), Opts).
+
+
+%%
+%% remove workload scenario
+-spec remove(urn(), opts()) -> {ok, ambitz:entity()}.
+
+remove({urn, _, _} = Key, Opts) ->
+   ambitz:free(typhoon, uri:s(Key), Opts).
+
+
+%%
 %% sign up a new user
 -spec signup(urn(), opts()) -> ok.
 
@@ -77,7 +107,7 @@ signup({urn, user, _} = User, Opts) ->
    ok.
 
 %%
-%% check user profile
+%% read user profile
 -spec profile(urn(), opts()) -> {ok, _} | {error, not_found}.
 
 profile({urn, user, _} = User, Opts) ->
@@ -89,7 +119,7 @@ profile({urn, user, _} = User, Opts) ->
    end.
 
 %%
-%% check user scenario
+%% read user scenario
 -spec scenario(urn(), opts()) -> {ok, _} | {error, not_found}.
 
 scenario({urn, user, _} = User, Opts) ->
@@ -101,35 +131,26 @@ scenario({urn, user, _} = User, Opts) ->
    end.
 
 %%
-%% defines load scenario to the cluster, 
-%% takes unique name of test scenario and its specification,
-%% returns cluster descriptor entity
--spec define(urn(), spec(), opts()) -> {ok, _}.
+%% add new scenario to user profile
+-spec scenario(urn(), urn(), opts()) -> {ok, _} | {error, not_found}. 
 
-define({urn, _, _} = Id, Spec, Opts) ->
-   User  = {urn, user, uri:schema(Id)},
-   ScenarioA = crdts:update(Id, crdts:new(gsets)),
-   Actor = {typhoon_scenario, start_link, [scalar:atom(uri:path(Id)), Spec]},
-   {ok, _} = ambitz:spawn(typhoon, uri:s(Id), Actor, Opts),
-   {ok, #entity{val = ScenarioB}} = ambitz:put(typhoon, uri:s(User), scenario, ScenarioA, Opts),
-   {ok, crdts:value(ScenarioB)}.
+scenario({urn, user, _} = User, {urn, _, _} = Urn, Opts) ->
+   case ambitz:put(typhoon, uri:s(User), scenario, crdts:update(Urn, crdts:new(gsets)), Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Scenario}} ->
+         {ok, crdts:value(Scenario)}
+   end.
+   
 
-
-%%
-%% lookup load scenario using it's unique name
-%% returns cluster descriptor entity, including scenario specification
--spec lookup(urn(), opts()) -> {ok, ambitz:entity()}.
-
-lookup({urn, _, _} = Id, Opts) ->
-   ambitz:lookup(typhoon, uri:s(Id), Opts).
 
 
 %%
 %% remove load scenario from cluster
--spec remove(urn(), opts()) -> ok.
+% -spec remove(urn(), opts()) -> ok.
 
-remove({urn, _, _} = Id, Opts) ->
-   ambitz:free(typhoon, uri:s(Id), Opts).
+% remove({urn, _, _} = Id, Opts) ->
+%    ambitz:free(typhoon, uri:s(Id), Opts).
 
 
 %%

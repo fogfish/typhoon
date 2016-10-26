@@ -34,25 +34,24 @@
 %%%
 %%%----------------------------------------------------------------------------   
 
-start_link(Vnode, Id, Spec) ->
-   pipe:start_link(?MODULE, [Vnode, Id, Spec], []).
+start_link(Vnode, Mod, Spec) ->
+   pipe:start_link(?MODULE, [Vnode, Mod, Spec], []).
 
-init([Vnode, Id, Spec]) ->
-   clue:define(meter, Id, 60000),
-   {ok, Code} = compile(Id, Spec),
+init([Vnode, Mod, Spec]) ->
+   {ok, Code} = compile(Mod, Spec),
    {ok, handle, 
       #{
          vnode => Vnode,
-         id    => Id,
+         mod   => Mod,
          code  => Code,
          n     => 0
       }
    }.
 
-free(_, #{id := Id}) ->
-   file:delete(file(Id)).
+free(_, #{mod := Mod}) ->
+   file:delete(file(Mod)).
 
-ioctl(attr, #{id := Scenario, n := Session}) ->
+ioctl(attr, #{mod := Scenario, n := Session}) ->
    [
       {id,     Scenario},
       {t,      Scenario:t()},
@@ -68,9 +67,9 @@ ioctl(attr, #{id := Scenario, n := Session}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle(run, Tx, #{id := Id, code := Code, n := N0}=State) ->
-   drift(Id, Code),
-   milestone(State),
+handle(run, Tx, #{mod := Mod, code := Code, n := N0}=State) ->
+   drift(Mod, Code),
+   history(State),
    N1 = length(run(State)),
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
@@ -115,21 +114,21 @@ drift(Node, Mod, Code) ->
 
 %%
 %% run test case on cluster
-run(#{id := Scenario} = State) ->
+run(#{mod := Scenario} = State) ->
    N = opts:val(n, opts:val(ring, ambit)),
    run(Scenario:n(), N, State).
 
 run(Q, _N, _State)
  when Q =< 0 ->
    [];
-run(Q, N, #{id := Scenario} = State) ->
+run(Q, N, #{mod := Scenario} = State) ->
    Id = uid:encode(uid:g()),
    {ok, #entity{vnode = Vnodes}} = ambitz:spawn(typhoon, Id, {typhoon_unit_sup, start_link, [Scenario]}, [{w, N}]),
    [Id | run(Q - length(Vnodes), N, State)].
 
 %%
-%% log milestone
-milestone(#{id := Scenario}) ->
+%% log history
+history(#{mod := Scenario}) ->
    Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    aura:send(Urn, os:timestamp(), Scenario:t()).
 
