@@ -27,7 +27,9 @@
 %%
 start(_Type, _Args) ->
    clue:define(meter, {typhoon, req}, 600000),
-   typhoon_sup:start_link(). 
+   {ok, Sup} = typhoon_sup:start_link(),
+   typhoon:signup({urn, user, <<"root">>}, [{w, 1}]),
+   {ok, Sup}.
 
 %%
 %%

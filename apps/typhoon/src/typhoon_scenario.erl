@@ -18,6 +18,7 @@
 -module(typhoon_scenario).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
+-include_lib("ambitz/include/ambitz.hrl").
 
 -export([
    start_link/3
@@ -25,11 +26,6 @@
   ,free/2
   ,ioctl/2
   ,handle/3
-]).
-%% ambit callback
--export([
-   process/1,
-   handoff/2
 ]).
 
 %%%----------------------------------------------------------------------------   
@@ -68,33 +64,14 @@ ioctl(attr, #{id := Scenario, n := Session}) ->
 
 %%%----------------------------------------------------------------------------   
 %%%
-%%% ambit
-%%%
-%%%----------------------------------------------------------------------------   
-
-process(Root) ->
-   {ok, Root}.
-
-handoff(Root, Vnode) ->
-   pipe:call(Root, {handoff, Vnode}).
-
-%%%----------------------------------------------------------------------------   
-%%%
 %%% pipe
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle({handoff, _Vnode}, Tx, State) ->
-   pipe:ack(Tx, ok),
-   {next_state, handle, State};
-
 handle(run, Tx, #{id := Id, code := Code, n := N0}=State) ->
-   % deploy compiled scenario code to each node
-   Nodes = erlang:nodes(),
-   lists:foreach(fun(Node) -> drift(Node, Id, Code) end, Nodes),
+   drift(Id, Code),
    milestone(State),
-   % run scenario
-   N1 = run(q:new([erlang:node() | Nodes]), State),
+   N1 = length(run(State)),
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
 
@@ -129,29 +106,26 @@ compile(Id, Scenario) ->
 
 %%
 %% deploy code to cluster nodes
+drift(Id, Code) ->
+   lists:foreach(fun(Node) -> drift(Node, Id, Code) end, erlang:nodes()).
+
 drift(Node, Mod, Code) ->
    _ = rpc:call(Node, code, purge, [Mod]),
    {module, Mod} = rpc:call(Node, code, load_binary, [Mod, undefined, Code]).
 
-
-
 %%
 %% run test case on cluster
-run(Nodes, #{id := Scenario} = State) ->
-   run(Scenario:n(), 0, Nodes, State).
+run(#{id := Scenario} = State) ->
+   N = opts:val(n, opts:val(ring, ambit)),
+   run(Scenario:n(), N, State).
 
-run(0, K, _Nodes, _State) ->
-   K;
-run(N, K, Nodes, #{id := Scenario}=State) ->
-   case 
-      supervisor:start_child({typhoon_unit_sup, q:head(Nodes)}, [Scenario]) 
-   of
-      {ok, Pid} ->
-         erlang:monitor(process, Pid),
-         run(N - 1, K + 1, q:enq(q:head(Nodes), q:tail(Nodes)), State);
-      {error,_} ->
-         run(N - 1, K, q:enq(q:head(Nodes), q:tail(Nodes)), State)
-   end.
+run(Q, _N, _State)
+ when Q =< 0 ->
+   [];
+run(Q, N, #{id := Scenario} = State) ->
+   Id = uid:encode(uid:g()),
+   {ok, #entity{vnode = Vnodes}} = ambitz:spawn(typhoon, Id, {typhoon_unit_sup, start_link, [Scenario]}, [{w, N}]),
+   [Id | run(Q - length(Vnodes), N, State)].
 
 %%
 %% log milestone

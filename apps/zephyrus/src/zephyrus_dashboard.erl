@@ -38,25 +38,20 @@ content_provided(_Req) ->
 %%
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   case typhoon:lookup(Id, [{r, 1}]) of
-      {error, unity} ->
-         {303, [{'Location', location(Url, Id)}], <<>>};
+   case typhoon:lookup({urn, root, Id}, [{r, 1}]) of
+      {error, not_found} ->
+         404;
 
       {ok,   Entity} ->
-         case ambitz:entity(service, Entity) of
-            undefined ->
-               404;
-            _         ->
-               case uri:segments(Url) of
-                  [<<"analysis">> | _] ->
-                     file:read_file(
-                        filename:join([code:priv_dir(zephyrus), htdoc, "analysis.html"])
-                     );
-                  _ ->
-                     file:read_file(
-                        filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
-                     )
-               end
+         case uri:segments(Url) of
+            [<<"analysis">> | _] ->
+               file:read_file(
+                  filename:join([code:priv_dir(zephyrus), htdoc, "analysis.html"])
+               );
+            _ ->
+               file:read_file(
+                  filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
+               )
          end
    end.
 

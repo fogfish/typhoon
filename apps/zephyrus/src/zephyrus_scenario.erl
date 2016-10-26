@@ -18,6 +18,8 @@
 -module(zephyrus_scenario).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-include_lib("ambitz/include/ambitz.hrl").
+
 -export([
    allowed_methods/1,
    content_provided/1, 
@@ -44,19 +46,13 @@ content_accepted(_Req) ->
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    R  = scalar:i(uri:q(<<"r">>, 1, Url)),   
-   case typhoon:lookup(Id, [{r, R}]) of
-      {error, unity} ->
-         {303, [{'Location', uri:s(Url)}], <<>>};
+   case typhoon:lookup({urn, root, Id}, [{r, R}]) of
+      {error, not_found} ->
+         {404, [], <<>>};
       
-      {ok,   Entity} ->
-         case ambitz:entity(service, Entity) of
-            undefined ->
-               404;
-
-            Service   ->
-               Spec = lens:get(lens:t3(), lens:tl(), lens:hd(), Service),
-               {ok, Spec}
-         end      
+      {ok, #entity{} = Entity} ->
+         %% @todo: return binary content  
+         {200, [], json(Entity)}
    end.
 
 %%
@@ -64,26 +60,16 @@ content_accepted(_Req) ->
 'PUT'(_, {Url, _Head, Env}, Scenario) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
-   case typhoon:define(Id, Scenario, [{w, W}]) of
-      {error, unity} ->
-         {303, [{'Location', uri:s(Url)}], <<>>};
-
-      {ok,   Entity} ->
-         {201, json(Entity)}
-   end.
+   {ok, _List} = typhoon:define({urn, root, Id}, Scenario, [{w, W}]),
+   {201, jsx:encode(Id)}.
 
 %%
 %%
 'DELETE'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
-   case typhoon:remove(Id, [{r, W}, {w, W}]) of
-      {error, unity} ->
-         {303, [{'Location', uri:s(Url)}], <<>>};
-
-      {ok,   Entity} ->
-         {200, json(Entity)}
-   end.
+   {ok, Entity} = typhoon:remove({urn, root, Id}, [{w, W}]),
+   {200, json(Entity)}.
 
 %%
 %% return status descriptor

@@ -41,6 +41,7 @@ start_link(_Vnode, Profile) ->
    pipe:start_link(?MODULE, [Profile], []).
 
 init([Profile]) ->
+   lager:notice("typhoon [user]: sign up ~p~n", [crdts:value(Profile)]),
    {ok, handle, 
       #state{
          profile  = Profile,
