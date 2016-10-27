@@ -1,0 +1,14 @@
+<html>
+<body>
+
+{for e in list}
+<h1>{e.id}</h1>
+
+{for u in e.unit}
+<pre>{u.check} {u.pass} {for l in u.lens} {l} {/for} {u.expect} {u.actual}</pre>
+{/for}
+
+{/for}
+
+</body>
+</html>

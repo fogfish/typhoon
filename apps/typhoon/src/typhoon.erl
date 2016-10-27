@@ -40,6 +40,7 @@
 
   ,peer/1
   ,run/1
+  ,once/1
   ,unit/1
   ,attr/1
 ]).
@@ -163,6 +164,15 @@ run({urn, _, _} = Id) ->
    Pid  = lists:nth(random:uniform(length(Pids)), Pids),
    pipe:call(Pid, run).
 
+%%
+%% test load scenario, run once, the scenario will terminate automatically after timeout
+-spec once(urn()) -> ok | {error, _}.
+
+once({urn, _, _} = Id) ->
+   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
+   Pids = crdts:value(CRDT),
+   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
+   pipe:call(Pid, once, 60000).
 
 
 

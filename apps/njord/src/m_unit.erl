@@ -30,7 +30,7 @@ return(_) ->
    fun(State) -> 
       Urn  = lens:get(id(), State),
       Unit = lens:get(unit(), State),
-      [{Urn, Unit}|maps:remove(unit, State)] 
+      [#{id => uri:s(Urn), unit => Unit}|maps:remove(unit, State)] 
    end.
 
 fail(X) ->
@@ -89,6 +89,9 @@ check(Check, Fun, Lens, Value) ->
       Unit   = #{check => Check, pass => Fun(Expect, Actual), lens => Lens, expect => Expect, actual => Actual},
       [ok|lens:put(unit(), [Unit|Units], State)]      
    end.
+
+%%
+%% @todo: code and header checks
 
 %%
 %%

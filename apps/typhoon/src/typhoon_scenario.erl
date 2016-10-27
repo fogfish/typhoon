@@ -74,6 +74,18 @@ handle(run, Tx, #{mod := Mod, code := Code, n := N0}=State) ->
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
 
+handle(once, Tx, #{mod := Scenario} = State) ->
+   Config   = config(Scenario),
+   UnitTest = [X || {X, 1} <- Scenario:module_info(exports), X =/= init, X =/= module_info],
+   Value    = lists:map(
+      fun(Unit) ->
+         hd( (Scenario:Unit(Config))(#{}) )
+      end,
+      UnitTest
+   ),
+   pipe:ack(Tx, Value),
+   {next_state, handle, State};
+
 handle({'DOWN', _Ref, _Type, _Pid, _Reason}, _, #{n := N} = State) ->
    {next_state, handle, State#{n := N - 1}};
 
@@ -132,4 +144,15 @@ history(#{mod := Scenario}) ->
    Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    aura:send(Urn, os:timestamp(), Scenario:t()).
 
+%%
+%% configure scenario execution
+config(Scenario) ->
+   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
+      0 ->
+         Fun = Scenario:init(),
+         Fun(#{});
+
+      _ ->
+         [undefined]
+   end.
 
