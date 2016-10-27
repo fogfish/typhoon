@@ -34,10 +34,10 @@ start() ->
 
 t() ->
    do([m_state ||
-      % X <- a(),
+      X <- a(),
       % Y <- b(X),
-      Y <- c(),
-      return(Y)
+      % Y <- c(),
+      return(X)
    ]).
 
 a() ->
@@ -47,29 +47,41 @@ a() ->
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "close"),
       _ /= get(),
+      _ <- b(_),
       return(_)
    ]).
 
-b(_) ->
-   do([m_http || 
-      _ /= new("urn:http:yyy"),
-      _ /= url("https://api.zalando.com/articles"),
-      _ /= header("Accept-Language", "de-DE"),
-      _ /= header("Connection", "close"),
-      _ /= get(),
+b(X) ->
+   do([m_unit ||
+      _ /= new(X),
+      _ /= eq([endpoints, facets], <<"https://api.zalando.com/facets1">>),
+      _ /= eq([endpoints, brands], <<"https://api.zalando.com/brands">>),
+      _ /= eq([endpoints, filters], <<"https://api.zalando.com/filters">>),
       return(_)
    ]).
 
 
-c() ->
-   do([m_sock ||
-      _ /= new(),
-      _ /= url("ssl://api.zalando.com"),
-      _ /= send(<<"GET / HTTP/1.1\r\n">>),
-      _ /= send(<<"Host: api.zalando.com\r\n">>),
-      _ /= send(<<"\r\n">>),
-      _ /= recv(),
-      return(_)
-   ]).
+
+% b(_) ->
+%    do([m_http || 
+%       _ /= new("urn:http:yyy"),
+%       _ /= url("https://api.zalando.com/articles"),
+%       _ /= header("Accept-Language", "de-DE"),
+%       _ /= header("Connection", "close"),
+%       _ /= get(),
+%       return(_)
+%    ]).
+
+
+% c() ->
+%    do([m_sock ||
+%       _ /= new(),
+%       _ /= url("ssl://api.zalando.com"),
+%       _ /= send(<<"GET / HTTP/1.1\r\n">>),
+%       _ /= send(<<"Host: api.zalando.com\r\n">>),
+%       _ /= send(<<"\r\n">>),
+%       _ /= recv(),
+%       return(_)
+%    ]).
 
 
