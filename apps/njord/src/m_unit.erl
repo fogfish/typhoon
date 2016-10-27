@@ -18,7 +18,7 @@
 -module(m_unit).
 
 -export([return/1, fail/1, '>>='/2]).
--export([new/1, eq/2]).
+-export([new/1, eq/2, ne/2, le/2, lt/2, ge/2, gt/2]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -26,7 +26,7 @@
 %%%
 %%%----------------------------------------------------------------------------   
 
-return(X) -> 
+return(_) -> 
    fun(State) -> 
       Urn  = lens:get(id(), State),
       Unit = lens:get(unit(), State),
@@ -74,12 +74,19 @@ decode(_, Payload) ->
 
 %%
 %%
-eq(Lens, Value) ->
+eq(Lens, Value) -> check(eq, fun(A, B) -> A =:= B end, Lens, Value).
+ne(Lens, Value) -> check(ne, fun(A, B) -> A =/= B end, Lens, Value).
+le(Lens, Value) -> check(le, fun(A, B) -> A =<  B end, Lens, Value).
+lt(Lens, Value) -> check(lt, fun(A, B) -> A  <  B end, Lens, Value).
+ge(Lens, Value) -> check(ge, fun(A, B) -> A  >= B end, Lens, Value).
+gt(Lens, Value) -> check(gt, fun(A, B) -> A  >  B end, Lens, Value).
+
+check(Check, Fun, Lens, Value) ->
    fun(State) ->
       Expect = value(Value),
       Actual = scenario:lens(Lens, lens:get(data(), State)),
       Units  = lens:get(unit(), State),
-      Unit   = #{pass => Expect =:= Actual, lens => Lens, expect => Expect, actual => Actual},
+      Unit   = #{check => Check, pass => Fun(Expect, Actual), lens => Lens, expect => Expect, actual => Actual},
       [ok|lens:put(unit(), [Unit|Units], State)]      
    end.
 
