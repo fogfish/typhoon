@@ -35,7 +35,7 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, erlang}].
+   [{text, html}].
 
 %%
 content_accepted(_Req) ->
@@ -69,9 +69,9 @@ content_accepted(_Req) ->
    Fun1 = Fun0(undefined),
    case is_passed(Pass) of
       [true] ->
-         {200, Fun1(#{list => Pass})};
+         {200, Fun1(#{list => jsonify(Pass)})};
       _ ->
-         {500, Fun1(#{list => Pass})}
+         {500, Fun1(#{list => jsonify(Pass)})}
    end.
 
 is_passed(Pass) ->
@@ -81,3 +81,27 @@ is_passed(Pass) ->
          lists:flatten([Y || #{unit := Y} <- Pass]) 
       )
    ).
+
+
+jsonify([#{unit := Unit} = X | Tail]) ->
+   [X#{unit => jsonify_unit(Unit)} | jsonify(Tail)];
+jsonify([]) ->
+   [].
+
+jsonify_unit([#{lens := Lens} = X | Tail]) ->
+   [X#{lens => jsonify_lens(Lens)}| jsonify_unit(Tail)];
+jsonify_unit([X | Tail]) ->
+   [X| jsonify_unit(Tail)];
+jsonify_unit([]) ->
+   [].
+
+jsonify_lens([{X} | Tail]) ->
+   [<<${, (scalar:s(X))/binary, $}>> | jsonify_lens(Tail)];
+jsonify_lens([{X, Y} | Tail]) ->
+   [<<${, (scalar:s(X))/binary, $,, (scalar:s(Y))/binary, $}>> | jsonify_lens(Tail)];
+jsonify_lens([X | Tail]) ->
+   [X | jsonify_lens(Tail)];
+jsonify_lens([]) ->
+   [].
+
+

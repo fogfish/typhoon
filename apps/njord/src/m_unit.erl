@@ -18,7 +18,7 @@
 -module(m_unit).
 
 -export([return/1, fail/1, '>>='/2]).
--export([new/1, eq/2, ne/2, le/2, lt/2, ge/2, gt/2]).
+-export([new/1, eq/2, ne/2, le/2, lt/2, ge/2, gt/2, has/1, code/1, head/2]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -28,9 +28,9 @@
 
 return(_) -> 
    fun(State) -> 
-      Urn  = lens:get(id(), State),
+      Url  = lens:get(url(), State),
       Unit = lens:get(unit(), State),
-      [#{id => uri:s(Urn), unit => Unit}|maps:remove(unit, State)] 
+      [#{id => uri:s(Url), unit => lists:reverse(Unit)}|maps:remove(unit, State)] 
    end.
 
 fail(X) ->
@@ -48,7 +48,7 @@ fail(X) ->
 
 %%
 %%
-id()   -> lens:c([lens:map(fd, #{}), lens:map(id,  none)]).
+url()  -> lens:c([lens:map(fd, #{}), lens:map(url,  none)]).
 code() -> lens:c([lens:map(unit, #{}), lens:map(code,  none)]).
 head() -> lens:c([lens:map(unit, #{}), lens:map(head,    [])]).
 data() -> lens:c([lens:map(unit, #{}), lens:map(data,  none)]).
@@ -86,13 +86,41 @@ check(Check, Fun, Lens, Value) ->
       Expect = value(Value),
       Actual = scenario:lens(Lens, lens:get(data(), State)),
       Units  = lens:get(unit(), State),
-      Unit   = #{check => Check, pass => Fun(Expect, Actual), lens => Lens, expect => Expect, actual => Actual},
+      Unit   = #{check => Check, pass => Fun(Actual, Expect), lens => Lens, expect => Expect, actual => Actual},
       [ok|lens:put(unit(), [Unit|Units], State)]      
    end.
 
 %%
-%% @todo: code and header checks
+%%
+has(Lens) ->
+   fun(State) ->
+      Actual = scenario:lens(Lens, lens:get(data(), State)),
+      Units  = lens:get(unit(), State),
+      Unit   = #{check => has, pass => Actual =/= [], lens => Lens, expect => property, actual => Actual =/= []},
+      [ok|lens:put(unit(), [Unit|Units], State)]      
+   end.
 
+%%
+%%
+code(Expect) ->
+   fun(State) ->
+      Actual = lens:get(code(), State),
+      Units  = lens:get(unit(), State),
+      Unit   = #{check => code, pass => Expect =:= Actual, expect => Expect, actual => Actual},
+      [ok|lens:put(unit(), [Unit|Units], State)]      
+   end.
+
+%%
+%%
+head(Head, Value) ->
+   fun(State) ->
+      Expect = value(Value),
+      Actual = lens:get(lens:pair(scalar:atom(Head), <<>>), lens:get(head(), State)),
+      Units  = lens:get(unit(), State),
+      Unit   = #{check => head, pass => Expect =:= Actual, expect => Expect, actual => Actual},
+      [ok|lens:put(unit(), [Unit|Units], State)]      
+   end.
+   
 %%
 %%
 value(X)
@@ -100,3 +128,4 @@ value(X)
    scalar:s(X);
 value(X) ->
    X.
+

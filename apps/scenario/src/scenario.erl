@@ -108,6 +108,16 @@ lens(Ln)
  when is_atom(Ln) ->
    lens:pair(scalar:s(Ln), []);
 
+lens(I)
+ when is_integer(I) ->
+   fun
+   (Fun,   []) ->
+      lens:fmap(fun(_) -> [] end, Fun([]));
+   (Fun, List) ->
+      Value = lists:nth(I, List),
+      lens:fmap(fun(_) -> List end, Fun(Value))
+   end;
+      
 lens({uniform}) ->
    fun
    (Fun,   []) ->
@@ -124,8 +134,30 @@ lens({pareto, A}) ->
    (Fun, List) ->
       Value = lists:nth(pdf:pareto(A, length(List)), List),
       lens:fmap(fun(_) -> List end, Fun(Value))
+   end;
+
+lens({Key, Match}) ->
+   fun
+   (Fun,   []) ->
+      lens:fmap(fun(_) -> [] end, Fun([]));
+   (Fun, List) ->
+      JsonKey = scalar:s(Key),
+      JsonVal = jsonval(Match),
+      Value = lists:filter(
+         fun(X) ->
+            case lists:keyfind(JsonKey, 1, X) of
+               {JsonKey, JsonVal} -> true;
+               _              -> false
+            end
+         end,
+         List
+      ),
+      lens:fmap(fun(_) -> List end, Fun(Value))
    end.
 
+jsonval(X) when is_atom(X) -> scalar:s(X);
+jsonval(X) when is_list(X) -> scalar:s(X);
+jsonval(X) -> X.
 
 %%
 %% join terms to string
