@@ -20,7 +20,7 @@
 
 %%
 %% scenario actions
--export([get_local_ip/1, get_client_ip/1]).
+-export([get_local_ip/1, get_client_ip/1, discover/1]).
 
 
 %%%----------------------------------------------------------------------------   
@@ -44,6 +44,7 @@ get_local_ip(_) ->
 assert_local_ip(X) ->
    do([m_unit || 
       _ /= new(X),
+      _ /= code(200),
       _ /= eq([origin], "127.0.0.1"),
       return(_)
    ]).
@@ -64,6 +65,55 @@ get_client_ip(_) ->
 assert_client_ip(X) ->
    do([m_unit || 
       _ /= new(X),
+      _ /= code(404),
       _ /= ne([origin], "127.0.0.1"),
       return(_)
    ]).
+
+%%
+%%
+discover(_) ->
+   do([m_http ||
+      _ /= new("urn:http:cs:mobile:brand"),
+      _ /= url( q() ),
+      _ /= header("Connection", "keep-alive"),
+      _ /= get(),
+      _ <- assert_discover(_),
+      return(_)
+   ]).
+
+q() ->
+   uri:q(
+      [
+         {uuid, "D0E545F4-E2D2-4802-933D-8659DAAD464E"},
+         {se, ""},
+         {page, 1},
+         {ts, tempus:m(os:timestamp())},
+         {appVersion, "4.4.0"},
+         {perPage, 24},
+         {deviceType, "phone"},
+         {sig, "c3885e8ac73ccdfe0c9383749e3e25c9579dc479"},
+         {season, ""},
+         {search_use_case, categories},
+         {dir, desc},
+         {order, popularity},
+         {fields, "products"},
+         {screenDensity, 200},
+         {devicePlatform, ios},
+         {appdomainId, 19}
+      ],
+      uri:path("/catalog-and-search", uri:new("https://mango-live.poirot.zalan.do"))
+   ).
+
+assert_discover(X) ->
+   do([m_unit || 
+      _ /= new(X),
+      _ /= code(200),
+      _ /= gt([totalPages], 0),
+      _ /= has([products]),
+      _ /= has([products, {uniform}, sku]),
+      _ /= has([aaa]),
+      _ /= has([filters, {type, assortment_area}, 1, label]),
+      return(_)
+   ]).
+
