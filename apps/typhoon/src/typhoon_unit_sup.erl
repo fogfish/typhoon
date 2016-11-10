@@ -37,7 +37,7 @@ start_link(_Vnode, Scenario) ->
 init([Scenario]) ->   
    {ok,
       {
-         {one_for_one, 1000, 60},
+         {one_for_one, 100, 3600},
          [
             ?CHILD(worker, typhoon_unit, [Scenario])
          ]
