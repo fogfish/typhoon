@@ -136,7 +136,7 @@ scenario({urn, user, _} = User, Opts) ->
 -spec scenario(urn(), urn(), opts()) -> {ok, _} | {error, not_found}. 
 
 scenario({urn, user, _} = User, {urn, _, _} = Urn, Opts) ->
-   case ambitz:put(typhoon, uri:s(User), scenario, crdts:update(Urn, crdts:new(gsets)), Opts) of
+   case ambitz:put(typhoon, uri:s(User), scenario, crdts:update(Urn, crdts:new(orsets)), Opts) of
       {ok, #entity{val = undefined}} ->
          {error, not_found};
       {ok, #entity{val = Scenario}} ->

@@ -45,7 +45,7 @@ init([Profile]) ->
    {ok, handle, 
       #state{
          profile  = Profile,
-         scenario = crdts:new(gsets)
+         scenario = crdts:new(orsets)
       }
    }.
 

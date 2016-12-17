@@ -40,7 +40,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'POST'(_, {_Url, _Head, Env}, Scenario) ->
+'POST'(_, Scenario, {_Url, _Head, Env}) ->
    Id = scalar:atom( lens:get(lens:pair(<<"id">>), Env) ),
    case compile(Id, Scenario) of
       {ok, Id,  Code} ->

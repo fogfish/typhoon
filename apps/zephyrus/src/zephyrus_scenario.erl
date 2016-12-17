@@ -24,9 +24,9 @@
    allowed_methods/1,
    content_provided/1, 
    content_accepted/1,
-   'GET'/2,
+   'GET'/3,
    'PUT'/3,
-   'DELETE'/2
+   'DELETE'/3
 ]).
 
 %%
@@ -43,7 +43,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'GET'(_, {Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    R  = scalar:i(uri:q(<<"r">>, 1, Url)), 
    {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, R}]),
@@ -57,7 +57,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'PUT'(_, {Url, _Head, Env}, Spec) ->
+'PUT'(_Type, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
    {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
@@ -66,7 +66,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'DELETE'(_, {Url, _Head, Env}) ->
+'DELETE'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok,_} = typhoon:remove({urn, root, Id}, [{w, W}]),

@@ -21,7 +21,7 @@
 -export([
    allowed_methods/1,
    content_provided/1, 
-   'GET'/2
+   'GET'/3
 ]).
 
 %%
@@ -36,7 +36,7 @@ content_provided(_Req) ->
 
 %%
 %%
-'GET'(_, {_Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
    Id  = lens:get(lens:pair(<<"id">>), Env),
    Urn = {urn, <<"c">>, <<"scenario:", (scalar:s(Id))/binary>>},
    {ok, List} = aura:stream(Urn, history(Urn)),
