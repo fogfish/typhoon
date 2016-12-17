@@ -21,8 +21,7 @@
 -export([
    allowed_methods/1,
    content_provided/1, 
-   content_accepted/1,
-   'GET'/2
+   'GET'/3
 ]).
 
 %%
@@ -34,12 +33,8 @@ content_provided(_Req) ->
    [{application, json}].
 
 %%
-content_accepted(_Req) ->
-   [].
-
 %%
-%%
-'GET'(_, {Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    _  = scalar:i(uri:q(<<"r">>, 1, Url)),
    case typhoon:attr({urn, root, Id}) of

@@ -23,7 +23,7 @@
 -export([
    allowed_methods/1,
    content_provided/1, 
-   'GET'/2
+   'GET'/3
 ]).
 
 %%
@@ -38,7 +38,7 @@ content_provided(_Req) ->
 
 %%
 %%
-'GET'(_, {Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, 1}]),
    case crdts:value(Val) of
