@@ -44,7 +44,7 @@ content_provided(_Req) ->
       %%
       %% spawn load scenario 
       <<"spawn">> ->
-         _ = typhoon:run(Id),
+         _ = typhoon:run({urn, root, Id}),
          {202, [{'Location',  uri:s(uri:segments([Id], Url))}], <<>>};
 
       %%

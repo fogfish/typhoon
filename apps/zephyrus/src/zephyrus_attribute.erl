@@ -42,7 +42,7 @@ content_accepted(_Req) ->
 'GET'(_, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    _  = scalar:i(uri:q(<<"r">>, 1, Url)),
-   case typhoon:attr(Id) of
+   case typhoon:attr({urn, root, Id}) of
       {error, unity} ->
          {303, [{'Location', uri:s(Url)}], <<>>};
       

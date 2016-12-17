@@ -41,7 +41,6 @@ init([]) ->
          [
             ?CHILD(worker,     typhoon_peer)
            ,?CHILD(supervisor, typhoon_net_sup)
-           ,?CHILD(supervisor, typhoon_unit_sup)
          ]
       }
    }.

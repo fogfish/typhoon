@@ -15,7 +15,7 @@
 %%
 %% @doc
 %%   rest api - scenario management
--module(zephyrus_scenario).
+-module(zephyrus_unit).
 -author('dmitry.kolesnikov@zalando.fi').
 
 -include_lib("ambitz/include/ambitz.hrl").
@@ -35,25 +35,12 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, erlang}].
+   [{text, html}].
 
 %%
 content_accepted(_Req) ->
    [{application, erlang}].
 
-%%
-%%
-'GET'(_, {Url, _Head, Env}) ->
-   Id = lens:get(lens:pair(<<"id">>), Env),
-   R  = scalar:i(uri:q(<<"r">>, 1, Url)), 
-   {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, R}]),
-   case crdts:value(Val) of
-      undefined ->
-         404;
-      
-      {_, _, [_, Spec]} ->
-         {200, Spec}
-   end.
 
 %%
 %%
@@ -71,3 +58,50 @@ content_accepted(_Req) ->
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok,_} = typhoon:remove({urn, root, Id}, [{w, W}]),
    200.
+
+%%
+%%
+'GET'(_, {Url, _Head, Env}) ->
+   Id   = lens:get(lens:pair(<<"id">>), Env),
+   Pass = typhoon:once({urn, root, Id}),
+   {ok, File} = file:read_file(filename:join([code:priv_dir(zephyrus), "unit.html"])),
+   Fun0 = swirl:f(scalar:c(File)),   
+   Fun1 = Fun0(undefined),
+   case is_passed(Pass) of
+      [true] ->
+         {200, Fun1(#{list => jsonify(Pass)})};
+      _ ->
+         {500, Fun1(#{list => jsonify(Pass)})}
+   end.
+
+is_passed(Pass) ->
+   lists:usort(
+      lists:map(
+         fun(#{pass := X}) -> X end,
+         lists:flatten([Y || #{unit := Y} <- Pass]) 
+      )
+   ).
+
+
+jsonify([#{unit := Unit} = X | Tail]) ->
+   [X#{unit => jsonify_unit(Unit)} | jsonify(Tail)];
+jsonify([]) ->
+   [].
+
+jsonify_unit([#{lens := Lens} = X | Tail]) ->
+   [X#{lens => jsonify_lens(Lens)}| jsonify_unit(Tail)];
+jsonify_unit([X | Tail]) ->
+   [X| jsonify_unit(Tail)];
+jsonify_unit([]) ->
+   [].
+
+jsonify_lens([{X} | Tail]) ->
+   [<<${, (scalar:s(X))/binary, $}>> | jsonify_lens(Tail)];
+jsonify_lens([{X, Y} | Tail]) ->
+   [<<${, (scalar:s(X))/binary, $,, (scalar:s(Y))/binary, $}>> | jsonify_lens(Tail)];
+jsonify_lens([X | Tail]) ->
+   [X | jsonify_lens(Tail)];
+jsonify_lens([]) ->
+   [].
+
+

@@ -4,7 +4,7 @@
 ## @description
 ##   Makefile to build and release Erlang applications using standard development tools
 ##
-## @version 0.11.1
+## @version 0.11.6
 
 #####################################################################
 ##
@@ -17,22 +17,16 @@ ARCH   ?= $(shell uname -m)
 PLAT   ?= $(shell uname -s)
 VSN    ?= $(shell test -z "`git status --porcelain`" && git describe --tags --long | sed -e 's/-g[0-9a-f]*//' | sed -e 's/-0//' || echo "`git describe --abbrev=0 --tags`-SNAPSHOT")
 REL     = ${APP}-${VSN}
+PKG    ?= ${REL}+${ARCH}.${PLAT}
 TEST   ?= ${APP}
 S3     ?=
-VMI    ?= fogfish/erlang:latest
+VMI    ?= fogfish/erlang
 NET    ?= lo0
-URL    ?= registry.opensource.zalan.do/hunt
+URL    ?= undefined
 LATEST ?= latest
 
-##
-## release is build either using cross-compile feature of Erlang/OTP,
-## otherwise release assembly is offloaded to Docker builder that produces only Linux
-ifeq (${PLAT},$(shell uname -s))
-PKG  ?= ${REL}+${ARCH}.${PLAT}
-else
-PKG  ?= ${REL}+${ARCH}.Linux
-endif
-
+## rebar version (no spaces at end)
+REBAR  ?= 3.3.2
 
 ## root path to benchmark framework
 BB     = ../basho_bench
@@ -55,7 +49,7 @@ EFLAGS = \
 ## self-extracting bundle wrapper
 BUNDLE_INIT = PREFIX=${PREFIX}\nREL=${PREFIX}/${REL}\nAPP=${APP}\nVSN=${VSN}\nLINE=`grep -a -n "BUNDLE:$$" $$0`\nmkdir -p $${REL}\ntail -n +$$(( $${LINE%%%%:*} + 1)) $$0 | gzip -vdc - | tar -C $${REL} -xvf - > /dev/null\n
 BUNDLE_FREE = exit\nBUNDLE:\n
-BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make distclean && make && make rel\n
+BUILDER = FROM ${VMI}\nRUN mkdir ${APP}\nCOPY . ${APP}/\nRUN cd ${APP} && make && make rel\n
 CTRUN   = \
 	-module(test). \
 	-export([run/1]). \
@@ -90,7 +84,7 @@ clean:
 distclean: clean 
 	@./rebar3 unlock ;\
 	rm -Rf _build ;\
-	rm -Rf rebar3 
+	rm -Rf rebar3
 
 ##
 ## execute unit test
@@ -140,12 +134,12 @@ _build/dockermake:
 endif
 
 ## build docker image
-docker: rel/Dockerfile scm-source.json
+docker: rel/Dockerfile
 	docker build \
 		--build-arg APP=${APP} \
 		--build-arg VSN=${VSN} \
 		-t ${URL}/${APP}:${VSN} -f $< .
-	docker tag ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
+	docker tag -f ${URL}/${APP}:${VSN} ${URL}/${APP}:${LATEST}
 
 
 
@@ -216,24 +210,9 @@ console: ${PKG}.tar.gz
 ##
 #####################################################################
 rebar3:
-	@curl -L -O https://s3.amazonaws.com/rebar3/rebar3 ; \
-	chmod ugo+x $@
-
-
-#####################################################################
-##
-## stups extension
-##
-#####################################################################
-
-
-scm-source.json: FORCE
-	@R=`git rev-parse HEAD`;\
-	S=`git status --porcelain | awk 1 ORS=' '`;\
-	if [ -n "$$S" ]; then R="$$R (locally modified)"; fi; \
-	echo "{\"url\": \"git:https://github.com/zalando/typhoon.git\", \"revision\": \"$$R\", \"author\": \"${USER}\", \"status\": \"$$S\"}" > $@
-
-FORCE:
+	@echo "==> install rebar (${REBAR})" ;\
+	curl -L -O --progress-bar https://github.com/erlang/rebar3/releases/download/${REBAR}/rebar3 ;\
+	chmod +x $@
 
 .PHONY: test rel deps all pkg 
 

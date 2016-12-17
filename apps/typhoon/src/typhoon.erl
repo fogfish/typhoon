@@ -18,15 +18,29 @@
 -module(typhoon).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-include_lib("ambitz/include/ambitz.hrl").
+
 -export([start/0]).
 %%
 %% management interface
 -export([
-   define/3
-  ,lookup/2
+   put/3
+  ,get/2
   ,remove/2
+
+  ,signup/2
+  ,profile/2
+  ,scenario/2
+  ,scenario/3
+
+
+  % ,define/3
+  % ,lookup/2
+  % ,remove/2
+
   ,peer/1
   ,run/1
+  ,once/1
   ,unit/1
   ,attr/1
 ]).
@@ -39,9 +53,11 @@
 
 
 %%
-%%
--type(id()     :: binary()).
--type(json()   :: [{binary(), _}]).
+%% data types
+-type urn()    :: {urn, _, _}.
+-type spec()   :: binary().  %% application/erlang
+-type opts()   :: [_].
+
 
 %%
 %% RnD node start
@@ -55,58 +71,115 @@ start() ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%% defines load scenario to the cluster, 
-%% takes unique name of test scenario and its specification,
-%% returns cluster descriptor entity
-%% @todo: id is converted to atom, scalar:atom(Id)
--spec define(id(), json(), list()) -> {ok, ambitz:entity()} | {error, _}.
+%% create a new workload scenario
+-spec put(urn(), binary(), opts()) -> {ok, ambitz:entity()}.
 
-define(Id, Spec, Opts) ->
-   ambitz:spawn(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(service, {typhoon_scenario, start_link, [scalar:atom(Id), Spec]},
-            ambitz:entity(Id)
-         )
-      ),
+put({urn, _, _} = Key, Spec, Opts) ->
+   ambitz:spawn(typhoon, uri:s(Key),
+      {typhoon_scenario, start_link, [scalar:atom(uri:path(Key)), Spec]},
       Opts
    ).
 
 
 %%
-%% lookup load scenario using it's unique name
-%% returns cluster descriptor entity, including scenario specification
--spec lookup(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
+%% read content of workload scenario
+-spec get(urn(), opts()) -> {ok, ambitz:entity()}.
 
-lookup(Id, Opts) ->
-   ambitz:lookup(
-      ambitz:entity(ring, typhoon, 
-         ambitz:entity(Id)
-      ),
-      Opts
-   ).
+get({urn, _, _} = Key, Opts) ->
+   ambitz:lookup(typhoon, uri:s(Key), Opts).
+
 
 %%
-%% remove load scenario from cluster
--spec remove(id(), list()) -> {ok, ambitz:entity()} | {error, _}.
+%% remove workload scenario
+-spec remove(urn(), opts()) -> {ok, ambitz:entity()}.
 
-remove(Id, Opts) ->
-   case    
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, 
-            ambitz:entity(Id)
-         ),
-         Opts
-      )
-   of
-      {error, _} = Error ->
-         Error;
-      {ok, Entity} ->
-         ambitz:free(Entity, Opts)
+remove({urn, _, _} = Key, Opts) ->
+   ambitz:free(typhoon, uri:s(Key), Opts).
+
+
+%%
+%% sign up a new user
+-spec signup(urn(), opts()) -> ok.
+
+signup({urn, user, _} = User, Opts) ->
+   Profile = crdts:update(uri:path(User), crdts:new(lwwreg)),
+   Spec    = {typhoon_user, start_link, [Profile]},
+   {ok, _} = ambitz:spawn(typhoon, uri:s(User), Spec, Opts),
+   ok.
+
+%%
+%% read user profile
+-spec profile(urn(), opts()) -> {ok, _} | {error, not_found}.
+
+profile({urn, user, _} = User, Opts) ->
+   case ambitz:get(typhoon, uri:s(User), profile, Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Profile}} ->
+         {ok, crdts:value(Profile)}
    end.
 
 %%
+%% read user scenario
+-spec scenario(urn(), opts()) -> {ok, _} | {error, not_found}.
+
+scenario({urn, user, _} = User, Opts) ->
+   case ambitz:get(typhoon, uri:s(User), scenario, Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Scenario}} ->
+         {ok, crdts:value(Scenario)}
+   end.
+
+%%
+%% add new scenario to user profile
+-spec scenario(urn(), urn(), opts()) -> {ok, _} | {error, not_found}. 
+
+scenario({urn, user, _} = User, {urn, _, _} = Urn, Opts) ->
+   case ambitz:put(typhoon, uri:s(User), scenario, crdts:update(Urn, crdts:new(gsets)), Opts) of
+      {ok, #entity{val = undefined}} ->
+         {error, not_found};
+      {ok, #entity{val = Scenario}} ->
+         {ok, crdts:value(Scenario)}
+   end.
+   
+
+
+
+%%
+%% remove load scenario from cluster
+% -spec remove(urn(), opts()) -> ok.
+
+% remove({urn, _, _} = Id, Opts) ->
+%    ambitz:free(typhoon, uri:s(Id), Opts).
+
+
+%%
+%% run load scenario, the scenario will terminate automatically after timeout
+-spec run(urn()) -> ok | {error, _}.
+
+run({urn, _, _} = Id) ->
+   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
+   Pids = crdts:value(CRDT),
+   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
+   pipe:call(Pid, run).
+
+%%
+%% test load scenario, run once, the scenario will terminate automatically after timeout
+-spec once(urn()) -> ok | {error, _}.
+
+once({urn, _, _} = Id) ->
+   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
+   Pids = crdts:value(CRDT),
+   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
+   pipe:call(Pid, once, 60000).
+
+
+
+
+%%
 %% return list of peer(s) nodes (ip addresses) 
--spec peer(id()) -> [_].
+-spec peer(urn()) -> [_].
 
 peer(Id) ->
    [addr(Vnode) || Vnode <- ek:successors(typhoon, scalar:s(Id)), 
@@ -119,67 +192,30 @@ addr(Vnode) ->
    IP.
 
 
-%%
-%% run load scenario, the scenario will terminate automatically after timeout
--spec run(id()) -> ok | {error, _}.
 
-run(Id) ->
-   case
-      ambitz:whereis(
-         ambitz:entity(ring, typhoon, 
-            ambitz:entity(Id)
-         ),
-         [{r, 1}]
-      )
-   of
-      {error, _} = Error ->
-         Error;
-      {ok, Entity} ->
-         Pids = ambitz:entity(service, Entity),
-         pipe:call(lists:nth(random:uniform(length(Pids)), Pids), run)
-   end.
+
 
 %%
 %% return number of active load units
--spec unit(id()) -> {ok, integer()} | {error, any()}.
+-spec unit(urn()) -> {ok, integer()} | {error, any()}.
 
-unit(Id) ->
-   case
-      ambitz:whereis(
-         ambitz:entity(ring, typhoon, ambitz:entity(Id)),
-         [{r, 1}]
+unit({urn, _, _} = Id) ->
+   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 3}]),
+   lists:sum(
+      lists:map(
+         fun(Pid) -> pipe:ioctl(Pid, n) end,
+         crdts:value(CRDT)
       )
-   of
-      {error, _} = Error ->
-         Error;
-      
-      {ok, Entity} ->
-         lists:sum(
-            lists:map(
-               fun(X) -> pipe:ioctl(X, n) end,
-               ambitz:entity(service, Entity)
-            )
-         )
-   end.
+   ).
 
 %%
 %% return number of active load units
--spec attr(id()) -> {ok, [_]} | {error, any()}.
+-spec attr(urn()) -> {ok, [_]} | {error, any()}.
 
-attr(Id) ->
-   case
-      ambitz:whereis(
-         ambitz:entity(ring, typhoon, ambitz:entity(Id)),
-         [{r, 1}]
-      )
-   of
-      {error, _} = Error ->
-         Error;
-      
-      {ok, Entity} ->
-         Pid = hd( ambitz:entity(service, Entity) ),
-         {ok, pipe:ioctl(Pid, attr)}
-   end.
+attr({urn, _, _} = Id) ->
+   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 3}]),
+   Pid = hd( crdts:value(CRDT) ),
+   {ok, pipe:ioctl(Pid, attr)}.
 
 
 %%%----------------------------------------------------------------------------   
@@ -198,22 +234,17 @@ fd() ->
 
 %%
 %% takes a generator function and produce telemetry stream
--spec stream(id(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
+-spec stream(urn(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
 
 stream(Id, Gen) ->
-   case
-      ambitz:lookup(
-         ambitz:entity(ring, typhoon, 
-            ambitz:entity(Id)
-         )
-      )
-   of
-      {error, _} = Error ->
-         Error;
+   {ok, #entity{vnode = Vnode}} = ambitz:lookup(typhoon, Id, [{r, 3}]),
+   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+   pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000).
 
-      {ok, Entity} ->
-         Vnode = ambitz:entity(vnode, Entity),
-         Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
-         pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000)
-   end.
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% private
+%%%
+%%%----------------------------------------------------------------------------   
 
