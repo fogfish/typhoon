@@ -84,7 +84,15 @@
          if (flist.length > 0)
             tail.fail(flist[0])
       }
-      value(accept)
+
+      var reject = function(x) {
+         var head = Promise.reject(x)
+         var tail = plist.reduce(function(acc, x){return acc.bind(x)}, head)
+         if (flist.length > 0)
+            tail.fail(flist[0])
+      }
+
+      value(accept, reject)
    }
 
    UI.prototype.bind = function(fun)
