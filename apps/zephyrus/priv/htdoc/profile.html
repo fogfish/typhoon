@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+%%
+%%   Copyright 2015 Zalando SE
+%%
+%%   Licensed under the Apache License, Version 2.0 (the "License");
+%%   you may not use this file except in compliance with the License.
+%%   You may obtain a copy of the License at
+%%
+%%       http://www.apache.org/licenses/LICENSE-2.0
+%%
+%%   Unless required by applicable law or agreed to in writing, software
+%%   distributed under the License is distributed on an "AS IS" BASIS,
+%%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%%   See the License for the specific language governing permissions and
+%%   limitations under the License.
+%%
+-->
+<meta charset="utf-8">
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/metro-bootstrap.min.css">
+<link rel="stylesheet" href="/css/typhoon.css">
+
+<script src="/js/d3.v3.min.js"></script>
+<script src="/js/whiskers.min.js"></script>
+<script src="/js/monad.js"></script>
+<script src="/js/typhoon.js"></script>
+
+<body>
+
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container-fluid">
+      <div class="navbar-header">
+         <a class="navbar-brand" href="#">Typhoon</a>
+      </div>
+      <ul class="nav navbar-nav">
+         <li><p id="scenario-id" class="navbar-text"></p></li>
+      </ul>
+
+      <ul class="nav navbar-nav navbar-right">
+         <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
+      </ul>
+   </div>
+</nav>
+
+
+<!-- 
+//
+// 
+//
+-->
+<div class="jumbotron">
+   <div class="container">
+      <h1 class='scenario-title'>Latency analysis</h1>
+      <p>
+      Latency is an important part of Quality of Service that determines the degree of consumer satisfaction. End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off the architecture to ensure competitive end-to-end latency of software solutions... <a href="#latency-challenge">Learn more &raquo;</a>
+      </p>
+   </div>
+</div>
+
+<!-- 
+//
+// tiles
+//
+-->
+<div class="container scenario">
+</div>
+
+<div class="container">
+<footer>
+   <p>&copy; 2016 Zalando, SE</p>
+</footer>
+</div>
+
+<script type="text/template" id="template-scenario-tile">
+   {if scenario}
+      <h1>Scenario</h1>
+      <div class="row">
+      {for e in scenario}
+         <div class="col-sm-4 col-md-4">
+            <a href="/{e.id}" class="thumbnail tile tile-wide tile-green-sea">
+               <h2 class="tile-text">{e.title}</h2>
+               <h4 class="tile-text">{e.n} sessions; {e.t} min</h4>
+            </a>
+         </div>
+      {/for}
+      </div>
+   {else}
+      <h1>No Scenario</h1>
+   {/if}
+</script>
+
+<script>
+var tiles = whiskers.compile(d3.select('#template-scenario-tile').html())
+
+monad.do([
+   monad.IO(IO.json('/user/root/scenario')),
+   function(scenario)
+   {
+      if (scenario.length > 0)
+      {
+         var list = scenario.map(
+            function(x)
+            {
+               return {id: x.id, title: x.title, n: x.n, t: (x.t / 60000).toFixed(0)}
+            }
+         )
+         d3.select('.scenario').html(tiles({scenario: list}))
+      } else {
+         d3.select('.scenario').html(tiles({}))
+      }
+      return scenario
+   }
+]).fail(UI.fail)
+
+</script>
+</body>

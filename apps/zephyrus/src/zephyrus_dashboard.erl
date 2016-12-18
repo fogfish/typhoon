@@ -39,23 +39,34 @@ content_provided(_Req) ->
 %%
 %%
 'GET'(_Type, _Msg, {Url, _Head, Env}) ->
-   Id = lens:get(lens:pair(<<"id">>), Env),
+   case uri:segments(Url) of
+      [<<"dashboard">>] -> 
+         html(<<"profile">>);
+
+      [<<"dashboard">>, UI] ->
+         html(UI);
+
+      _ ->
+         scenario(lens:get(lens:pair(<<"id">>), Env))
+   end.   
+
+
+html(File) ->
+   file:read_file(
+      filename:join([code:priv_dir(zephyrus), htdoc, <<File/binary, ".html">>])
+   ).
+
+
+scenario(Id) ->
    {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, 1}]),
    case crdts:value(Val) of
       undefined ->
-         404;
+         {404, <<"Not Found">>};
 
       _Entity ->
-         case uri:segments(Url) of
-            [<<"analysis">> | _] ->
-               file:read_file(
-                  filename:join([code:priv_dir(zephyrus), htdoc, "analysis.html"])
-               );
-            _ ->
-               file:read_file(
-                  filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
-               )
-         end
+         file:read_file(
+            filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
+         )
    end.
 
 
