@@ -19,3 +19,7 @@ relx.config
 scm-source.json
 compile_commands.json
 
+*.DS_Store
+
+.idea/
+*.iml
