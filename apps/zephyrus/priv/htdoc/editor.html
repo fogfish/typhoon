@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!--
+%%
+%%   Copyright 2016 Zalando SE
+%%
+%%   Licensed under the Apache License, Version 2.0 (the "License");
+%%   you may not use this file except in compliance with the License.
+%%   You may obtain a copy of the License at
+%%
+%%       http://www.apache.org/licenses/LICENSE-2.0
+%%
+%%   Unless required by applicable law or agreed to in writing, software
+%%   distributed under the License is distributed on an "AS IS" BASIS,
+%%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%%   See the License for the specific language governing permissions and
+%%   limitations under the License.
+%%
+-->
+<meta charset="utf-8">
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<!--<link rel="stylesheet" href="/css/metro-bootstrap.min.css">-->
+<link rel="stylesheet" href="/css/typhoon.css">
+
+<script src="/js/jquery-3.1.1.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/d3.v3.min.js"></script>
+<script src="/js/whiskers.min.js"></script>
+<script src="/js/monad.js"></script>
+<script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/ace/snippets/erlang.js" type="text/javascript" charset="utf-8"></script>
+<script src="/js/typhoon.js"></script>
+
+<head>
+    <style type="text/css" media="screen">
+    #editor {
+        margin-bottom: 0.2em;
+        width: 100%;
+        height: 520px;
+    }
+
+    div.keyboard-shortcuts-help {
+        text-align: right;
+    }
+    div.keyboard-shortcuts-help > a {
+        border-bottom: 1px dashed;
+        text-decoration: none;
+    }
+
+    #pnl-lint-result {
+        margin-top: 1em;
+    }
+  </style>
+</head>
+
+<body>
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Typhoon</a>
+        </div>
+        <ul class="nav navbar-nav">
+            <li><p id="scenario-id" class="navbar-text"></p></li>
+        </ul>
+
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a href="https://github.com/zalando/typhoon">
+                    <span class="glyphicon glyphicon-star"></span> Star us on GitHub
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container">
+
+    <pre id="editor"></pre>
+    <span class="pull-right">
+        <a href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts" target="_blank">
+            Keyboard shortcuts
+        </a>
+    </span>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12">
+            <button id="btn-lint" data-loading-text="Linting..." class="btn btn-default">
+                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                Lint
+            </button>
+            <button id="btn-save" data-loading-text="Saving..." class="btn btn-primary">
+                <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                Save
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div id="pnl-lint-result">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <footer>
+        <p>&copy; 2016 Zalando, SE</p>
+    </footer>
+</div>
+
+<script type="text/javascript">
+    var scenarioId = (function() {
+        // Get URL path segment that precedes "editor".
+        var urlSegments = $(location).attr('pathname').split("/");
+        for (var i = urlSegments.length - 1; i >= 0; i--) {
+            if (urlSegments[i].toUpperCase() === "EDITOR") {
+                return urlSegments[i - 1];
+            }
+        }
+    })();
+    console.log('Scenario ID:', scenarioId);
+
+    var scenarioUrl = "/scenario/" + scenarioId;
+    var lintUrl = "/lint/" + scenarioId;
+
+
+$(document).ready(function() {
+    var btnLint = $("#btn-lint");
+    var btnSave = $("#btn-save");
+    var pnlLintResult = $("#pnl-lint-result");
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/github");
+    editor.session.setMode("ace/mode/erlang");
+    editor.session.setNewLineMode("unix");
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true
+    });
+
+    var getScenarioBody = function() {
+        return editor.getValue();
+    };
+
+    /**
+     * Do actions before network interaction involving a scenario.
+     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
+     */
+    var preScenarioNetwork = function(buttonClicked) {
+        if (buttonClicked) {
+            buttonClicked.button('loading');
+        }
+        setSaveAndLintButtonsEnable(false);
+        editor.setReadOnly(true)
+    };
+
+    /**
+     * Do actions after network interaction involving a scenario, after a reply.
+     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
+     */
+    var postScenarioNetwork = function(buttonClicked) {
+        if (buttonClicked) {
+            buttonClicked.button('reset');
+        }
+        setSaveAndLintButtonsEnable(true);
+        editor.setReadOnly(false)
+        editor.focus();
+    };
+
+    /**
+     * Set availability for buttons Save and Lint.
+     * @param enabled - should buttons be enabled.
+     */
+    var setSaveAndLintButtonsEnable = function(enabled) {
+        if (enabled) {
+            btnLint.removeClass("disabled");
+            btnSave.removeClass("disabled");
+        } else {
+            btnLint.addClass("disabled");
+            btnSave.addClass("disabled");
+        }
+    };
+
+    /**
+     * Show 'alarm' box with linting results.
+     * @param error - indicator of the result with errors.
+     * @param lintResult - the result.
+     */
+    var showLintResult = function(error, lintResult) {
+        pnlLintResult.children(".alert").removeClass("fade in");
+        pnlLintResult.children(".alert").alert('close');
+
+        pnlLintResult.html();
+
+        var alertDiv = $(
+            '<div class="alert alert-dismissible fade in" role="alert">' +
+            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
+            '<h4>Lint result</h4>' +
+            '</div>'
+        );
+        if (error) {
+            alertDiv.addClass("alert-warning");
+        } else {
+            alertDiv.addClass("alert-success");
+        }
+
+        var alertText = $('<span></span>');
+        alertText.text(lintResult);
+        alertDiv.append(alertText);
+
+        pnlLintResult.append(alertDiv);
+    };
+
+    /**
+     * Send the current scenario from the editor over the network.
+     * @param url - the url to send to.
+     * @param method - HTTP method ("POST"/"PUT").
+     */
+    var sendScenario = function(url, method) {
+        return $.ajax({
+            type: method,
+            url: url,
+            contentType: "application/erlang",
+            dataType: "text", // type of response
+            headers: {
+                "Accept": "*/*"
+            },
+            data: getScenarioBody(),
+            timeout: 5000
+        });
+    };
+
+    btnLint.click(function(e) {
+        var thisBtn = $(this);
+        preScenarioNetwork(thisBtn);
+
+        sendScenario(lintUrl, "POST")
+            .done(function(data) {
+                showLintResult(false, data);
+            })
+
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                // In this case, 400 Bar request is technically not an error of communication,
+                // just the indicator of errors in the scenario.
+                if (jqXHR.status == 400) {
+                    showLintResult(true, jqXHR.responseText);
+                } else {
+                    alert("Error: " + errorThrown);
+                }
+            })
+
+            .always(function() {
+                postScenarioNetwork(thisBtn);
+            })
+            ;
+    });
+
+    btnSave.click(function(e) {
+        var thisBtn = $(this);
+        preScenarioNetwork(thisBtn);
+
+        sendScenario(scenarioUrl, "PUT")
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                alert("Error: " + errorThrown);
+            })
+
+            .always(function() {
+                postScenarioNetwork(thisBtn);
+            })
+            ;
+    });
+
+    // Fetch the scenario body.
+    preScenarioNetwork(null);
+    $.get(scenarioUrl)
+        .done(function( data ) {
+            // Show the scenario in the editor.
+            editor.setValue(data);
+            editor.session.selection.clearSelection();
+            editor.scrollToLine(1, true, true, function () {});
+            editor.gotoLine(1);
+
+            postScenarioNetwork(null);
+        })
+
+        .fail(function(jqXHR, textStatus, errorThrown) {
+            alert("Error: " + errorThrown);
+        })
+        ;
+});
+</script>
+
+</body>
