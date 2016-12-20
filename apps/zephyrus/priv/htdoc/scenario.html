@@ -56,11 +56,28 @@
 -->
 <div class="jumbotron">
    <div class="container">
-      <h1 class='scenario-title'></h1>
-      <p>
-      Latency is an important part of Quality of Service that determines the degree of consumer satisfaction. End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off the architecture to ensure competitive end-to-end latency of software solutions... <a href="#latency-challenge">Learn more &raquo;</a>
-      </p>
-      <p><a class="btn btn-primary btn-lg launch">Launch &raquo;</a></p>
+      <div class="row">
+         <h1 class='scenario-title'></h1>
+      </div>
+      <div class="row">
+         <p>
+            Latency is an important part of Quality of Service that determines the degree of consumer satisfaction.
+            End-to-end latency is one of user-oriented characteristics used for quality assessment of
+            distributed software architecture. The ultimate goal is the ability to quantitatively evaluate
+            and trade-off the architecture to ensure competitive end-to-end latency of software solutions...
+            <a href="#latency-challenge">Learn more &raquo;</a>
+         </p>
+      </div>
+      <div class="row">
+         <div class="col-sm-6">
+            <a class="btn btn-primary btn-lg launch">Launch &raquo;</a>
+         </div>
+         <div class="col-sm-6">
+            <span class="pull-right">
+               <a id="btn-edit-code" class="btn btn-default">View/edit code</a>
+            </span>
+         </div>
+      </div>
    </div>
 </div>
 
@@ -786,8 +803,9 @@ var chain = (function()
          present.sensor(),
          function(x)
          {
-            d3.selectAll('.scenario-title').text(x.scenario.title)
-            return x
+            d3.selectAll('.scenario-title').text(x.scenario.title);
+            d3.selectAll('#btn-edit-code').attr('href', '/scenario/' + x.scenario.id + '/editor/');
+            return x;
          },
          function(_)
          {
