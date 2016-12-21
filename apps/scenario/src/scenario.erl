@@ -17,9 +17,10 @@
 %%   the library implements definition, and compilation of typhoon load scripts.
 %%   see docs/scenario.md for detailed specification of dsl
 -module(scenario).
+-compile({parse_transform, category}).
 
 -export([start/0]).
--export([c/2]).
+-export([c/2,t/1]).
 
 %% script definition interface
 %% @deprecated, 
@@ -86,6 +87,32 @@ cc_mod(Id, [Head|Tail]) ->
 cc_mod(_, []) ->
    [].
 
+%%
+%% validate compiled and loaded module is valid typhoon scenario
+t(Mod) ->
+   [$^||
+      exports(Mod),
+      is_exported(title, 0, _),
+      is_exported(t, 0, _),
+      is_exported(n, 0, _),
+      is_exported(urn, 0, _),
+      is_exported(run, 1, _),
+      identity(_)
+   ].
+
+exports(Mod) ->
+   {ok, Mod:module_info()}.
+
+identity(Spec) ->
+   {ok, lens:get(lens:pair(module), Spec)}.
+
+is_exported(Fun, Arity, Spec) ->
+   case lens:get(lens:pair(exports), lens:pair(Fun, undefined), Spec) of
+      Arity ->
+         {ok, Spec};   
+      _ ->
+         {error, {undefined, Fun, Arity}}
+   end.
 
 %%%----------------------------------------------------------------------------   
 %%%
