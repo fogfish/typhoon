@@ -804,7 +804,7 @@ var chain = (function()
          function(x)
          {
             d3.selectAll('.scenario-title').text(x.scenario.title);
-            d3.selectAll('#btn-edit-code').attr('href', '/scenario/' + x.scenario.id + '/editor/');
+            d3.selectAll('#btn-edit-code').attr('href', '/editor/scenario/' + x.scenario.id);
             return x;
          },
          function(_)
