@@ -16,6 +16,7 @@
 %% @doc
 %%   rest api - validate scenario
 -module(zephyrus_lint).
+-compile({parse_transform, category}).
 
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -41,19 +42,42 @@ content_accepted(_Req) ->
 %%
 %%
 'POST'(_, Scenario, {_Url, _Head, Env}) ->
-   Id = scalar:atom( lens:get(lens:pair(<<"id">>), Env) ),
-   case compile(Id, Scenario) of
-      {ok, Id,  Code} ->
-         code:purge(Id),
-         {module, Id} = code:load_binary(Id, undefined, Code),
-         try
-            {ok, lint(Id, config(Id))}
-         catch Error:Reason ->
-            {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}
-         end;
+   [$^||
+      identity(Env),
+      compile(_, Scenario),
+      install(_),
+      scenario:t(_),
+      execute(_)
+   ].
 
+%%
+identity(Env) ->
+   {ok, scalar:atom( lens:get(lens:pair(<<"id">>), Env) )}.
+
+%%
+compile(Id, Scenario) ->
+   File = file(Id),
+   ok = filelib:ensure_dir(File),
+   ok = file:write_file(File, Scenario),
+   case scenario:c(Id, File) of
+      {ok, Id, Code} ->
+         {ok, {Id, Code}};
       {error, Error, Warn} ->
-         {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}
+         {error, {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}}
+   end.
+
+%%
+install({Id, Code}) ->
+   code:purge(Id),
+   {module, Id} = code:load_binary(Id, undefined, Code),
+   {ok, Id}.   
+
+%%
+execute(Id) ->
+   try
+      {ok, lint(Id, config(Id))}
+   catch Error:Reason ->
+      {error, {badarg, scalar:s(io_lib:format("~nErrors:~n~p:~p~n~p~n", [Error, Reason, erlang:get_stacktrace()]))}}
    end.
 
 %%
@@ -84,14 +108,6 @@ lint(Scenario, Conf) ->
 %%
 file(Id) ->
    filename:join([opts:val(libdir, typhoon), scalar:c(Id) ++ ".erl"]).
-
-%%
-%% compiles specification into binary code
-compile(Id, Scenario) ->
-   File = file(Id),
-   ok = filelib:ensure_dir(File),
-   ok = file:write_file(File, Scenario),
-   scenario:c(Id, File).
 
 %%
 %% selector of net i/o pool (hack uses lint pool)
