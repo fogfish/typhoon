@@ -39,7 +39,7 @@ content_provided(_Req) ->
 
 %%
 content_accepted(_Req) ->
-   [{application, erlang}].
+   [{application, erlang}, {application, json}].
 
 %%
 %%
@@ -59,8 +59,23 @@ content_accepted(_Req) ->
 %%
 'PUT'(_Type, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
-   {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),
+   ContentType = lens:get(lens:pair('Content-Type'), Env),
+
+   SpecToUse =
+      case ContentType of
+         %% On input JSON, we expect it to be only a scenario name,
+         %% so we create a new scenario from the skeleton.
+         {application, json} ->
+            Json = jsx:decode(Spec),
+            ScenarioName = lens:get(lens:pair(<<"scenarioName">>), Json),
+            create_skeleton(Id, ScenarioName);
+
+         _ ->
+            Spec
+      end,
+
+   {ok, _} = typhoon:put({urn, root, Id}, SpecToUse, [{w, W}]),
    {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
    201.
 
@@ -71,3 +86,20 @@ content_accepted(_Req) ->
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok,_} = typhoon:remove({urn, root, Id}, [{w, W}]),
    200.
+
+create_skeleton(Id, ScenarioName) ->
+   {ok, Skeleton} = file:read_file(<<"examples/skeleton.erl">>),
+
+   Skeleton1 = binary:replace(
+      Skeleton,
+      <<"module(skeleton)">>,
+      <<"module(", Id/binary, ")">>
+      ),
+
+   Skeleton2 = binary:replace(
+      Skeleton1,
+      <<"Skeleton Workload Scenario">>,
+      ScenarioName
+   ),
+
+   Skeleton2.

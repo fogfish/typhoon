@@ -15,7 +15,7 @@
 %%
 %% @doc
 %%   rest api - scenario management
--module(zephyrus_scenario_editor).
+-module(zephyrus_editor_scenario).
 -author('ivan.yurchenko@zalando.fi').
 
 -include_lib("ambitz/include/ambitz.hrl").
