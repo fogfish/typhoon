@@ -191,7 +191,10 @@ $(document).ready(function() {
         pnlLintResult.children(".alert").removeClass("fade in");
         pnlLintResult.children(".alert").alert('close');
 
+        // Clear.
         pnlLintResult.html();
+
+        var isResultJson = typeof lintResult === 'object';
 
         var alertDiv = $(
             '<div class="alert alert-dismissible fade in" role="alert">' +
@@ -199,17 +202,85 @@ $(document).ready(function() {
             '<h4>Lint result</h4>' +
             '</div>'
         );
+
+        // Choose panel color based on the result type (ok/warning/error).
         if (error) {
-            alertDiv.addClass("alert-warning");
+            if (isResultJson) {
+                if (lintResult['errors'].length == 0) {
+                    alertDiv.addClass("alert-warning");
+                } else {
+                    alertDiv.addClass("alert-danger");
+                }
+            } else {
+                alertDiv.addClass("alert-danger");
+            }
         } else {
             alertDiv.addClass("alert-success");
         }
 
+         // Output errors and warning in the text form.
         var alertText = $('<span></span>');
-        alertText.text(lintResult);
+        if (isResultJson) {
+            //alertText.text(JSON.stringify(lintResult));
+            var errors = lintResult['errors'];
+            var warnings = lintResult['warnings'];
+
+            var outputItem = function(item) {
+                alertText.append($('<p><strong>Line ' + item['lineNumber'] + ':</strong> ' + item['message'] + '</p>'));
+            };
+
+            if (errors.length > 0) {
+                alertText.append($('<h5>Errors</h5>'));
+                errors.map(outputItem);
+            }
+            if (warnings.length > 0) {
+                alertText.append($('<h5>Warnings</h5>'));
+                warnings.map(outputItem);
+            }
+        } else {
+            alertText.text(lintResult);
+        };
         alertDiv.append(alertText);
 
         pnlLintResult.append(alertDiv);
+
+
+        // Output errors and warning in the form of markers in the editor,
+        // or clear markers if there is no (structured) errors or warnings.
+        if (isResultJson) {
+            displayErrorsAndWarningsInEditor(lintResult);
+        } else {
+            displayErrorsAndWarningsInEditor(null);
+        }
+    };
+
+    var displayErrorsAndWarningsInEditor = function(errorsAndWarnings) {
+        if (errorsAndWarnings === null) {
+            editor.getSession().setAnnotations(null);
+        } else {
+            var errors = errorsAndWarnings['errors'];
+            var warnings = errorsAndWarnings['warnings'];
+
+            var annotations = [];
+
+            var processItem = function(itemType) {
+                 return function(item) {
+                    var message = item['message'];
+                    var lineNumber = item['lineNumber'];
+                    annotations.push({
+                        row: lineNumber - 1,
+                        column: 0,
+                        text: message,
+                        type: itemType
+                    });
+                }
+            };
+
+            errors.map(processItem("error"));
+            warnings.map(processItem("warning"));
+
+            editor.getSession().setAnnotations(annotations);
+        }
     };
 
     /**
@@ -222,7 +293,7 @@ $(document).ready(function() {
             type: method,
             url: url,
             contentType: "application/erlang",
-            dataType: "text", // type of response
+            dataType: "json", // type of response
             headers: {
                 "Accept": "*/*"
             },
@@ -244,7 +315,8 @@ $(document).ready(function() {
                 // In this case, 400 Bar request is technically not an error of communication,
                 // just the indicator of errors in the scenario.
                 if (jqXHR.status == 400) {
-                    showLintResult(true, jqXHR.responseText);
+                    var json = JSON.parse(jqXHR.responseText);
+                    showLintResult(true, json);
                 } else {
                     alert("Error: " + errorThrown);
                 }
