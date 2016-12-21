@@ -32,7 +32,7 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, erlang}].
+   [{application, json}].
 
 %%
 content_accepted(_Req) ->
@@ -53,8 +53,33 @@ content_accepted(_Req) ->
          end;
 
       {error, Error, Warn} ->
-         {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}
+         ErrorPretty = prettify_error_or_warn(Error),
+         WarnPretty = prettify_error_or_warn(Warn),
+         ResultBody = jsx:encode([
+            {errors, ErrorPretty},
+            {warnings, WarnPretty}
+         ]),
+%%         {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}
+         {badarg, ResultBody}
    end.
+
+prettify_error_or_warn(X) ->
+   Result1 = lists:flatmap(
+      fun({_, Second}) ->
+         Second
+      end, X),
+
+   Result2 = lists:map(
+      fun({LineNumber, _, Args}) ->
+         Message = erlang:iolist_to_binary(erl_lint:format_error(Args)),
+         [
+            {lineNumber, LineNumber},
+%%            {args, Args},
+            {message, Message}
+         ]
+      end, Result1),
+
+   Result2.
 
 %%
 %% @deprecated, 'Mio' support is over at 0.10.x release
