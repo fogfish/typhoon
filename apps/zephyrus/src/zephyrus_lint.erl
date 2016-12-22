@@ -63,8 +63,33 @@ compile(Id, Scenario) ->
       {ok, Id, Code} ->
          {ok, {Id, Code}};
       {error, Error, Warn} ->
-         {error, {badarg, scalar:s(io_lib:format("~nErrors:~n~p~n~nWarnings:~n~p~n", [Error, Warn]))}}
+         ErrorPretty = prettify_error_or_warn(Error),
+         WarnPretty = prettify_error_or_warn(Warn),
+         ResultBody = jsx:encode([
+            {errors, ErrorPretty},
+            {warnings, WarnPretty}
+         ]),
+         {error, {badarg, ResultBody}}
    end.
+
+prettify_error_or_warn(X) ->
+  Result1 = lists:flatmap(
+    fun({_, Second}) ->
+      Second
+    end, X),
+
+  Result2 = lists:map(
+    fun({LineNumber, _, Args}) ->
+      Message = erlang:iolist_to_binary(erl_lint:format_error(Args)),
+      [
+        {lineNumber, LineNumber},
+%%            {args, Args},
+        {message, Message}
+      ]
+    end, Result1),
+
+  Result2.
+
 
 %%
 install({Id, Code}) ->
