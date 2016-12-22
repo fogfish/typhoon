@@ -23,13 +23,9 @@
 
 <script src="/js/jquery-3.1.1.min.js"></script>
 <script src="/js/bootstrap.min.js"></script>
-<script src="/js/d3.v3.min.js"></script>
-<script src="/js/whiskers.min.js"></script>
-<script src="/js/monad.js"></script>
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/snippets/erlang.js" type="text/javascript" charset="utf-8"></script>
-<script src="/js/typhoon.js"></script>
 
 <head>
     <style type="text/css" media="screen">
@@ -115,11 +111,11 @@
 
 <script type="text/javascript">
     var scenarioId = (function() {
-        // Get URL path segment that precedes "editor".
+        // Get the last non-empty URL path segment.
         var urlSegments = $(location).attr('pathname').split("/");
         for (var i = urlSegments.length - 1; i >= 0; i--) {
-            if (urlSegments[i].toUpperCase() === "EDITOR") {
-                return urlSegments[i - 1];
+            if (urlSegments[i] !== "") {
+                return urlSegments[i];
             }
         }
     })();

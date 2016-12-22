@@ -39,7 +39,7 @@ content_provided(_Req) ->
 
 %%
 content_accepted(_Req) ->
-   [{application, erlang}].
+   [{application, erlang}, {application, json}].
 
 %%
 %%
@@ -57,10 +57,24 @@ content_accepted(_Req) ->
 
 %%
 %%
-'PUT'(_Type, Spec, {Url, _Head, Env}) ->
+'PUT'({application, erlang}, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   W  = scalar:i(uri:q(<<"w">>, 1, Url)), 
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),
    {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
+   {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
+   201;
+
+%%
+%%
+'PUT'({application, json}, Spec, {Url, _Head, Env}) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),
+
+   Json = jsx:decode(Spec),
+   ScenarioName = lens:get(lens:pair(<<"scenarioName">>), Json),
+   SpecToUse = create_skeleton(Id, ScenarioName),
+
+   {ok, _} = typhoon:put({urn, root, Id}, SpecToUse, [{w, W}]),
    {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
    201.
 
@@ -71,3 +85,20 @@ content_accepted(_Req) ->
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok,_} = typhoon:remove({urn, root, Id}, [{w, W}]),
    200.
+
+create_skeleton(Id, ScenarioName) ->
+   {ok, Skeleton} = file:read_file(
+      filename:join([code:priv_dir(zephyrus), <<"skeleton.erl.tpl">>])
+   ),
+
+   Skeleton1 = binary:replace(
+      Skeleton,
+      <<"${MODULE_NAME_PLACEHOLDER}">>,
+      Id),
+
+   Skeleton2 = binary:replace(
+      Skeleton1,
+      <<"${TITLE_PLACEHOLDER}">>,
+      ScenarioName),
+
+   Skeleton2.
