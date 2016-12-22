@@ -57,23 +57,22 @@ content_accepted(_Req) ->
 
 %%
 %%
-'PUT'(_Type, Spec, {Url, _Head, Env}) ->
+'PUT'({application, erlang}, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),
-   ContentType = lens:get(lens:pair('Content-Type'), Env),
+   {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
+   {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
+   201;
 
-   SpecToUse =
-      case ContentType of
-         %% On input JSON, we expect it to be only a scenario name,
-         %% so we create a new scenario from the skeleton.
-         {application, json} ->
-            Json = jsx:decode(Spec),
-            ScenarioName = lens:get(lens:pair(<<"scenarioName">>), Json),
-            create_skeleton(Id, ScenarioName);
+%%
+%%
+'PUT'({application, json}, Spec, {Url, _Head, Env}) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),
 
-         _ ->
-            Spec
-      end,
+   Json = jsx:decode(Spec),
+   ScenarioName = lens:get(lens:pair(<<"scenarioName">>), Json),
+   SpecToUse = create_skeleton(Id, ScenarioName),
 
    {ok, _} = typhoon:put({urn, root, Id}, SpecToUse, [{w, W}]),
    {ok, _} = typhoon:scenario({urn, user, root}, {urn, root, Id}, [{w, W}]),
