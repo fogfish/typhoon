@@ -88,18 +88,18 @@ content_accepted(_Req) ->
    200.
 
 create_skeleton(Id, ScenarioName) ->
-   {ok, Skeleton} = file:read_file(<<"examples/skeleton.erl">>),
+   {ok, Skeleton} = file:read_file(
+      filename:join([code:priv_dir(zephyrus), <<"skeleton.erl.tpl">>])
+   ),
 
    Skeleton1 = binary:replace(
       Skeleton,
-      <<"module(skeleton)">>,
-      <<"module(", Id/binary, ")">>
-      ),
+      <<"${MODULE_NAME_PLACEHOLDER}">>,
+      Id),
 
    Skeleton2 = binary:replace(
       Skeleton1,
-      <<"Skeleton Workload Scenario">>,
-      ScenarioName
-   ),
+      <<"${TITLE_PLACEHOLDER}">>,
+      ScenarioName),
 
    Skeleton2.
