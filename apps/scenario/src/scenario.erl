@@ -121,9 +121,12 @@ is_exported(Fun, Arity, Spec) ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%%  
-lens(Ln, Content) ->
-   lens:get(scenario:lens(Ln), Content).
+%% lens is applicable to json only, we ignore other content 
+lens(Ln, Content)
+ when is_list(Content) ->
+   lens:get(scenario:lens(Ln), Content);
+lens(_, _) ->
+   [].
 
 %%
 %%
