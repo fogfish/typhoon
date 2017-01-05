@@ -118,17 +118,18 @@ request(Mthd, Payload) ->
 
 %%
 %% decode http payload using mime-type
-decode([{_, _, Head, _} | Payload]) ->
+decode([{Code, _, Head, _} | Payload]) ->
    fun(State) ->
       Mime   = lens:get(lens:pair('Content-Type'), Head),
-      Entity = decode(Mime, erlang:iolist_to_binary(Payload)),
+      Entity = decode(Code, Mime, erlang:iolist_to_binary(Payload)),
       [Entity|State]
    end.
 
-decode({_, <<"json">>}, Payload) ->
+decode(Code, {_, <<"json">>}, Payload)
+ when Code >= 200, Code < 300 ->
    jsx:decode(erlang:iolist_to_binary(Payload));
 
-decode(_, Payload) ->
+decode(_, _, Payload) ->
    erlang:iolist_to_binary(Payload).
 
 %%%----------------------------------------------------------------------------   
