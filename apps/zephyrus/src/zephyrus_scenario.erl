@@ -57,7 +57,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'PUT'({application, erlang}, Spec, {Url, _Head, Env}) ->
+'PUT'({{application, erlang}, _}, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),
    {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
@@ -66,7 +66,7 @@ content_accepted(_Req) ->
 
 %%
 %%
-'PUT'({application, json}, Spec, {Url, _Head, Env}) ->
+'PUT'({{application, json}, _}, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),
 
