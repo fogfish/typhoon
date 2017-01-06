@@ -94,26 +94,43 @@ delete() ->
 %% @todo: validate and normalize method
 request(Mthd) ->
    fun(State0) ->
-      Url  = lens:get(url(), State0),
-      Head = lens:get(header(), State0),
-      {Sock, State1} = socket(Url, State0),
-      knet:send(Sock, {trace, lens:get(id(), State1)}),
-      knet:send(Sock, {Mthd, Url, Head}),
-      knet:send(Sock, eof),
-      [recv(Sock)|State1]
+      %% @todo: customizable attempt by client
+      do_request_no_payload(10, Mthd, State0)
+   end.
+
+do_request_no_payload(0, _, _) ->
+   exit(econnaborted);
+do_request_no_payload(I, Mthd, State0) ->
+   Url  = lens:get(url(), State0),
+   Head = lens:get(header(), State0),
+   {Sock, State1} = socket(Url, State0),
+   knet:send(Sock, {trace, lens:get(id(), State1)}),
+   knet:send(Sock, {Mthd, Url, Head}),
+   knet:send(Sock, eof),
+   case recv(Sock) of
+      {ok, Pckt} -> [Pckt|State1];  
+      {error, _} -> do_request_no_payload(I - 1, Mthd, sclose(Url, State0))
    end.
 
 request(Mthd, Payload) ->
    fun(State0) ->
-      Url  = lens:get(url(), State0),
-      %% @todo: check if TE exists already
-      Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State0)],
-      {Sock, State1} = socket(Url, State0),
-      knet:send(Sock, {trace, lens:get(id(), State1)}),
-      knet:send(Sock, {Mthd, Url, Head}),
-      knet:send(Sock, Payload),
-      knet:send(Sock, eof),
-      [recv(Sock)|State1]
+      do_request_with_payload
+   end.
+
+do_request_with_payload(0, _, _, _) ->
+   exit(econnaborted);
+do_request_with_payload(I, Mthd, Payload, State0) ->
+   Url  = lens:get(url(), State0),
+   %% @todo: check if TE exists already
+   Head = [{'Transfer-Encoding', <<"chunked">>} | lens:get(header(), State0)],
+   {Sock, State1} = socket(Url, State0),
+   knet:send(Sock, {trace, lens:get(id(), State1)}),
+   knet:send(Sock, {Mthd, Url, Head}),
+   knet:send(Sock, Payload),
+   knet:send(Sock, eof),
+   case recv(Sock) of
+      {ok, Pckt} -> [Pckt|State1];  
+      {error, _} -> do_request_with_payload(I - 1, Mthd, Payload, sclose(Url, State0))
    end.
 
 %%
@@ -159,7 +176,6 @@ socket(Authority, Uri, State) ->
                {Sock, State#{Authority => Sock}}   
          end
    end.
-
 socket(Uri) ->
    {ok, Sock} = supervisor:start_child(njord_sup, [Uri]),
    pipe:bind(a, Sock),
@@ -167,12 +183,31 @@ socket(Uri) ->
 
 %%
 %%
+sclose(Uri, State) -> 
+   sclose(uri:authority(Uri), Uri, State).
+
+sclose(Authority, Uri, State) ->
+   case State of
+      #{Authority := Sock} ->
+         pipe:free(Sock),
+         maps:remove(Authority, State);
+      _ ->
+         State
+   end.
+   
+%%
+%%
 recv(Sock) ->
    %% @todo: customizable timeout by client
-   case knet:recv(Sock, 30000, []) of
+   case knet:recv(Sock, 30000, [noexit]) of
       {http, Sock,  eof} ->
-         [];
+         {ok, []};
       {http, Sock, Pckt} ->
-         [Pckt | recv(Sock)]
+         case recv(Sock) of
+            {ok, Tail} -> {ok, [Pckt | Tail]};
+            {error, _} = Error -> Error
+         end;
+      %% transport error
+      {error, _} = Error ->
+         Error      
    end.
-
