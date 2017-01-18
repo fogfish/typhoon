@@ -109,12 +109,12 @@ do_request_no_payload(I, Mthd, State0) ->
    knet:send(Sock, eof),
    case recv(Sock) of
       {ok, Pckt} -> [Pckt|State1];  
-      {error, _} -> do_request_no_payload(I - 1, Mthd, sclose(Url, State0))
+      {error, _} -> do_request_no_payload(I - 1, Mthd, sclose(Url, State1))
    end.
 
 request(Mthd, Payload) ->
    fun(State0) ->
-      do_request_with_payload
+      do_request_with_payload(10, Mthd, Payload, State0)
    end.
 
 do_request_with_payload(0, _, _, _) ->
@@ -130,7 +130,7 @@ do_request_with_payload(I, Mthd, Payload, State0) ->
    knet:send(Sock, eof),
    case recv(Sock) of
       {ok, Pckt} -> [Pckt|State1];  
-      {error, _} -> do_request_with_payload(I - 1, Mthd, Payload, sclose(Url, State0))
+      {error, _} -> do_request_with_payload(I - 1, Mthd, Payload, sclose(Url, State1))
    end.
 
 %%
@@ -186,7 +186,7 @@ socket(Uri) ->
 sclose(Uri, State) -> 
    sclose(uri:authority(Uri), Uri, State).
 
-sclose(Authority, Uri, State) ->
+sclose(Authority, _Uri, State) ->
    case State of
       #{Authority := Sock} ->
          pipe:free(Sock),

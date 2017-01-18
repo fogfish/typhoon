@@ -126,7 +126,8 @@ lint(Scenario, Conf) ->
          jsx:encode(erlang:iolist_to_binary(Data));
 
       [Data|_] ->
-         jsx:encode(Data)
+         erlang:iolist_to_binary(Data)
+         % jsx:encode(Data)
    end.
 
 %%

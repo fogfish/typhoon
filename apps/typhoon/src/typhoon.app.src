@@ -16,7 +16,7 @@
 {application, typhoon,
    [
       {description, "distributed stress, load testing tool"},
-      {vsn,         "0.4.1"},
+      {vsn,         "0.4.2"},
       {modules,     []},
       {registered,  []},
       {applications,[
