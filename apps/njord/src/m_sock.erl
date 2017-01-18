@@ -70,7 +70,10 @@ recv(Timeout) ->
       Url  = lens:get(url(), State0),
       {Sock, State1} = socket(Url, State0),
       knet:send(Sock, {trace, lens:get(id(), State1)}),
-      [recv(Sock, Timeout)|State1]
+      case recv(Sock, Timeout) of
+         {ok, Pckt} -> [Pckt|State1];
+         {error, _} -> [<<>>|sclose(Url, State1)]
+      end
    end.
 
 %%%----------------------------------------------------------------------------   
@@ -106,6 +109,26 @@ socket(Uri) ->
 
 %%
 %%
+sclose(Uri, State) -> 
+   sclose(uri:authority(Uri), Uri, State).
+
+sclose(Authority, _Uri, State) ->
+   case State of
+      #{Authority := Sock} ->
+         pipe:free(Sock),
+         maps:remove(Authority, State);
+      _ ->
+         State
+   end.
+
+
+%%
+%%
 recv(Sock, Timeout) ->
-   {_, Sock, Pckt} = knet:recv(Sock, Timeout),
-   Pckt.
+   case knet:recv(Sock, Timeout, [noexit]) of
+      {_, Sock, Pckt} -> 
+         {ok, Pckt};
+      %% transport error
+      {error, _} = Error ->
+         Error
+   end.

@@ -72,7 +72,11 @@ handle(request, _, #{scenario := Scenario, peer := Peer, config := Config, conte
    {next_state, handle, State#{context => Context1}};
 
 handle(expired, _, State) ->
-   {stop, normal, State}.
+   {stop, normal, State};
+
+handle(_, _, State) ->
+   %% ignore any side effect from script
+   {next_state, handle, State}.
  
 
 %%-----------------------------------------------------------------------------
