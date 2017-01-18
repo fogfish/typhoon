@@ -144,8 +144,8 @@ If you experience any issues with Typhoon, please let us know via [GitHub issues
 
 Typhoon uses [semantic versions](http://semver.org) to identify stable releases. 
  
+* [0.8.0](https://github.com/zalando/typhoon/releases/tag/0.8.0) - hackweek UI improvments and bug fixes 
 * [0.7.3](https://github.com/zalando/typhoon/releases/tag/0.7.3) - support local clustering
-* [0.7.0](https://github.com/zalando/typhoon/releases/tag/0.7.0) - improve latency sampling
 * [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
   
 
