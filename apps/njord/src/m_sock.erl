@@ -4,7 +4,7 @@
 
 -export([return/1, fail/1, '>>='/2]).
 -export([new/0, new/1, url/1, thinktime/1]).
--export([send/1, recv/0, recv/1]).
+-export([send/1, send/3, recv/0, recv/1, close/0]).
 
 
 %%%----------------------------------------------------------------------------   
@@ -57,7 +57,29 @@ send(Pckt) ->
       Url  = lens:get(url(), State0),
       {Sock, State1} = socket(Url, State0),
       knet:send(Sock, {trace, lens:get(id(), State1)}),
-      [knet:send(Sock, Pckt)|State1]
+      knet:send(Sock, Pckt),
+      [Pckt|State1]
+   end.
+
+%%
+%% send packet with give bytes per second rate
+send(Pckt, Bytes, T) -> 
+   fun(State0) ->
+      Url  = lens:get(url(), State0),
+      {Sock, State1} = socket(Url, State0),
+      knet:send(Sock, {trace, lens:get(id(), State1)}),
+      send_with_delay(Sock, Bytes, T, Pckt),
+      [Pckt|State1]
+   end.
+
+send_with_delay(Sock, Bytes, T, Pckt) ->
+   case Pckt of
+      <<Head:Bytes/binary, Tail/binary>> ->
+         knet:send(Sock, Head),
+         timer:sleep(T),
+         send_with_delay(Sock, Bytes, T, Tail);
+      _ ->
+         knet:send(Sock, Pckt)
    end.
 
 %%
@@ -74,6 +96,14 @@ recv(Timeout) ->
          {ok, Pckt} -> [Pckt|State1];
          {error, _} -> [<<>>|sclose(Url, State1)]
       end
+   end.
+
+%%
+%%
+close() ->
+   fun(State0) ->
+      Url  = lens:get(url(), State0),
+      [ok|sclose(Url, State0)]
    end.
 
 %%%----------------------------------------------------------------------------   
