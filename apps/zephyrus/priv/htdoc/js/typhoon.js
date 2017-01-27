@@ -2,9 +2,9 @@ var IO = (function()
 {
    var self = {}
 
-   self.json = function(path, accept, reject)
+   self.json = function(url, accept, reject)
    {
-      d3.json(path, 
+      d3.json(url, 
          function(error, json)
          {
             if (error != null)
@@ -12,6 +12,38 @@ var IO = (function()
                reject({code: error.status, text: error.statusText})
             } else {
                accept(json)
+            }
+         }
+      )
+   }.$_()
+
+   self.post = function(url, type, data, accept, reject)
+   {
+      d3.xhr(url)
+         .header('Content-Type', type)
+         .post(data,
+            function(error, req)
+            {
+               if (error != null)
+               {
+                  reject(JSON.parse(error.response))
+               } else {
+                  accept(req.response)
+               }
+            }
+         )
+   }.$_()
+
+   self.text = function(url, accept, reject)
+   {
+      d3.xhr(url).get(
+         function(error, req)
+         {
+            if (error != null)
+            {
+               reject({code: error.status, text: error.statusText})
+            } else {
+               accept(req.response)
             }
          }
       )
@@ -34,6 +66,16 @@ var UI = (function()
    self.fail = function(error)
    {
       console.error(error)
+   }.$_()
+
+   self.action = function(klass, accept)
+   {
+      d3.select(klass).on('click',
+         function()
+         {
+            accept(d3.event.target)
+         }
+      )
    }.$_()
 
    return self

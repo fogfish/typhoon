@@ -40,13 +40,13 @@ content_provided(_Req) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    R  = scalar:i(uri:q(<<"r">>, 1, Url)), 
    {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, R}]),
-   case crdts:value(Val) of
-      undefined ->
-         404;
+   % case crdts:value(Val) of
+   %    undefined ->
+   %       404;
       
-      {_, _, _} ->
-         html(<<"editor">>)
-   end.
+   %    {_, _, _} ->
+         html(<<"editor">>).
+   % end.
 
 html(File) ->
    file:read_file(

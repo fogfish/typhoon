@@ -18,35 +18,36 @@
 -->
 <meta charset="utf-8">
 <link rel="stylesheet" href="/css/bootstrap.min.css">
-<!--<link rel="stylesheet" href="/css/metro-bootstrap.min.css">-->
+<link rel="stylesheet" href="/css/metro-bootstrap.min.css">
 <link rel="stylesheet" href="/css/typhoon.css">
 
+<script src="/js/d3.v3.min.js"></script>
+<script src="/js/whiskers.min.js"></script>
+<script src="/js/monad.js"></script>
+<script src="/js/typhoon.js"></script>
+
+
 <script src="/js/jquery-3.1.1.min.js"></script>
-<script src="/js/bootstrap.min.js"></script>
+<!-- drop <script src="/js/bootstrap.min.js"></script> -->
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/snippets/erlang.js" type="text/javascript" charset="utf-8"></script>
 
 <head>
-    <style type="text/css" media="screen">
-    #editor {
-        margin-bottom: 0.2em;
-        width: 100%;
-        height: 520px;
-    }
+<style type="text/css" media="screen">
+.navbar
+{
+   margin: 0; 
+}
 
-    div.keyboard-shortcuts-help {
-        text-align: right;
-    }
-    div.keyboard-shortcuts-help > a {
-        border-bottom: 1px dashed;
-        text-decoration: none;
-    }
-
-    #pnl-lint-result {
-        margin-top: 1em;
-    }
-  </style>
+pre
+{
+   font-family: monospace!important;
+   width:  100%;
+   height: 100%;
+   border: none;
+}
+</style>
 </head>
 
 <body>
@@ -56,70 +57,94 @@
             <a class="navbar-brand" href="#">Typhoon</a>
         </div>
         <ul class="nav navbar-nav">
-            <li><p id="scenario-id" class="navbar-text"></p></li>
-        </ul>
-
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                <a href="https://github.com/zalando/typhoon">
-                    <span class="glyphicon glyphicon-star"></span> Star us on GitHub
-                </a>
+            <li class="nav-item">
+               <a class="nav-link scenario-lint">Lint</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link" href="#">Save</a>
             </li>
         </ul>
+
+         <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+               <a class="nav-link" href="https://github.com/zalando/typhoon">
+                  <span class="glyphicon glyphicon-random"></span>
+                  GitHub
+               </a>
+            </li>
+         </ul>
     </div>
 </nav>
 
-
-<div class="container">
-
-    <pre id="editor"></pre>
-    <span class="pull-right">
-        <a href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts" target="_blank">
-            Keyboard shortcuts
-        </a>
-    </span>
-</div>
-
-<div class="container">
-    <div class="row">
-        <div class="col-xs-12">
-            <button id="btn-lint" data-loading-text="Linting..." class="btn btn-default">
-                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                Lint
-            </button>
-            <button id="btn-save" data-loading-text="Saving..." class="btn btn-primary">
-                <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
-                Save
-            </button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div id="pnl-lint-result">
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <footer>
-        <p>&copy; 2016 Zalando, SE</p>
-    </footer>
-</div>
+<pre id="editor" class="editor"></pre>
 
 <script type="text/javascript">
-    var scenarioId = (function() {
-        // Get the last non-empty URL path segment.
-        var urlSegments = $(location).attr('pathname').split("/");
-        for (var i = urlSegments.length - 1; i >= 0; i--) {
-            if (urlSegments[i] !== "") {
-                return urlSegments[i];
+var scenarioId = window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-1)[0]
+
+var editor = ace.edit("editor")
+editor.setTheme("ace/theme/github")
+editor.session.setMode("ace/mode/erlang")
+editor.session.setNewLineMode("unix")
+editor.setOptions({
+   enableBasicAutocompletion: true,
+   enableSnippets: true
+})
+
+var set_editor_content = function(data)
+{
+   editor.setValue(data);
+   editor.session.selection.clearSelection();
+   editor.scrollToLine(1, true, true, function () {});
+   editor.gotoLine(1);
+}.$_()
+
+//
+// load scenario content
+monad.do([
+   monad.IO(IO.text('/scenario/' + scenarioId)),
+   set_editor_content
+]).fail(
+   function(_)
+   {
+      var ui = whiskers.compile(d3.select("#template").html())
+      console.log(ui)
+      set_editor_content(ui({id: scenarioId}))
+   }
+)
+
+//
+// lint scenario
+monad.do([
+   monad.UI(UI.action('.scenario-lint')),
+   function(_)
+   {
+      editor.getSession().clearAnnotations()
+      return monad.IO(IO.post('/lint/' + scenarioId, 'application/erlang', editor.getValue()))
+   },
+   function(x)
+   {
+      console.log(x)
+   }
+]).fail(
+   function(error)
+   {
+      editor.getSession().setAnnotations(
+         error.badarg.map(
+            function(x)
+            {
+               return {row: x.line - 1, column: 1, text: x.message, type: x.type}
             }
-        }
-    })();
-    console.log('Scenario ID:', scenarioId);
+         )
+      )
+   }
+)
+
+//
+// save scenario
+
 
     var scenarioUrl = "/scenario/" + scenarioId;
     var lintUrl = "/lint/" + scenarioId;
@@ -130,14 +155,6 @@ $(document).ready(function() {
     var btnSave = $("#btn-save");
     var pnlLintResult = $("#pnl-lint-result");
 
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/github");
-    editor.session.setMode("ace/mode/erlang");
-    editor.session.setNewLineMode("unix");
-    editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableSnippets: true
-    });
 
     var getScenarioBody = function() {
         return editor.getValue();
@@ -343,24 +360,87 @@ $(document).ready(function() {
             ;
     });
 
-    // Fetch the scenario body.
-    preScenarioNetwork(null);
-    $.get(scenarioUrl)
-        .done(function( data ) {
-            // Show the scenario in the editor.
-            editor.setValue(data);
-            editor.session.selection.clearSelection();
-            editor.scrollToLine(1, true, true, function () {});
-            editor.gotoLine(1);
+    // // Fetch the scenario body.
+    // preScenarioNetwork(null);
+    // $.get(scenarioUrl)
+    //     .done(function( data ) {
+    //         // Show the scenario in the editor.
+    //         // editor.setValue(data);
+    //         // editor.session.selection.clearSelection();
+    //         // editor.scrollToLine(1, true, true, function () {});
+    //         // editor.gotoLine(1);
 
-            postScenarioNetwork(null);
-        })
+    //         postScenarioNetwork(null);
+    //     })
 
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            alert("Error: " + errorThrown);
-        })
-        ;
+    //     .fail(function(jqXHR, textStatus, errorThrown) {
+    //         alert("Error: " + errorThrown);
+    //     })
+    //     ;
 });
+</script>
+
+<script id="template" type="text/template">
+%%
+%% @doc
+%%   typhoon scenario file
+%%   see https://github.com/zalando/typhoon/blob/master/docs/scenario.md
+-module({id}).
+-compile({parse_transform, monad}).
+
+%% 
+-export([title/0, t/0, n/0, urn/0]).
+-export([init/0, run/1]).
+
+%%
+%% human readable scenario title
+title() -> 
+   "{id}".
+
+%% time to execute workload in milliseconds
+t() ->
+   60000.
+
+%% number of concurrent sessions to spawn in the cluster.
+n() ->
+   2.
+
+%% identifiers of requests to visualize
+urn() ->
+   [
+      "urn:http:request"
+   ].
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% actions
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% init scenario configuration
+init() ->
+   do([m_state ||
+      _ =< undefined,
+      return(_)
+   ]).
+
+%%
+%% execute scenario, the operation is repeated  until `t()` is expired. 
+run(_Config) ->
+   do([m_state ||
+      _ <- request(),
+      return(_)
+   ]).
+
+request() ->
+   do([m_http ||
+      _ /= new("urn:http:request"),
+      _ /= url("http://example.org/"),
+      _ /= header("Connection", "keep-alive"),
+      _ /= get(),
+      return(_)
+   ]).
 </script>
 
 </body>

@@ -24,6 +24,7 @@
    allowed_methods/1,
    content_provided/1, 
    content_accepted/1,
+   fail/2,
    'POST'/3
 ]).
 
@@ -38,6 +39,10 @@ content_provided(_Req) ->
 %%
 content_accepted(_Req) ->
    [{application, erlang}].
+
+%%
+fail({badarg, Reason}, _Req) ->
+   {badarg, Reason}.   
 
 %%
 %%
@@ -63,33 +68,26 @@ compile(Id, Scenario) ->
       {ok, Id, Code} ->
          {ok, {Id, Code}};
       {error, Error, Warn} ->
-         ErrorPretty = prettify_error_or_warn(Error),
-         WarnPretty = prettify_error_or_warn(Warn),
-         ResultBody = jsx:encode([
-            {errors, ErrorPretty},
-            {warnings, WarnPretty}
-         ]),
-         {error, {badarg, ResultBody}}
+         {error, {badarg, jsonify(error, Error) ++ jsonify(warning, Warn)}}
    end.
 
-prettify_error_or_warn(X) ->
-  Result1 = lists:flatmap(
-    fun({_, Second}) ->
-      Second
-    end, X),
+%%
+%%
+jsonify(Type, Message) ->
+   [$.||
+      lists:flatmap(fun({_, X}) -> X end, Message),
+      lists:map(fun jsonify_compiler_message/1, _),
+      lists:map(fun(X) -> X#{type => Type} end, _)
+   ].
 
-  Result2 = lists:map(
-    fun({LineNumber, _, Args}) ->
-      Message = erlang:iolist_to_binary(erl_lint:format_error(Args)),
-      [
-        {lineNumber, LineNumber},
-%%            {args, Args},
-        {message, Message}
-      ]
-    end, Result1),
+jsonify_compiler_message({none, compile, _}) ->
+   #{line => 1, message => "Unknown compiler error."};
 
-  Result2.
+jsonify_compiler_message({Line, _, Text}) when is_list(Text) ->
+   #{line => Line, message => erlang:iolist_to_binary(Text)};
 
+jsonify_compiler_message({Line, _, Text}) ->
+   #{line => Line, message => erlang:iolist_to_binary(erl_lint:format_error(Text))}.
 
 %%
 install({Id, Code}) ->
