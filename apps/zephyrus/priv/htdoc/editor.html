@@ -35,17 +35,17 @@
 
 <head>
 <style type="text/css" media="screen">
-.navbar
-{
-   margin: 0; 
-}
-
 pre
 {
    font-family: monospace!important;
    width:  100%;
-   height: 100%;
+   height: 92%;
    border: none;
+}
+
+body
+{
+   overflow: hidden;
 }
 </style>
 </head>
@@ -54,14 +54,17 @@ pre
 <nav class="navbar navbar-default">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="#">Typhoon</a>
+            <a class="navbar-brand" href="/dashboard">Typhoon</a>
         </div>
         <ul class="nav navbar-nav">
             <li class="nav-item">
                <a class="nav-link scenario-lint">Lint</a>
             </li>
             <li class="nav-item">
-               <a class="nav-link" href="#">Save</a>
+               <a class="nav-link scenario-put">Save</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link scenario-remove">Remove</a>
             </li>
         </ul>
 
@@ -77,6 +80,27 @@ pre
 </nav>
 
 <pre id="editor" class="editor"></pre>
+
+<!-- 
+//
+// lint dialog
+//
+-->
+<div class="modal">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+           <h2 class="modal-title" id="exampleModalLabel">Lint</h2>
+         </div>
+         <pre class="modal-body">
+         </pre>
+         <div class="modal-footer">
+           <button type="button" class="btn btn-primary lint-ok">OK</button>
+         </div>
+      </div>
+   </div>
+</div>
+
 
 <script type="text/javascript">
 var scenarioId = window.location.pathname
@@ -104,13 +128,12 @@ var set_editor_content = function(data)
 //
 // load scenario content
 monad.do([
-   monad.IO(IO.text('/scenario/' + scenarioId)),
+   monad.IO(IO.scenario.get(scenarioId)),
    set_editor_content
 ]).fail(
    function(_)
    {
       var ui = whiskers.compile(d3.select("#template").html())
-      console.log(ui)
       set_editor_content(ui({id: scenarioId}))
    }
 )
@@ -122,11 +145,12 @@ monad.do([
    function(_)
    {
       editor.getSession().clearAnnotations()
-      return monad.IO(IO.post('/lint/' + scenarioId, 'application/erlang', editor.getValue()))
+      return monad.IO(IO.scenario.lint(scenarioId, editor.getValue()))
    },
-   function(x)
+   function(data)
    {
-      console.log(x)
+      d3.select('.modal').classed('show', true)
+      d3.select('.modal').select('pre').text(data)
    }
 ]).fail(
    function(error)
@@ -142,8 +166,42 @@ monad.do([
    }
 )
 
+monad.do([
+   monad.UI(UI.action('.lint-ok')),
+   function(x)
+   {
+      d3.select('.modal').classed('show', false)
+      d3.select('.modal').select('pre').text('')
+   }
+])
+
 //
 // save scenario
+monad.do([
+   monad.UI(UI.action('.scenario-put')),
+   function(_)
+   {
+      return monad.IO(IO.scenario.put(scenarioId, editor.getValue()))
+   },
+   function(_)
+   {
+      window.open('/' + scenarioId, '_self')
+   }
+]).fail(UI.fail)
+
+//
+// remove scenario
+monad.do([
+   monad.UI(UI.action('.scenario-remove')),
+   function(_)
+   {
+      return monad.IO(IO.scenario.remove(scenarioId))
+   },
+   function(_)
+   {
+      window.open('/dashboard', '_self')
+   }
+])
 
 
     var scenarioUrl = "/scenario/" + scenarioId;

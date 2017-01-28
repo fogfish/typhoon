@@ -1,42 +1,26 @@
-var IO = (function()
+var IO = {}
+
+IO.json = function(url, accept, reject)
 {
-   var self = {}
-
-   self.json = function(url, accept, reject)
-   {
-      d3.json(url, 
-         function(error, json)
+   d3.json(url, 
+      function(error, json)
+      {
+         if (error != null)
          {
-            if (error != null)
-            {
-               reject({code: error.status, text: error.statusText})
-            } else {
-               accept(json)
-            }
+            reject({code: error.status, text: error.statusText})
+         } else {
+            accept(json)
          }
-      )
-   }.$_()
+      }
+   )
+}.$_()
 
-   self.post = function(url, type, data, accept, reject)
-   {
-      d3.xhr(url)
-         .header('Content-Type', type)
-         .post(data,
-            function(error, req)
-            {
-               if (error != null)
-               {
-                  reject(JSON.parse(error.response))
-               } else {
-                  accept(req.response)
-               }
-            }
-         )
-   }.$_()
-
-   self.text = function(url, accept, reject)
-   {
-      d3.xhr(url).get(
+IO.scenario = {}
+IO.scenario.get  = function(id, accept, reject)
+{
+   d3.xhr(url)
+      .header('Accept', 'application/erlang')
+      .get(
          function(error, req)
          {
             if (error != null)
@@ -47,10 +31,59 @@ var IO = (function()
             }
          }
       )
-   }.$_()
+}.$_()
 
-   return self
-})()
+IO.scenario.lint = function(id, data, accept, reject)
+{
+   d3.xhr('/lint/' + id)
+      .header('Content-Type', 'application/erlang')
+      .post(data,
+         function(error, req)
+         {
+            if (error != null)
+            {
+               reject(JSON.parse(error.response))
+            } else {
+               accept(req.response)
+            }
+         }
+      )
+}.$_()
+
+IO.scenario.put = function(id, data, accept, reject)
+{
+   d3.xhr('/scenario/' + id)
+      .header('Content-Type', 'application/erlang')
+      .send('PUT', data,
+         function(error, req)
+         {
+            if (error != null)
+            {
+               reject({code: error.status, text: error.statusText})
+            } else {
+               accept(req.response)
+            }
+         }
+      )
+}.$_()
+
+IO.scenario.remove = function(id, accept, reject)
+{
+   d3.xhr('/scenario/' + id)
+      .send('DELETE',
+         function(error, req)
+         {
+            if (error != null)
+            {
+               reject({code: error.status, text: error.statusText})
+            } else {
+               accept(req.response)
+            }
+         }
+      )
+}.$_()
+
+
 
 
 var UI = (function()

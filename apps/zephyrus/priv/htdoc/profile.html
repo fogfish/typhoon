@@ -109,11 +109,16 @@
    {if scenario}
       {for e in scenario}
          <div class="col-sm-4 col-md-4">
-            <a href="/{e.id}" class="thumbnail tile tile-wide tile-green-sea">
+            <div class="thumbnail tile tile-wide tile-green-sea">
+            <a href="/editor/scenario/{e.id}" class="action pull-right">
+               <span class="glyphicon glyphicon-edit"></span>
+            </a>
+            <a href="/{e.id}" class="">
                <h2 class="tile-text">{e.title}</h2>
                <h4 class="tile-text">{e.n} sessions; {e.t} min</h4>
                <h5 class="tile-text">{e.id}</h5>
             </a>
+            </div>
          </div>
       {/for}
    {/if}
@@ -151,7 +156,11 @@ monad.do([
          function(_)
          {
             d3.select('.modal').classed('show', true)
+            document.getElementById('scenario-id').focus();
          }
+      ])
+      
+      monad.do([
       ])
       return scenario
    }
@@ -175,8 +184,7 @@ monad.do([
          d3.select('#scenario-id').classed('failure', false)
          d3.select('.modal').classed('show', false)
          d3.select('#scenario-id').property('value', '')
-         // window.open('/dashboard/')
-         window.open('/editor/scenario/' + id)
+         window.open('/editor/scenario/' + id, '_self')
       } else {
          d3.select('#scenario-id').classed('failure', true)
       }

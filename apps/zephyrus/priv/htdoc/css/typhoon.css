@@ -4,6 +4,13 @@ body
    height: 100%;
 }
 
+.navbar
+{
+   margin: 0;
+   height: 8%;
+}
+
+
 .navbar-brand,
 .nav-link
 {
@@ -31,4 +38,12 @@ a.tile
 .failure
 {
    border: 1px solid red;
+}
+
+.tile .action
+{
+   color: white;
+   font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
+   font-weight: 100;
+   padding: 0 10px 0 10px;
 }
