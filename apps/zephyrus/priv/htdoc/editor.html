@@ -47,6 +47,12 @@ body
 {
    overflow: hidden;
 }
+
+.navbar
+{
+   height: 8%;
+}
+
 </style>
 </head>
 
@@ -181,6 +187,10 @@ monad.do([
    monad.UI(UI.action('.scenario-put')),
    function(_)
    {
+      return monad.IO(IO.scenario.remove(scenarioId))
+   },
+   function(_)
+   {
       return monad.IO(IO.scenario.put(scenarioId, editor.getValue()))
    },
    function(_)
@@ -202,240 +212,6 @@ monad.do([
       window.open('/dashboard', '_self')
    }
 ])
-
-
-    var scenarioUrl = "/scenario/" + scenarioId;
-    var lintUrl = "/lint/" + scenarioId;
-
-
-$(document).ready(function() {
-    var btnLint = $("#btn-lint");
-    var btnSave = $("#btn-save");
-    var pnlLintResult = $("#pnl-lint-result");
-
-
-    var getScenarioBody = function() {
-        return editor.getValue();
-    };
-
-    /**
-     * Do actions before network interaction involving a scenario.
-     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
-     */
-    var preScenarioNetwork = function(buttonClicked) {
-        if (buttonClicked) {
-            buttonClicked.button('loading');
-        }
-        setSaveAndLintButtonsEnable(false);
-        editor.setReadOnly(true)
-    };
-
-    /**
-     * Do actions after network interaction involving a scenario, after a reply.
-     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
-     */
-    var postScenarioNetwork = function(buttonClicked) {
-        if (buttonClicked) {
-            buttonClicked.button('reset');
-        }
-        setSaveAndLintButtonsEnable(true);
-        editor.setReadOnly(false)
-        editor.focus();
-    };
-
-    /**
-     * Set availability for buttons Save and Lint.
-     * @param enabled - should buttons be enabled.
-     */
-    var setSaveAndLintButtonsEnable = function(enabled) {
-        if (enabled) {
-            btnLint.removeClass("disabled");
-            btnSave.removeClass("disabled");
-        } else {
-            btnLint.addClass("disabled");
-            btnSave.addClass("disabled");
-        }
-    };
-
-    /**
-     * Show 'alarm' box with linting results.
-     * @param error - indicator of the result with errors.
-     * @param lintResult - the result.
-     */
-    var showLintResult = function(error, lintResult) {
-        pnlLintResult.children(".alert").removeClass("fade in");
-        pnlLintResult.children(".alert").alert('close');
-
-        // Clear.
-        pnlLintResult.html();
-
-        var isResultJson = typeof lintResult === 'object';
-
-        var alertDiv = $(
-            '<div class="alert alert-dismissible fade in" role="alert">' +
-            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4>Lint result</h4>' +
-            '</div>'
-        );
-
-        // Choose panel color based on the result type (ok/warning/error).
-        if (error) {
-            if (isResultJson) {
-                if (lintResult['errors'].length == 0) {
-                    alertDiv.addClass("alert-warning");
-                } else {
-                    alertDiv.addClass("alert-danger");
-                }
-            } else {
-                alertDiv.addClass("alert-danger");
-            }
-        } else {
-            alertDiv.addClass("alert-success");
-        }
-
-         // Output errors and warning in the text form.
-        var alertText = $('<span></span>');
-        if (isResultJson) {
-            //alertText.text(JSON.stringify(lintResult));
-            var errors = lintResult['errors'];
-            var warnings = lintResult['warnings'];
-
-            var outputItem = function(item) {
-                alertText.append($('<p><strong>Line ' + item['lineNumber'] + ':</strong> ' + item['message'] + '</p>'));
-            };
-
-            if (errors.length > 0) {
-                alertText.append($('<h5>Errors</h5>'));
-                errors.map(outputItem);
-            }
-            if (warnings.length > 0) {
-                alertText.append($('<h5>Warnings</h5>'));
-                warnings.map(outputItem);
-            }
-        } else {
-            alertText.text(lintResult);
-        };
-        alertDiv.append(alertText);
-
-        pnlLintResult.append(alertDiv);
-
-
-        // Output errors and warning in the form of markers in the editor,
-        // or clear markers if there is no (structured) errors or warnings.
-        if (isResultJson) {
-            displayErrorsAndWarningsInEditor(lintResult);
-        } else {
-            displayErrorsAndWarningsInEditor(null);
-        }
-    };
-
-    var displayErrorsAndWarningsInEditor = function(errorsAndWarnings) {
-        if (errorsAndWarnings === null) {
-            editor.getSession().setAnnotations(null);
-        } else {
-            var errors = errorsAndWarnings['errors'];
-            var warnings = errorsAndWarnings['warnings'];
-
-            var annotations = [];
-
-            var processItem = function(itemType) {
-                 return function(item) {
-                    var message = item['message'];
-                    var lineNumber = item['lineNumber'];
-                    annotations.push({
-                        row: lineNumber - 1,
-                        column: 0,
-                        text: message,
-                        type: itemType
-                    });
-                }
-            };
-
-            errors.map(processItem("error"));
-            warnings.map(processItem("warning"));
-
-            editor.getSession().setAnnotations(annotations);
-        }
-    };
-
-    /**
-     * Send the current scenario from the editor over the network.
-     * @param url - the url to send to.
-     * @param method - HTTP method ("POST"/"PUT").
-     */
-    var sendScenario = function(url, method) {
-        return $.ajax({
-            type: method,
-            url: url,
-            contentType: "application/erlang",
-            dataType: "json", // type of response
-            headers: {
-                "Accept": "*/*"
-            },
-            data: getScenarioBody(),
-            timeout: 5000
-        });
-    };
-
-    btnLint.click(function(e) {
-        var thisBtn = $(this);
-        preScenarioNetwork(thisBtn);
-
-        sendScenario(lintUrl, "POST")
-            .done(function(data) {
-                showLintResult(false, data);
-            })
-
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                // In this case, 400 Bar request is technically not an error of communication,
-                // just the indicator of errors in the scenario.
-                if (jqXHR.status == 400) {
-                    var json = JSON.parse(jqXHR.responseText);
-                    showLintResult(true, json);
-                } else {
-                    alert("Error: " + errorThrown);
-                }
-            })
-
-            .always(function() {
-                postScenarioNetwork(thisBtn);
-            })
-            ;
-    });
-
-    btnSave.click(function(e) {
-        var thisBtn = $(this);
-        preScenarioNetwork(thisBtn);
-
-        sendScenario(scenarioUrl, "PUT")
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                alert("Error: " + errorThrown);
-            })
-
-            .always(function() {
-                postScenarioNetwork(thisBtn);
-            })
-            ;
-    });
-
-    // // Fetch the scenario body.
-    // preScenarioNetwork(null);
-    // $.get(scenarioUrl)
-    //     .done(function( data ) {
-    //         // Show the scenario in the editor.
-    //         // editor.setValue(data);
-    //         // editor.session.selection.clearSelection();
-    //         // editor.scrollToLine(1, true, true, function () {});
-    //         // editor.gotoLine(1);
-
-    //         postScenarioNetwork(null);
-    //     })
-
-    //     .fail(function(jqXHR, textStatus, errorThrown) {
-    //         alert("Error: " + errorThrown);
-    //     })
-    //     ;
-});
 </script>
 
 <script id="template" type="text/template">

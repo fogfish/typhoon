@@ -19,6 +19,7 @@
 <meta charset="utf-8">
 <link rel="stylesheet" href="/css/bootstrap.min.css">
 <link rel="stylesheet" href="/css/metro-bootstrap.min.css">
+<link rel="stylesheet" href="/css/typhoon.css" >
 <link rel="stylesheet" href="/css/scenario.css" >
 
 <script src="/js/d3.v3.min.js"></script>
@@ -37,11 +38,24 @@
          <a class="navbar-brand" href="/dashboard">Typhoon</a>
       </div>
       <ul class="nav navbar-nav">
-         <li><p id="scenario-id" class="navbar-text"></p></li>
+         <li class="nav-item">
+            <a class="nav-link launch">Launch</a>
+         </li>
+         <li class="nav-item">
+            <a class="nav-link">Analysis</a>
+         </li>
+         <li class="nav-item">
+            <a class="nav-link">History</a>
+         </li>
       </ul>
 
       <ul class="nav navbar-nav navbar-right">
-         <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
+         <li class="nav-item">
+            <a class="nav-link" href="https://github.com/zalando/typhoon">
+               <span class="glyphicon glyphicon-random"></span>
+               GitHub
+            </a>
+         </li>
       </ul>
    </div>
    <div class="progress">
@@ -54,7 +68,7 @@
 // 
 //
 -->
-<div class="jumbotron">
+<!-- <div class="jumbotron">
    <div class="container">
       <div class="row">
          <h1 class='scenario-title'></h1>
@@ -72,15 +86,10 @@
          <div class="col-sm-6">
             <a class="btn btn-primary btn-lg launch">Launch &raquo;</a>
          </div>
-         <div class="col-sm-6">
-            <span class="pull-right">
-               <a id="btn-edit-code" class="btn btn-default">View/edit code</a>
-            </span>
-         </div>
       </div>
    </div>
 </div>
-
+ -->
 
 <!-- 
 //
@@ -88,7 +97,7 @@
 //
 -->
 <div class="container">
-   <h1>System status</h1>
+   <h1>Latency analysis : <span class='scenario-title'></span></h1>
    <div class="row">
       <div class="col-sm-6 col-md-2">
          <div class="thumbnail tile tile-medium tile-green-sea">
@@ -141,9 +150,8 @@
 //
 -->
 <div id="time-series-analysis" class="container cubism">
-   <h1>Time Series analysis</h1>
-   <div id="series" class="container">
-   </div>
+   <!-- <h1>Time Series analysis</h1> -->
+   <div id="series"></div>
 </div>
 
 

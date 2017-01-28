@@ -7,7 +7,6 @@ body
 .navbar
 {
    margin: 0;
-   height: 8%;
 }
 
 
@@ -46,4 +45,9 @@ a.tile
    font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
    font-weight: 100;
    padding: 0 10px 0 10px;
+}
+
+.container
+{
+   margin: 1.5em auto;
 }
