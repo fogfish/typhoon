@@ -45,12 +45,12 @@ content_provided(_Req) ->
 
 history(Urn) ->
    A = os:timestamp(),
-   B = tempus:sub(A, 30 * 24 * 3600),  
+   B = tempus:sub(A, 30 * 24 * 3600),
    fun(FD) ->
       stream:map(
          fun({T, X}) -> 
             [tempus:s(T), X] 
          end,
-         chronolog:stream(FD, Urn, {B, A})
+         chronolog:stream(FD, Urn, {A, B})
       )
    end.

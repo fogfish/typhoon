@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 %%
-%%   Copyright 2015 Zalando SE
+%%   Copyright 2017 Zalando SE
 %%
 %%   Licensed under the Apache License, Version 2.0 (the "License");
 %%   you may not use this file except in compliance with the License.
@@ -17,523 +17,555 @@
 %%
 -->
 <meta charset="utf-8">
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<link rel="stylesheet" href="/css/bootstrap.min.css">
+<link rel="stylesheet" href="/css/metro-bootstrap.min.css">
+<link rel="stylesheet" href="/css/typhoon.css">
+<link rel="stylesheet" href="/css/scenario.css">
 
-
-<!--
-%%
-%% Styles
-%%
--->
-<style>
-body
-{
-   width: 100%;
-}
-h3
-{
-   margin-top: 3em;
-}
-</style>
-
+<script src="/js/d3.v3.min.js"></script>
+<script src="/js/cubism.v1.js"></script>
+<script src="/js/bullet.js"></script>
+<script src="/js/whiskers.min.js"></script>
+<script src="/js/monad.js"></script>
+<script src="/js/typhoon.js"></script>
 
 <body>
 
-<!--
-%%
-%% View
-%%
+<nav class="navbar navbar-default navbar-fixed-top">
+   <div class="container-fluid">
+      <div class="navbar-header">
+         <a class="navbar-brand" href="/dashboard">Typhoon</a>
+      </div>
+
+      <ul class="nav navbar-nav navbar-right">
+         <li class="nav-item">
+            <a class="nav-link" href="https://github.com/zalando/typhoon">
+               <span class="glyphicon glyphicon-random"></span>
+               GitHub
+            </a>
+         </li>
+      </ul>
+   </div>
+</nav>
+
+
+<!-- 
+//
+// tiles
+//
 -->
 <div class="container">
-   <h1>Latency analysis <span id="scenario-id"></span></h1>
-   <h2>Executive Summary</h2>
-   <p>
-   End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions.
-   </p>
-   <p>
-   This latency analysis is the investigation of a component behavior using information gathered as the service <strong id="url-val"></strong> sustain artificial load during <strong id="t-val"></strong>.
-   </p>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>KPI</th>
-            <th>Mean</th>
-         </tr>
-      </thead>
-      <tbody>
-         <tr>
-            <td>Availability</td>
-            <td><span id="sla-val">0.0</span> %</td>
-         </tr>
-         <tr>
-            <td>Capacity</td>
-            <td><span id="rps-val">0.0</span> RPS</td>
-         </tr>
-         <tr>
-            <td>Latency</td>
-            <td><span id="lat-val">0.0</span> ms</td>
-         </tr>
-         <tr>
-            <td>Duration</td>
-            <td><span id="dur-val">0</span> sec</td>
-         </tr>
-      </tbody>
-   </table>
-   <p>
-   Availability is ratio of successful requests to total amount of executed requests; Capacity is amount of successful requests per unit of time.
-   </p>
+   <div class="row">
+      <h1>Scenario analysis - <span class='scenario-title'></span></h1>
+      <p>
+      End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions. This latency analysis is the investigation of a component behavior using information gathered as the service sustain <a class="editor-link">artificial load</a> starting at <span class="analysis-t"></span> for <span class="analysis-dur"></span> seconds.
+      </p>
 
-</div>
+      <h2>Availability</h2>
+      <p>Availability is ratio of successful requests to total amount of executed requests.</p>
+      <div class="availability"></div>
 
-<div class="container">
-   <h2>Availability <small>(%)</small></h2>
-   <p>Availability is ratio of successful requests to total amount of executed requests.</p>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="availability"></tbody>
-   </table>       
+
+      <h2>Capacity (req / sec)</h2>
+      <p>The Capacity is a measured value of successful requests per unit of time. It reflects amount of effective traffic carried through system-under-test.</p>
+      <div class="capacity"></div>
+
+
+      <h2>Time to First Byte (ms)</h2>
+      <p>Time to First Byte (TTFB) is the duration from making an request to the first byte of the response being received. This metric assume that the network appears to mobile application as a system that makes it wait. This delay is influenced by request transfer delay, time required by remote host to process request, and delivery time of first byte/packet of the response. TTFB represents initial confirmation that remote host is responding and client application could procedure to rendering. A primary advantage of TTFB is that it concrete, consumer oriented metric easily measurable and is defined independently of underlying solutions or technologies.
+      </p>
+      <div class="ttfb"></div>
+
+      <h2>Time to Response (ms)</h2>
+      <p>The time to display response is the most valuable metric from consumer perspective. It is influenced by performance of network and client application by itself. The time required for response rendering needs to be excluded from quality assessment due its dependency on user interface technology. Instead, Time to Meaningful Response (TTMR) is defined as network delay required to deliver response to client.
+      </p>  
+      <div class="ttmr"></div>
+
+      <h2>Network Round Trip (ms)</h2>
+      <div class="tcp"></div>
+
+      <h2>SSL Handshake (ms)</h2>
+      <div class="ssl"></div>
+
+      <h2>Packet Per Second</h2>
+      <div class="pps"></div>
+
+      <h2>Packet Size (bytes)</h2>
+      <div class="pack"></div>
+   </div>
 </div>
 
 
 <div class="container">
-   <h2>Capacity <small>(req / sec)</small></h2>
-   <p>The Capacity is a measured value of successful requests per unit of time. It reflects amount of effective traffic carried through system-under-test.</p>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="throughput"></tbody>
-   </table>       
+<footer>
+   <p>&copy; 2016 Zalando, SE</p>
+</footer>
 </div>
 
-<div class="container">
-   <h2>Latency</h2>
-   <p>
-   Software development practices considers the end-to-end latency as one of user-oriented characteristics during entire life-cycle of an application. This user-oriented metric shall be defined independently of underlying solutions or technologies and shall be used for quality assessment of delivered product. The interactive traffic is the classical data communication scheme employed by mobile applications. It is described as a request response pattern of consumer. This patter give a recommendation that interaction between human and remote equipment should not exceed 1 sec. The report highlight latencies that are observed by consumer while his mobile device interacts with remote system.
-   </p>
+<script type="text/template" id="template-history-tile">
+</script>
 
-   <h3>Time to First Byte <small>(ms)</small></h3>
-   <p>
-   Time to First Byte (TTFB) is the duration from making an request to the first byte of the response being received. This metric assume that the network appears to mobile application as a system that makes it wait. This delay is influenced by request transfer delay, time required by remote host to process request, and delivery time of first byte/packet of the response. TTFB represents initial confirmation that remote host is responding and client application could procedure to rendering.
-   </p>
-   <p>
-   A primary advantage of TTFB is that it concrete, consumer oriented metric easily measurable and is defined independently of underlying solutions or technologies.
-   </p>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="ttfb"></tbody>
-   </table>       
-   <h3>Time to Meaningful Response <small>(ms)</small></h3>
-   <p>
-   The time to display response is the most valuable metric from consumer perspective. It is influenced by performance of network and client application by itself. The time required for response rendering needs to be excluded from quality assessment due its dependency on user interface technology. Instead, Time to Meaningful Response (TTMR) is defined as network delay required to deliver response to client.
-   </p>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="ttmr"></tbody>
-   </table>       
-</div>
+<script>
+var tiles = whiskers.compile(d3.select('#template-history-tile').html())
+var sid = window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-3)[0]
+var t = ~~ window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-2)[0]
+var dur = ~~ window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-1)[0] / 1000
 
-<div class="container">
-   <h2>Transport</h2>
-   <p>
-   A transparent end-to-end communication involves various technologies and communication principles. There is a limited ability to influence and measure latency at transmission overhead network infrastructure level due to decentralized management architecture, cost of equipment, network ownership, etc. The report merge them into single network delay and protocol metrics.
-   </p>
+d3.selectAll('.editor-link').attr('href', '/dashboard/editor/' + sid)
+d3.selectAll('.analysis-t').text( (new Date(t)).toUTCString() )
+d3.selectAll('.analysis-dur').text( ~~ dur )
 
-   <h3>Network round trip <small>(ms)</small></h3>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="tcp"></tbody>
-   </table>       
-
-   <h3>SSL Handshake <small>(ms)</small></h3>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="ssl"></tbody>
-   </table>       
-
-   <h3>Packets <small>(MTU ~1500 byte)</small></h3>
-   <table class="table table-striped">
-      <thead>
-         <tr>
-            <th>Url</th>
-            <th>Mean</th>
-            <th>Std</th>
-            <th>Min</th>
-            <th>25%</th>
-            <th>50%</th>
-            <th>75%</th>
-            <th>80%</th>
-            <th>90%</th>
-            <th>95%</th>
-            <th>99%</th>
-            <th>Max</th>
-         </tr>
-      </thead>
-      <tbody id="pack"></tbody>
-   </table>       
-</div>
-
-<!--
-%%
-%% Controller
-%%
--->
-<script type="text/javascript">
-//--------------------------------------------------------------------------
 //
-// report
 //
-//--------------------------------------------------------------------------
-var report = function()
-{
-   var self = {};
-   
-   self.init = function(data)
-   {
-      self.executive(data);
-      self.availability(data);
-      self.throughput(data);
-      self.latency(data);
-      self.transport(data);
-   }
-
-   self.executive = function(data)
-   {
-      var http = data.kpi('http');
-      var h200 = http.filter(function(x){return x < 300});
-      var sla  = h200.length / http.length;
-      var rps  = h200.length / data.duration();
-
-      d3.select('#sla-val').text(sla.toFixed(4));
-      d3.select('#rps-val').text(rps.toFixed(1));
-
-      var ttfb = data.kpi('ttfb');
-      var lat  = d3.mean(ttfb) / 1000; 
-      d3.select('#lat-val').text(lat.toFixed(3));
-
-      d3.select('#dur-val').text(data.duration());
-      d3.select('#t-val').text(data.interval());
-      d3.select('#url-val').text(data.url());
-   }
-
-   self.availability = function(data)
-   {
-      var list = data.urn()
-         .map(
-            function(x)
-            {
-               var list = d3.zip(
-                  data.kpi('200', x),
-                  data.kpi('300', x),
-                  data.kpi('400', x),
-                  data.kpi('500', x)
-               ).map(function(d){return d[0] / d3.sum(d) })
-            return {title: x, data: list.sort(d3.ascending)};
-            }
-         );
-      self.table('#availability', list);
-   }
-
-
-   self.throughput = function(data)
-   {
-      var list = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('200', x).sort(d3.ascending)};
-         });
-      self.table('#throughput', list);
-   }
-
-   self.latency = function(data)
-   {
-      var ttfb = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('ttfb', x).map(function(x){return x/1000}).sort(d3.ascending)};
-         });
-      self.table('#ttfb', ttfb);
-
-      var ttmr = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('ttmr', x).map(function(x){return x/1000}).sort(d3.ascending)};
-         });
-      self.table('#ttmr', ttmr);
-   }
-
-   self.transport = function(data)
-   {
-      var tcp = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('tcp', x).map(function(x){return x/1000}).sort(d3.ascending)};
-         });
-      self.table('#tcp', tcp);
-
-      var ssl = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('ssl', x).map(function(x){return x/1000}).sort(d3.ascending)};
-         });
-      self.table('#ssl', ssl);
-
-      var pack = data.urn()
-         .map(function(x){
-            return {title: x, data: data.kpi('pack', x).map(function(x){return x/1500}).sort(d3.ascending)};
-         });
-      self.table('#pack', pack);
-   }
-
-   //
-   // render table
-   self.table = function(id, list)
-   {
-      d3.select(id).selectAll('tr')
-         .data(list.filter(function(x){return x.data.length != 0}))
-         .enter()
-         .append('tr')
-         .html(
-            function(d)
-            {
-               return [
-                  '<td>' + d.title.replace("urn:http:", "") + '</td>',
-                  '<td>' + d3.mean(d.data).toFixed(2) + '</td>',
-                  '<td>' + d3.deviation(d.data).toFixed(2) + '</td>',
-                  '<td>' + d3.min(d.data).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.25).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.5).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.75).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.8).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.9).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.95).toFixed(2) + '</td>',
-                  '<td>' + d3.quantile(d.data, 0.99).toFixed(2) + '</td>',
-                  '<td>' + d3.max(d.data).toFixed(2) + '</td>',
-               ].join("")
-            }
-         )
-   }
-
-   return self;
+var model = {
+   sensors: [],
+   h2xx: [],
+   h3xx: [],
+   h4xx: [],
+   h5xx: [],
+   sla:  [],
+   capacity: [],
+   ttfb: [],
+   ttmr: [],
+   tcp:  [],
+   ssl:  [],
+   pps:  [],
+   pack: []
 }
 
-//--------------------------------------------------------------------------
+monad.do([
+   monad.IO(IO.scenario.metadata(sid)),
+   function(json)
+   {
+      d3.select('.scenario-title').text(json.title)
+      model.sensors = json.urn
+      availability()
+      capacity()
+      ttfb()
+      ttmr()
+      tcp()
+      ssl()
+      pps()
+      pack()
+   }
+]).fail(UI.fail)
+
 //
-// analysis data model (raw data)
-//
-//--------------------------------------------------------------------------
-var analysis = function(id, ta, tb, fun)
+// capacity
+var capacity = function()
 {
-   var self = {}
-   var counter  = 0;
-   var scenario = null;
-   var units    = {};
-   var kpi      = ['urn:http', 'urn:tcp', 'urn:ssl', 'urn:ttfb', 'urn:ttmr', 'urn:pack'];
-   var hpi      = ['200', '300', '400', '500'];
-
-   self.init = function()
-   {
-      d3.json("/scenario/" + id + "/attributes",
-         function(json)
-         {
-            scenario = json 
-            var list = json.urn;
-
-            list.forEach(self.load);
-         }
-      )
-   }
-
-   //
-   // load latency
-   self.load = function(urn) 
-   {
-      kpi.forEach(
-         function(x)
-         {
-            // request raw data
-            units[urn] = {};
-            var tag = x.replace("urn:", "");
-            var iid = urn.replace("urn:http", x);
-            var req = ['scenario', id, 'series', iid, 'id', ta, tb].join("/");
-            counter++;
-            d3.json("/" + req + "?chronon=1",
-               function(json)
-               {
-                  units[urn][tag] = json
-                  counter--;
-                  if (counter == 0)
-                     fun(self)
-               }
-            )
-         }
-      );
-
-      hpi.forEach(
-         function(x)
-         {
-            var req = ['scenario', id, 'series', urn, x, ta, tb].join("/");
-            counter++;
-            d3.json("/" + req + "?chronon=1",
-               function(json)
-               {
-                  units[urn][x] = json
-                  counter--;
-                  if (counter == 0)
-                     fun(self)
-               }
-            )
-         }
-      );
-   }
-   
-   //
-   //
-   self.url= function()
-   {
-      return scenario.url;
-   }
-
-   //
-   //
-   self.urn = function()
-   {
-      return d3.keys(units)
-   }
-
-   //
-   //
-   self.kpi = function(kpi, key)
-   {
-      if (key == null)
+   model.sensors.reduce(
+      function(acc, x)
       {
-         var list = d3.keys(units)
-            .map(function(x){return units[x][kpi].map(function(d){return d[1]})})
-            .reduce(function(acc, x){return acc.concat(x)}, []);
-         return list;
-      } else {
-         var list = units[key][kpi].map(function(d){return d[1]});
-         return list;
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:c:2xx:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, series)
+                  model.capacity.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.capacity.length > 0)
+            UIbullet('.capacity', model.capacity)
+         else
+            d3.select('.capacity').insert('p').text('No data.')
       }
-   }
+   )
+}
 
-   //
-   //
-   self.duration = function()
-   {
-      return tb - ta;
+//
+// availability
+var availability = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:c:2xx:" + x.substring(4)
+               return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  model.h2xx.push(series)
+               }
+            },
+            function(_)
+            {
+               var id = "urn:c:3xx:" + x.substring(4)
+               return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  model.h3xx.push(series)
+               }
+            },
+            function(_)
+            {
+               var id = "urn:c:4xx:" + x.substring(4)
+               return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  model.h4xx.push(series)
+               }
+            },
+            function(_)
+            {
+               var id = "urn:c:5xx:" + x.substring(4)
+               return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  model.h5xx.push(series)
+               }
+            },
+            function(_)
+            {
+               var x2 = model.h2xx.slice(-1)[0].map(function(d){return d[1]})
+               var x3 = model.h3xx.slice(-1)[0].map(function(d){return d[1]})
+               var x4 = model.h4xx.slice(-1)[0].map(function(d){return d[1]})
+               var x5 = model.h5xx.slice(-1)[0].map(function(d){return d[1]})
+               var sl = d3.zip(x2, x3, x4, x5).map(
+                  function(d){return [0, d[0] / d3.sum(d)]}
+               )
+               var xcdf = cdf(x, sl)
+               model.sla.push(xcdf)
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.sla.length > 0)
+            UIbullet('.availability', model.sla)
+         else
+            d3.select('.availability').insert('p').text('No data.')
+      }
+   ).fail(UI.fail)
+
+}
+
+//
+//
+var ttfb = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:g:ttfb:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {               
+                  var xcdf = cdf(x, ms(series))
+                  model.ttfb.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.ttfb.length > 0)
+            UIbullet('.ttfb', model.ttfb)
+         else
+            d3.select('.ttfb').insert('p').text('No data.')   
+      }
+   )
+}
+
+//
+//
+var ttmr = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:g:ttmr:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, ms(series))
+                  model.ttmr.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.ttmr.length > 0)
+            UIbullet('.ttmr', model.ttmr)
+         else
+            d3.select('.ttmr').insert('p').text('No data.')
+      }
+   )
+}
+
+//
+//
+var tcp = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:g:tcp:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, ms(series))
+                  model.tcp.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.tcp.length > 0)
+            UIbullet('.tcp', model.tcp)
+         else
+            d3.select('.tcp').insert('p').text('No data.')   
+      }
+   )
+}
+
+//
+//
+var ssl = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:g:ssl:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, ms(series))
+                  model.ssl.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.ssl.length > 0)
+            UIbullet('.ssl', model.ssl)
+         else
+            d3.select('.ssl').insert('p').text('No data.')
+      }
+   )
+}
+
+//
+//
+var pps = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:c:pack:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, series)
+                  model.pps.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.pps.length > 0)
+            UIbullet('.pps', model.pps)
+         else
+            d3.select('.pps').insert('p').text('No data.')
+      }
+   )
+}
+
+//
+//
+var pack = function()
+{
+   model.sensors.reduce(
+      function(acc, x)
+      {
+         return monad.do([acc,
+            function(_)
+            {
+               var id = "urn:g:pack:" + x.substring(4)
+               return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var xcdf = cdf(x, series)
+                  model.pack.push(xcdf)
+               }
+            }
+         ])
+      },
+      monad.IO(true)
+   ).bind(
+      function(_)
+      {
+         if (model.pack.length > 0)
+            UIbullet('.pack', model.pack)
+         else
+            d3.select('.pack').insert('p').text('No data.')   
+      }
+   )
+}
+
+
+//
+// series to CDF
+var cdf = function(title, series)
+{
+   var x = series.map(function(x){return x[1]}).sort(d3.ascending)
+   return {
+      title: title,
+      min: d3.min(x),
+      mean: d3.mean(x),
+      std: d3.deviation(x),
+      q25: d3.quantile(x, 0.25),
+      q50: d3.quantile(x, 0.50),
+      q75: d3.quantile(x, 0.75),
+      q80: d3.quantile(x, 0.80),
+      q90: d3.quantile(x, 0.90),
+      q95: d3.quantile(x, 0.95),
+      q99: d3.quantile(x, 0.99),
+      max: d3.max(x)
    }
+}
+
+var ms = function(series)
+{
+   return series.map(function(x){return [x[0], x[1]/1000]})
+}
+
+//
+//
+var UIbullet = function(ui, cdfs)
+{
+   var data = cdfs.map(
+      function(stat)
+      {
+         return {
+            title: stat.title,
+            subtitle: '',
+            ranges: [stat.min, stat.mean, stat.max],
+            measures: [stat.q75, stat.q80, stat.q90, stat.q95, stat.q99],
+            markers: [stat.q50]
+         }
+      }
+   )
+
+   var margin = {top: 25, right: 40, bottom: 20, left: 120};
+   var width  = 800;
+   var height = 75 - margin.top - margin.bottom;
+
+   var chart = d3.bullet()
+      .width(width)
+      .height(height);
    
-   //
-   //
-   self.interval = function()
-   {
-      return (new Date(ta * 1000).toISOString()) + " - " + (new Date(tb * 1000).toISOString());
-   }
+   d3.select(ui).selectAll('*').remove();
+   var svg = d3.select(ui).selectAll("svg")
+      .data(data)
+      .enter().append("svg")
+         .attr("class", "bullet")
+         .attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+         .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .call(chart);
 
-   return self;
-} 
+   var title = svg.append("g")
+      .style("text-anchor", "end")
+      .attr("transform", "translate(-6," + height / 2 + ")");
 
+   title.append("text")
+      .attr("class", "title")
+      .text(function(d) { return d.title; });
 
-//--------------------------------------------------------------------------
-//
-// entry point / global state
-//
-//--------------------------------------------------------------------------
-var req = window.location.pathname.substring(1).split("/")
-var ns  = req[1];
-var ta  = req[2];
-var tb  = req[3];
+   title.append("text")
+      .attr("class", "subtitle")
+      .attr("dy", "1em")
+      .text(function(d) { return d.subtitle; });
 
-d3.select("#scenario-id").text(ns);
+   return model;
+}.$_();
 
-var rp  = report();
-var ts  = analysis(ns, ta, tb, rp.init);
-ts.init();
 
 </script>
 </body>

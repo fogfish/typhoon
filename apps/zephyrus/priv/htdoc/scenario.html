@@ -29,6 +29,12 @@
 <script src="/js/cubism.v1.js"></script>
 <script src="/js/monad.js"></script>
 
+<style type="text/css" media="screen">
+.container
+{
+   width: 960px;
+}
+</style>
 
 <body>
 
@@ -41,11 +47,11 @@
          <li class="nav-item">
             <a class="nav-link launch">Launch</a>
          </li>
-         <li class="nav-item">
+<!--          <li class="nav-item">
             <a class="nav-link">Analysis</a>
-         </li>
+         </li> -->
          <li class="nav-item">
-            <a class="nav-link">History</a>
+            <a class="nav-link scenario-history">History</a>
          </li>
       </ul>
 
@@ -97,7 +103,7 @@
 //
 -->
 <div class="container">
-   <h1>Latency analysis : <span class='scenario-title'></span></h1>
+   <h1>Scenario - <span class='scenario-title'></span></h1>
    <div class="row">
       <div class="col-sm-6 col-md-2">
          <div class="thumbnail tile tile-medium tile-green-sea">
@@ -160,7 +166,7 @@
 // history
 //
 -->
-<div class="container">
+<!-- <div class="container">
    <h1>History</h1>
    <p>The section show past measurements within 30 days. Click on the milestone indicator to expand statistics.</p>
    <div id="history"></div> 
@@ -268,14 +274,14 @@
    </div>
    <hr>
 </div>
-
+ -->
 
 <!-- 
 //
 // help
 //
 -->
-<div id="latency-challenge" class="container subview">
+<!-- <div id="latency-challenge" class="container subview">
    <h1>Latency challenge</h1>
    <p>
    The latency challenge exists since the beginning of distributed computing. A transparent end-to-end communication involves various technologies and communication principles. We are looking on sources of latency through prism of infrastructure, protocol and application.
@@ -296,7 +302,6 @@
          <p>
          The long interactive scenarios involves data transfer, streaming, etc. This interaction concern network transmission. We are using packet metrics to approximate latency experienced by application due to infrastructure. 
          </p>
-         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
       </div>
 
       <div class="col-md-4">
@@ -310,7 +315,6 @@
          <p>
          The time to display response is the most valuable metric from consumer perspective which is influenced by infrastructure, protocol and application environment. The tool provides analysis of application level protocol behavior. One of these metrics is Time to First Byte. This is concrete consumer oriented easily measurable indicator, it is defined independently of underlying solutions or technologies. It represents initial confirmation that remote host is responding and client application could procedure to rendering. Secondly, Time to Meaningful Response defines a network delay required to deliver application payload.
          </p>
-         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
       </div>
       
       <div class="col-md-4">
@@ -321,12 +325,11 @@
          <p>
          The tool defines methods to control end-to-end latency requirements. Execute emergent actions required for system scalability. 
          </p> 
-         <!-- <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p> -->
       </div>
    </div>
    <hr>
 </div>
-
+ -->
 <div class="container">
 <footer>
    <p>&copy; 2016 Zalando, SE</p>
@@ -340,6 +343,15 @@
 %%
 -->
 <script type="text/javascript">
+var sid = window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-1)[0]
+
+d3.select('.scenario-history')
+   .attr('href', '/dashboard/history/' + sid)
+
+
 var context = null;
 var model = {
    scenario: {id: window.location.pathname.substring(1)},

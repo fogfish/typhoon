@@ -43,7 +43,7 @@ content_provided(_Req) ->
       [<<"dashboard">>] -> 
          html(<<"profile">>);
 
-      [<<"dashboard">>, UI] ->
+      [<<"dashboard">>, UI | _] ->
          html(UI);
 
       _ ->
