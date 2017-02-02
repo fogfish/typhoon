@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<!--
+%%
+%%   Copyright 2015 Zalando SE
+%%
+%%   Licensed under the Apache License, Version 2.0 (the "License");
+%%   you may not use this file except in compliance with the License.
+%%   You may obtain a copy of the License at
+%%
+%%       http://www.apache.org/licenses/LICENSE-2.0
+%%
+%%   Unless required by applicable law or agreed to in writing, software
+%%   distributed under the License is distributed on an "AS IS" BASIS,
+%%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%%   See the License for the specific language governing permissions and
+%%   limitations under the License.
+%%
+-->
+<meta charset="utf-8">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+
+
+<!--
+%%
+%% Styles
+%%
+-->
+<style>
+body
+{
+   width: 100%;
+}
+h3
+{
+   margin-top: 3em;
+}
+</style>
+
+
+<body>
+
+<!--
+%%
+%% View
+%%
+-->
+<div class="container">
+   <h1>Latency analysis <span id="scenario-id"></span></h1>
+   <h2>Executive Summary</h2>
+   <p>
+   End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions.
+   </p>
+   <p>
+   This latency analysis is the investigation of a component behavior using information gathered as the service <strong id="url-val"></strong> sustain artificial load during <strong id="t-val"></strong>.
+   </p>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>KPI</th>
+            <th>Mean</th>
+         </tr>
+      </thead>
+      <tbody>
+         <tr>
+            <td>Availability</td>
+            <td><span id="sla-val">0.0</span> %</td>
+         </tr>
+         <tr>
+            <td>Capacity</td>
+            <td><span id="rps-val">0.0</span> RPS</td>
+         </tr>
+         <tr>
+            <td>Latency</td>
+            <td><span id="lat-val">0.0</span> ms</td>
+         </tr>
+         <tr>
+            <td>Duration</td>
+            <td><span id="dur-val">0</span> sec</td>
+         </tr>
+      </tbody>
+   </table>
+   <p>
+   Availability is ratio of successful requests to total amount of executed requests; Capacity is amount of successful requests per unit of time.
+   </p>
+
+</div>
+
+<div class="container">
+   <h2>Availability <small>(%)</small></h2>
+   <p>Availability is ratio of successful requests to total amount of executed requests.</p>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="availability"></tbody>
+   </table>       
+</div>
+
+
+<div class="container">
+   <h2>Capacity <small>(req / sec)</small></h2>
+   <p>The Capacity is a measured value of successful requests per unit of time. It reflects amount of effective traffic carried through system-under-test.</p>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="throughput"></tbody>
+   </table>       
+</div>
+
+<div class="container">
+   <h2>Latency</h2>
+   <p>
+   Software development practices considers the end-to-end latency as one of user-oriented characteristics during entire life-cycle of an application. This user-oriented metric shall be defined independently of underlying solutions or technologies and shall be used for quality assessment of delivered product. The interactive traffic is the classical data communication scheme employed by mobile applications. It is described as a request response pattern of consumer. This patter give a recommendation that interaction between human and remote equipment should not exceed 1 sec. The report highlight latencies that are observed by consumer while his mobile device interacts with remote system.
+   </p>
+
+   <h3>Time to First Byte <small>(ms)</small></h3>
+   <p>
+   Time to First Byte (TTFB) is the duration from making an request to the first byte of the response being received. This metric assume that the network appears to mobile application as a system that makes it wait. This delay is influenced by request transfer delay, time required by remote host to process request, and delivery time of first byte/packet of the response. TTFB represents initial confirmation that remote host is responding and client application could procedure to rendering.
+   </p>
+   <p>
+   A primary advantage of TTFB is that it concrete, consumer oriented metric easily measurable and is defined independently of underlying solutions or technologies.
+   </p>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="ttfb"></tbody>
+   </table>       
+   <h3>Time to Meaningful Response <small>(ms)</small></h3>
+   <p>
+   The time to display response is the most valuable metric from consumer perspective. It is influenced by performance of network and client application by itself. The time required for response rendering needs to be excluded from quality assessment due its dependency on user interface technology. Instead, Time to Meaningful Response (TTMR) is defined as network delay required to deliver response to client.
+   </p>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="ttmr"></tbody>
+   </table>       
+</div>
+
+<div class="container">
+   <h2>Transport</h2>
+   <p>
+   A transparent end-to-end communication involves various technologies and communication principles. There is a limited ability to influence and measure latency at transmission overhead network infrastructure level due to decentralized management architecture, cost of equipment, network ownership, etc. The report merge them into single network delay and protocol metrics.
+   </p>
+
+   <h3>Network round trip <small>(ms)</small></h3>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="tcp"></tbody>
+   </table>       
+
+   <h3>SSL Handshake <small>(ms)</small></h3>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="ssl"></tbody>
+   </table>       
+
+   <h3>Packets <small>(MTU ~1500 byte)</small></h3>
+   <table class="table table-striped">
+      <thead>
+         <tr>
+            <th>Url</th>
+            <th>Mean</th>
+            <th>Std</th>
+            <th>Min</th>
+            <th>25%</th>
+            <th>50%</th>
+            <th>75%</th>
+            <th>80%</th>
+            <th>90%</th>
+            <th>95%</th>
+            <th>99%</th>
+            <th>Max</th>
+         </tr>
+      </thead>
+      <tbody id="pack"></tbody>
+   </table>       
+</div>
+
+<!--
+%%
+%% Controller
+%%
+-->
+<script type="text/javascript">
+//--------------------------------------------------------------------------
+//
+// report
+//
+//--------------------------------------------------------------------------
+var report = function()
+{
+   var self = {};
+   
+   self.init = function(data)
+   {
+      self.executive(data);
+      self.availability(data);
+      self.throughput(data);
+      self.latency(data);
+      self.transport(data);
+   }
+
+   self.executive = function(data)
+   {
+      var http = data.kpi('http');
+      var h200 = http.filter(function(x){return x < 300});
+      var sla  = h200.length / http.length;
+      var rps  = h200.length / data.duration();
+
+      d3.select('#sla-val').text(sla.toFixed(4));
+      d3.select('#rps-val').text(rps.toFixed(1));
+
+      var ttfb = data.kpi('ttfb');
+      var lat  = d3.mean(ttfb) / 1000; 
+      d3.select('#lat-val').text(lat.toFixed(3));
+
+      d3.select('#dur-val').text(data.duration());
+      d3.select('#t-val').text(data.interval());
+      d3.select('#url-val').text(data.url());
+   }
+
+   self.availability = function(data)
+   {
+      var list = data.urn()
+         .map(
+            function(x)
+            {
+               var list = d3.zip(
+                  data.kpi('200', x),
+                  data.kpi('300', x),
+                  data.kpi('400', x),
+                  data.kpi('500', x)
+               ).map(function(d){return d[0] / d3.sum(d) })
+            return {title: x, data: list.sort(d3.ascending)};
+            }
+         );
+      self.table('#availability', list);
+   }
+
+
+   self.throughput = function(data)
+   {
+      var list = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('200', x).sort(d3.ascending)};
+         });
+      self.table('#throughput', list);
+   }
+
+   self.latency = function(data)
+   {
+      var ttfb = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('ttfb', x).map(function(x){return x/1000}).sort(d3.ascending)};
+         });
+      self.table('#ttfb', ttfb);
+
+      var ttmr = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('ttmr', x).map(function(x){return x/1000}).sort(d3.ascending)};
+         });
+      self.table('#ttmr', ttmr);
+   }
+
+   self.transport = function(data)
+   {
+      var tcp = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('tcp', x).map(function(x){return x/1000}).sort(d3.ascending)};
+         });
+      self.table('#tcp', tcp);
+
+      var ssl = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('ssl', x).map(function(x){return x/1000}).sort(d3.ascending)};
+         });
+      self.table('#ssl', ssl);
+
+      var pack = data.urn()
+         .map(function(x){
+            return {title: x, data: data.kpi('pack', x).map(function(x){return x/1500}).sort(d3.ascending)};
+         });
+      self.table('#pack', pack);
+   }
+
+   //
+   // render table
+   self.table = function(id, list)
+   {
+      d3.select(id).selectAll('tr')
+         .data(list.filter(function(x){return x.data.length != 0}))
+         .enter()
+         .append('tr')
+         .html(
+            function(d)
+            {
+               return [
+                  '<td>' + d.title.replace("urn:http:", "") + '</td>',
+                  '<td>' + d3.mean(d.data).toFixed(2) + '</td>',
+                  '<td>' + d3.deviation(d.data).toFixed(2) + '</td>',
+                  '<td>' + d3.min(d.data).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.25).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.5).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.75).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.8).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.9).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.95).toFixed(2) + '</td>',
+                  '<td>' + d3.quantile(d.data, 0.99).toFixed(2) + '</td>',
+                  '<td>' + d3.max(d.data).toFixed(2) + '</td>',
+               ].join("")
+            }
+         )
+   }
+
+   return self;
+}
+
+//--------------------------------------------------------------------------
+//
+// analysis data model (raw data)
+//
+//--------------------------------------------------------------------------
+var analysis = function(id, ta, tb, fun)
+{
+   var self = {}
+   var counter  = 0;
+   var scenario = null;
+   var units    = {};
+   var kpi      = ['urn:http', 'urn:tcp', 'urn:ssl', 'urn:ttfb', 'urn:ttmr', 'urn:pack'];
+   var hpi      = ['200', '300', '400', '500'];
+
+   self.init = function()
+   {
+      d3.json("/scenario/" + id + "/attributes",
+         function(json)
+         {
+            scenario = json 
+            var list = json.urn;
+
+            list.forEach(self.load);
+         }
+      )
+   }
+
+   //
+   // load latency
+   self.load = function(urn) 
+   {
+      kpi.forEach(
+         function(x)
+         {
+            // request raw data
+            units[urn] = {};
+            var tag = x.replace("urn:", "");
+            var iid = urn.replace("urn:http", x);
+            var req = ['scenario', id, 'series', iid, 'id', ta, tb].join("/");
+            counter++;
+            d3.json("/" + req + "?chronon=1",
+               function(json)
+               {
+                  units[urn][tag] = json
+                  counter--;
+                  if (counter == 0)
+                     fun(self)
+               }
+            )
+         }
+      );
+
+      hpi.forEach(
+         function(x)
+         {
+            var req = ['scenario', id, 'series', urn, x, ta, tb].join("/");
+            counter++;
+            d3.json("/" + req + "?chronon=1",
+               function(json)
+               {
+                  units[urn][x] = json
+                  counter--;
+                  if (counter == 0)
+                     fun(self)
+               }
+            )
+         }
+      );
+   }
+   
+   //
+   //
+   self.url= function()
+   {
+      return scenario.url;
+   }
+
+   //
+   //
+   self.urn = function()
+   {
+      return d3.keys(units)
+   }
+
+   //
+   //
+   self.kpi = function(kpi, key)
+   {
+      if (key == null)
+      {
+         var list = d3.keys(units)
+            .map(function(x){return units[x][kpi].map(function(d){return d[1]})})
+            .reduce(function(acc, x){return acc.concat(x)}, []);
+         return list;
+      } else {
+         var list = units[key][kpi].map(function(d){return d[1]});
+         return list;
+      }
+   }
+
+   //
+   //
+   self.duration = function()
+   {
+      return tb - ta;
+   }
+   
+   //
+   //
+   self.interval = function()
+   {
+      return (new Date(ta * 1000).toISOString()) + " - " + (new Date(tb * 1000).toISOString());
+   }
+
+   return self;
+} 
+
+
+//--------------------------------------------------------------------------
+//
+// entry point / global state
+//
+//--------------------------------------------------------------------------
+var req = window.location.pathname.substring(1).split("/")
+var ns  = req[1];
+var ta  = req[2];
+var tb  = req[3];
+
+d3.select("#scenario-id").text(ns);
+
+var rp  = report();
+var ts  = analysis(ns, ta, tb, rp.init);
+ts.init();
+
+</script>
+</body>

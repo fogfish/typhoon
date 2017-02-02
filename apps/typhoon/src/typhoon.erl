@@ -19,6 +19,8 @@
 -author('dmitry.kolesnikov@zalando.fi').
 
 -include_lib("ambitz/include/ambitz.hrl").
+-compile({parse_transform, category}).
+
 
 -export([start/0]).
 %%
@@ -31,7 +33,6 @@
   ,signup/2
   ,profile/2
   ,scenario/2
-  ,scenario/3
 
 
   % ,define/3
@@ -72,14 +73,19 @@ start() ->
 
 %%
 %% create a new workload scenario
--spec put(urn(), binary(), opts()) -> {ok, ambitz:entity()}.
+-spec put(urn(), binary(), opts()) -> {ok, _} | {error, _}.
 
-put({urn, _, _} = Key, Spec, Opts) ->
+put({urn, User, _} = Key, Spec, Opts) ->
+   [$^||
+      scenario_spawn(Key, Spec, Opts),
+      typhoon_kv:append(scenario, {urn, user, User}, Key, Opts)
+   ].
+
+scenario_spawn(Key, Spec, Opts) ->
    ambitz:spawn(typhoon, uri:s(Key),
       {typhoon_scenario, start_link, [scalar:atom(uri:path(Key)), Spec]},
       Opts
    ).
-
 
 %%
 %% read content of workload scenario
@@ -91,9 +97,15 @@ get({urn, _, _} = Key, Opts) ->
 
 %%
 %% remove workload scenario
--spec remove(urn(), opts()) -> {ok, ambitz:entity()}.
+-spec remove(urn(), opts()) -> {ok, _} | {error, _}.
 
-remove({urn, _, _} = Key, Opts) ->
+remove({urn, User, _} = Key, Opts) ->
+   [$^||
+      typhoon_kv:remove(scenario, {urn, user, User}, Key, Opts),
+      scenario_free(Key, Opts)
+   ].
+
+scenario_free(Key, Opts) ->
    ambitz:free(typhoon, uri:s(Key), Opts).
 
 
@@ -125,18 +137,6 @@ profile({urn, user, _} = User, Opts) ->
 
 scenario({urn, user, _} = User, Opts) ->
    case ambitz:get(typhoon, uri:s(User), scenario, Opts) of
-      {ok, #entity{val = undefined}} ->
-         {error, not_found};
-      {ok, #entity{val = Scenario}} ->
-         {ok, crdts:value(Scenario)}
-   end.
-
-%%
-%% add new scenario to user profile
--spec scenario(urn(), urn(), opts()) -> {ok, _} | {error, not_found}. 
-
-scenario({urn, user, _} = User, {urn, _, _} = Urn, Opts) ->
-   case ambitz:put(typhoon, uri:s(User), scenario, crdts:update(Urn, crdts:new(orsets)), Opts) of
       {ok, #entity{val = undefined}} ->
          {error, not_found};
       {ok, #entity{val = Scenario}} ->

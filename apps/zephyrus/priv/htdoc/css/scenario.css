@@ -3,29 +3,9 @@ span
    -webkit-print-color-adjust: exact
 }
 
-body 
-{
-   padding-top: 30px;
-   padding-bottom: 20px;
-}
-
 .subview h1
 {
    margin-top: 60px;
-}
-
-.navbar-brand
-{
-   font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
-   font-weight: 100;
-   font-size: 26px;
-}
-
-.container
-{
-   width: 960px;
-   padding: 0px;
-   position: relative;
 }
 
 .jumbotron
@@ -255,7 +235,7 @@ g.label text
 .legend .measure-s4 {color: #F9F0CB; }
 
 .legend span {vertical-align: middle;}
-.legend .rect {font-size: 36px; }
+.legend .rect {font-size: 36px;}
 
 p
 {

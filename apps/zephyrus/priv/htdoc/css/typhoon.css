@@ -1,5 +1,71 @@
+html,
+body
+{
+   height: 100%;
+}
+
+body
+{
+   padding-top: 54px;
+}
+
+.navbar
+{
+   margin: 0;
+}
+
+.navbar-brand,
+.nav-link
+{
+   font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
+   font-weight: 100;
+}
+
+.navbar-brand
+{
+   font-size: 26px;
+}
+
+.navbar-brand span,
+.nav-link
+{
+   font-size: 20px;
+}
+
 a.tile
 {
    text-decoration: none;
    border: none;
+}
+
+.container
+{
+   margin: 0 auto;
+   width: 90%;
+   padding: 0px;
+   position: relative;
+}
+
+
+.failure
+{
+   border: 1px solid red;
+}
+
+.tile .action
+{
+   color: white;
+   font-family: "Segoe UI Light", "Helvetica Neue", "Segoe UI", "Segoe WP", sans-serif;
+   font-weight: 100;
+   padding: 0 10px 0 10px;
+}
+
+p
+{
+   font-family: "Segoe UI", "Open Sans", sans-serif, serif;
+}
+
+footer
+{
+   margin-top: 4em;    
 }

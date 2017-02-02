@@ -22,7 +22,7 @@
 -include("typhoon.hrl").
 
 -export([
-   start_link/1
+   start_link/2
   ,init/1
   ,free/2
   ,handle/3
@@ -34,12 +34,12 @@
 %%
 %%-----------------------------------------------------------------------------
 
-start_link(Scenario) ->
-   pipe:start_link(?MODULE, [Scenario], []).
+start_link(Scenario, T) ->
+   pipe:start_link(?MODULE, [Scenario, T], []).
 
-init([Scenario]) ->
+init([Scenario, T]) ->
+   kill_process_at(T),
    random:seed(os:timestamp()),
-   tempus:timer(Scenario:t(), expired),
    Peer = typhoon:peer(Scenario),
    erlang:send(self(), request),
    {ok, handle, 
@@ -120,5 +120,15 @@ config(Scenario, Peer) ->
 
       _ ->
          [undefined]
+   end.
+
+%%
+%%
+kill_process_at(T) ->
+   case os:timestamp() of
+      X when X >= T ->
+         erlang:send(self(), expired);
+      X ->
+         tempus:timer(tempus:sub(T, X), expired)
    end.
 

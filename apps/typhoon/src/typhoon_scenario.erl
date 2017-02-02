@@ -127,16 +127,17 @@ drift(Node, Mod, Code) ->
 %%
 %% run test case on cluster
 run(#{mod := Scenario} = State) ->
+   T = tempus:add(os:timestamp(), Scenario:t() div 1000),
    N = opts:val(n, opts:val(ring, ambit)),
-   run(Scenario:n(), N, State).
+   run(Scenario:n(), N, T, State).
 
-run(Q, _N, _State)
+run(Q, _N, _T, _State)
  when Q =< 0 ->
    [];
-run(Q, N, #{mod := Scenario} = State) ->
+run(Q, N, T, #{mod := Scenario} = State) ->
    Id = uid:encode(uid:g()),
-   {ok, #entity{vnode = Vnodes}} = ambitz:spawn(typhoon, Id, {typhoon_unit_sup, start_link, [Scenario]}, [{w, N}]),
-   [Id | run(Q - length(Vnodes), N, State)].
+   {ok, #entity{vnode = Vnodes}} = ambitz:spawn(typhoon, Id, {typhoon_unit_sup, start_link, [Scenario, T]}, [{w, N}]),
+   [Id | run(Q - length(Vnodes), N, T, State)].
 
 %%
 %% log history

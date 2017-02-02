@@ -40,10 +40,13 @@ content_provided(_Req) ->
 %%
 'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    case uri:segments(Url) of
+      [] ->
+         html(<<"profile">>);
+
       [<<"dashboard">>] -> 
          html(<<"profile">>);
 
-      [<<"dashboard">>, UI] ->
+      [<<"dashboard">>, UI | _] ->
          html(UI);
 
       _ ->
@@ -68,9 +71,3 @@ scenario(Id) ->
             filename:join([code:priv_dir(zephyrus), htdoc, "scenario.html"])
          )
    end.
-
-
-%%
-%% return location header
-location(Url, Id) ->
-   uri:s( uri:segments([scenario, Id], Url) ).

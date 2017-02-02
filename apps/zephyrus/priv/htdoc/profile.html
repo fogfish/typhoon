@@ -31,14 +31,16 @@
 <nav class="navbar navbar-default navbar-fixed-top">
    <div class="container-fluid">
       <div class="navbar-header">
-         <a class="navbar-brand" href="#">Typhoon</a>
+         <a class="navbar-brand" href="/dashboard">Typhoon</a>
       </div>
-      <ul class="nav navbar-nav">
-         <li><p id="scenario-id" class="navbar-text"></p></li>
-      </ul>
 
       <ul class="nav navbar-nav navbar-right">
-         <li><a href="https://github.com/zalando/typhoon"><span class="glyphicon glyphicon-star"></span> Star us on GitHub</a></li>
+         <li class="nav-item">
+            <a class="nav-link" href="https://github.com/zalando/typhoon">
+               <span class="glyphicon glyphicon-random"></span>
+               GitHub
+            </a>
+         </li>
       </ul>
    </div>
 </nav>
@@ -66,6 +68,35 @@
 <div class="container scenario">
 </div>
 
+<!-- 
+//
+// create new dialog
+//
+-->
+<div class="modal">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+           <h2 class="modal-title" id="exampleModalLabel">Create new - Scenario</h2>
+         </div>
+         <div class="modal-body">
+            <div class="form-group row">
+               <div class="col-md-2">
+                  <label for="scenario-id" class="col-form-label">Unique Id</label>
+               </div>
+               <div class="col-md-10">
+                 <input class="form-control" type="text" id="scenario-id">
+               </div>
+            </div>
+         </div>
+         <div class="modal-footer">
+           <button type="button" class="btn btn-secondary scenario-create-cancel">Cancel</button>
+           <button type="button" class="btn btn-primary scenario-create-accept">Create</button>
+         </div>
+      </div>
+   </div>
+</div>
+
 <div class="container">
 <footer>
    <p>&copy; 2016 Zalando, SE</p>
@@ -78,21 +109,26 @@
    {if scenario}
       {for e in scenario}
          <div class="col-sm-4 col-md-4">
-            <a href="/{e.id}" class="thumbnail tile tile-wide tile-green-sea">
+            <div class="thumbnail tile tile-wide tile-green-sea">
+            <a href="/dashboard/editor/{e.id}" class="action pull-right">
+               <span class="glyphicon glyphicon-edit"></span>
+            </a>
+            <a href="/{e.id}" class="">
                <h2 class="tile-text">{e.title}</h2>
                <h4 class="tile-text">{e.n} sessions; {e.t} min</h4>
                <h5 class="tile-text">{e.id}</h5>
             </a>
+            </div>
          </div>
       {/for}
    {/if}
       <div class="col-sm-4 col-md-4">
-         <a href="/editor/create" class="thumbnail tile tile-wide tile-clouds">
+         <a class="thumbnail tile tile-wide tile-clouds scenario-create-new">
             <h2 class="tile-text">Create new</h2>
             <h2 class="tile-text"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></h2>
          </a>
       </div>
-    </div>
+   </div>
 </script>
 
 <script>
@@ -114,9 +150,45 @@ monad.do([
       } else {
          d3.select('.scenario').html(tiles({}))
       }
+
+      monad.do([
+         monad.UI(UI.action('.scenario-create-new')),
+         function(_)
+         {
+            d3.select('.modal').classed('show', true)
+            document.getElementById('scenario-id').focus();
+         }
+      ])
+      
+      monad.do([
+      ])
       return scenario
    }
 ]).fail(UI.fail)
 
+monad.do([
+   monad.UI(UI.action('.scenario-create-cancel')),
+   function(_)
+   {
+      d3.select('.modal').classed('show', false)
+   }
+])
+
+monad.do([
+   monad.UI(UI.action('.scenario-create-accept')),
+   function(_)
+   {
+      var id = d3.select('#scenario-id').property('value')
+      if (id.length > 0)
+      { 
+         d3.select('#scenario-id').classed('failure', false)
+         d3.select('.modal').classed('show', false)
+         d3.select('#scenario-id').property('value', '')
+         window.open('/dashboard/editor/' + id, '_self')
+      } else {
+         d3.select('#scenario-id').classed('failure', true)
+      }
+   }
+])
 </script>
 </body>

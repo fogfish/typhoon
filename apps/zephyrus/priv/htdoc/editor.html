@@ -18,349 +18,257 @@
 -->
 <meta charset="utf-8">
 <link rel="stylesheet" href="/css/bootstrap.min.css">
-<!--<link rel="stylesheet" href="/css/metro-bootstrap.min.css">-->
+<link rel="stylesheet" href="/css/metro-bootstrap.min.css">
 <link rel="stylesheet" href="/css/typhoon.css">
 
+<script src="/js/d3.v3.min.js"></script>
+<script src="/js/whiskers.min.js"></script>
+<script src="/js/monad.js"></script>
+<script src="/js/typhoon.js"></script>
+
+
 <script src="/js/jquery-3.1.1.min.js"></script>
-<script src="/js/bootstrap.min.js"></script>
+<!-- drop <script src="/js/bootstrap.min.js"></script> -->
 <script src="/js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
 <script src="/js/ace/snippets/erlang.js" type="text/javascript" charset="utf-8"></script>
 
 <head>
-    <style type="text/css" media="screen">
-    #editor {
-        margin-bottom: 0.2em;
-        width: 100%;
-        height: 520px;
-    }
+<style type="text/css" media="screen">
+pre
+{
+   font-family: monospace!important;
+   width:  100%;
+   height: 100%;
+   border: none;
+}
 
-    div.keyboard-shortcuts-help {
-        text-align: right;
-    }
-    div.keyboard-shortcuts-help > a {
-        border-bottom: 1px dashed;
-        text-decoration: none;
-    }
-
-    #pnl-lint-result {
-        margin-top: 1em;
-    }
-  </style>
+body
+{
+   overflow: hidden;
+}
+</style>
 </head>
 
 <body>
-<nav class="navbar navbar-default">
+<nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
         <div class="navbar-header">
-            <a class="navbar-brand" href="#">Typhoon</a>
+            <a class="navbar-brand" href="/dashboard">Typhoon</a>
         </div>
         <ul class="nav navbar-nav">
-            <li><p id="scenario-id" class="navbar-text"></p></li>
-        </ul>
-
-        <ul class="nav navbar-nav navbar-right">
-            <li>
-                <a href="https://github.com/zalando/typhoon">
-                    <span class="glyphicon glyphicon-star"></span> Star us on GitHub
-                </a>
+            <li class="nav-item">
+               <a class="nav-link scenario-lint">Lint</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link scenario-put">Save</a>
+            </li>
+            <li class="nav-item">
+               <a class="nav-link scenario-remove">Remove</a>
             </li>
         </ul>
+
+         <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+               <a class="nav-link" href="https://github.com/zalando/typhoon">
+                  <span class="glyphicon glyphicon-random"></span>
+                  GitHub
+               </a>
+            </li>
+         </ul>
     </div>
 </nav>
 
+<pre id="editor" class="editor"></pre>
 
-<div class="container">
-
-    <pre id="editor"></pre>
-    <span class="pull-right">
-        <a href="https://github.com/ajaxorg/ace/wiki/Default-Keyboard-Shortcuts" target="_blank">
-            Keyboard shortcuts
-        </a>
-    </span>
+<!-- 
+//
+// lint dialog
+//
+-->
+<div class="modal">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+           <h2 class="modal-title" id="exampleModalLabel">Lint</h2>
+         </div>
+         <pre class="modal-body">
+         </pre>
+         <div class="modal-footer">
+           <button type="button" class="btn btn-primary lint-ok">OK</button>
+         </div>
+      </div>
+   </div>
 </div>
 
-<div class="container">
-    <div class="row">
-        <div class="col-xs-12">
-            <button id="btn-lint" data-loading-text="Linting..." class="btn btn-default">
-                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                Lint
-            </button>
-            <button id="btn-save" data-loading-text="Saving..." class="btn btn-primary">
-                <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
-                Save
-            </button>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xs-12">
-            <div id="pnl-lint-result">
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-    <footer>
-        <p>&copy; 2016 Zalando, SE</p>
-    </footer>
-</div>
 
 <script type="text/javascript">
-    var scenarioId = (function() {
-        // Get the last non-empty URL path segment.
-        var urlSegments = $(location).attr('pathname').split("/");
-        for (var i = urlSegments.length - 1; i >= 0; i--) {
-            if (urlSegments[i] !== "") {
-                return urlSegments[i];
+var scenarioId = window.location.pathname
+   .split('?')[0]
+   .split('/').filter(function (x) {return x !== ""})
+   .slice(-1)[0]
+
+var editor = ace.edit("editor")
+editor.setTheme("ace/theme/github")
+editor.session.setMode("ace/mode/erlang")
+editor.session.setNewLineMode("unix")
+editor.setOptions({
+   enableBasicAutocompletion: true,
+   enableSnippets: true
+})
+
+var set_editor_content = function(data)
+{
+   editor.setValue(data);
+   editor.session.selection.clearSelection();
+   editor.scrollToLine(1, true, true, function () {});
+   editor.gotoLine(1);
+}.$_()
+
+//
+// load scenario content
+monad.do([
+   monad.IO(IO.scenario.get(scenarioId)),
+   set_editor_content
+]).fail(
+   function(_)
+   {
+      var ui = whiskers.compile(d3.select("#template").html())
+      set_editor_content(ui({id: scenarioId}))
+   }
+)
+
+//
+// lint scenario
+monad.do([
+   monad.UI(UI.action('.scenario-lint')),
+   function(_)
+   {
+      editor.getSession().clearAnnotations()
+      return monad.IO(IO.scenario.lint(scenarioId, editor.getValue()))
+   },
+   function(data)
+   {
+      d3.select('.modal').classed('show', true)
+      d3.select('.modal').select('pre').text(data)
+   }
+]).fail(
+   function(error)
+   {
+      editor.getSession().setAnnotations(
+         error.badarg.map(
+            function(x)
+            {
+               return {row: x.line - 1, column: 1, text: x.message, type: x.type}
             }
-        }
-    })();
-    console.log('Scenario ID:', scenarioId);
+         )
+      )
+   }
+)
 
-    var scenarioUrl = "/scenario/" + scenarioId;
-    var lintUrl = "/lint/" + scenarioId;
+monad.do([
+   monad.UI(UI.action('.lint-ok')),
+   function(x)
+   {
+      d3.select('.modal').classed('show', false)
+      d3.select('.modal').select('pre').text('')
+   }
+])
 
+//
+// save scenario
+monad.do([
+   monad.UI(UI.action('.scenario-put')),
+   function(_)
+   {
+      return monad.IO(IO.scenario.remove(scenarioId))
+   },
+   function(_)
+   {
+      return monad.IO(IO.scenario.put(scenarioId, editor.getValue()))
+   },
+   function(_)
+   {
+      window.open('/' + scenarioId, '_self')
+   }
+]).fail(UI.fail)
 
-$(document).ready(function() {
-    var btnLint = $("#btn-lint");
-    var btnSave = $("#btn-save");
-    var pnlLintResult = $("#pnl-lint-result");
+//
+// remove scenario
+monad.do([
+   monad.UI(UI.action('.scenario-remove')),
+   function(_)
+   {
+      return monad.IO(IO.scenario.remove(scenarioId))
+   },
+   function(_)
+   {
+      window.open('/dashboard', '_self')
+   }
+])
+</script>
 
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/github");
-    editor.session.setMode("ace/mode/erlang");
-    editor.session.setNewLineMode("unix");
-    editor.setOptions({
-        enableBasicAutocompletion: true,
-        enableSnippets: true
-    });
+<script id="template" type="text/template">
+%%
+%% @doc
+%%   typhoon scenario file
+%%   see https://github.com/zalando/typhoon/blob/master/docs/scenario.md
+-module({id}).
+-compile({parse_transform, monad}).
 
-    var getScenarioBody = function() {
-        return editor.getValue();
-    };
+%% 
+-export([title/0, t/0, n/0, urn/0]).
+-export([init/0, run/1]).
 
-    /**
-     * Do actions before network interaction involving a scenario.
-     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
-     */
-    var preScenarioNetwork = function(buttonClicked) {
-        if (buttonClicked) {
-            buttonClicked.button('loading');
-        }
-        setSaveAndLintButtonsEnable(false);
-        editor.setReadOnly(true)
-    };
+%%
+%% human readable scenario title
+title() -> 
+   "{id}".
 
-    /**
-     * Do actions after network interaction involving a scenario, after a reply.
-     * @param buttonClicked - button (Lint/Save) that has been clicked. Can be null.
-     */
-    var postScenarioNetwork = function(buttonClicked) {
-        if (buttonClicked) {
-            buttonClicked.button('reset');
-        }
-        setSaveAndLintButtonsEnable(true);
-        editor.setReadOnly(false)
-        editor.focus();
-    };
+%% time to execute workload in milliseconds
+t() ->
+   60000.
 
-    /**
-     * Set availability for buttons Save and Lint.
-     * @param enabled - should buttons be enabled.
-     */
-    var setSaveAndLintButtonsEnable = function(enabled) {
-        if (enabled) {
-            btnLint.removeClass("disabled");
-            btnSave.removeClass("disabled");
-        } else {
-            btnLint.addClass("disabled");
-            btnSave.addClass("disabled");
-        }
-    };
+%% number of concurrent sessions to spawn in the cluster.
+n() ->
+   2.
 
-    /**
-     * Show 'alarm' box with linting results.
-     * @param error - indicator of the result with errors.
-     * @param lintResult - the result.
-     */
-    var showLintResult = function(error, lintResult) {
-        pnlLintResult.children(".alert").removeClass("fade in");
-        pnlLintResult.children(".alert").alert('close');
+%% identifiers of requests to visualize
+urn() ->
+   [
+      "urn:http:request"
+   ].
 
-        // Clear.
-        pnlLintResult.html();
+%%%----------------------------------------------------------------------------   
+%%%
+%%% actions
+%%%
+%%%----------------------------------------------------------------------------   
 
-        var isResultJson = typeof lintResult === 'object';
+%%
+%% init scenario configuration
+init() ->
+   do([m_state ||
+      _ =< undefined,
+      return(_)
+   ]).
 
-        var alertDiv = $(
-            '<div class="alert alert-dismissible fade in" role="alert">' +
-            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' +
-            '<h4>Lint result</h4>' +
-            '</div>'
-        );
+%%
+%% execute scenario, the operation is repeated  until `t()` is expired. 
+run(_Config) ->
+   do([m_state ||
+      _ <- request(),
+      return(_)
+   ]).
 
-        // Choose panel color based on the result type (ok/warning/error).
-        if (error) {
-            if (isResultJson) {
-                if (lintResult['errors'].length == 0) {
-                    alertDiv.addClass("alert-warning");
-                } else {
-                    alertDiv.addClass("alert-danger");
-                }
-            } else {
-                alertDiv.addClass("alert-danger");
-            }
-        } else {
-            alertDiv.addClass("alert-success");
-        }
-
-         // Output errors and warning in the text form.
-        var alertText = $('<span></span>');
-        if (isResultJson) {
-            //alertText.text(JSON.stringify(lintResult));
-            var errors = lintResult['errors'];
-            var warnings = lintResult['warnings'];
-
-            var outputItem = function(item) {
-                alertText.append($('<p><strong>Line ' + item['lineNumber'] + ':</strong> ' + item['message'] + '</p>'));
-            };
-
-            if (errors.length > 0) {
-                alertText.append($('<h5>Errors</h5>'));
-                errors.map(outputItem);
-            }
-            if (warnings.length > 0) {
-                alertText.append($('<h5>Warnings</h5>'));
-                warnings.map(outputItem);
-            }
-        } else {
-            alertText.text(lintResult);
-        };
-        alertDiv.append(alertText);
-
-        pnlLintResult.append(alertDiv);
-
-
-        // Output errors and warning in the form of markers in the editor,
-        // or clear markers if there is no (structured) errors or warnings.
-        if (isResultJson) {
-            displayErrorsAndWarningsInEditor(lintResult);
-        } else {
-            displayErrorsAndWarningsInEditor(null);
-        }
-    };
-
-    var displayErrorsAndWarningsInEditor = function(errorsAndWarnings) {
-        if (errorsAndWarnings === null) {
-            editor.getSession().setAnnotations(null);
-        } else {
-            var errors = errorsAndWarnings['errors'];
-            var warnings = errorsAndWarnings['warnings'];
-
-            var annotations = [];
-
-            var processItem = function(itemType) {
-                 return function(item) {
-                    var message = item['message'];
-                    var lineNumber = item['lineNumber'];
-                    annotations.push({
-                        row: lineNumber - 1,
-                        column: 0,
-                        text: message,
-                        type: itemType
-                    });
-                }
-            };
-
-            errors.map(processItem("error"));
-            warnings.map(processItem("warning"));
-
-            editor.getSession().setAnnotations(annotations);
-        }
-    };
-
-    /**
-     * Send the current scenario from the editor over the network.
-     * @param url - the url to send to.
-     * @param method - HTTP method ("POST"/"PUT").
-     */
-    var sendScenario = function(url, method) {
-        return $.ajax({
-            type: method,
-            url: url,
-            contentType: "application/erlang",
-            dataType: "json", // type of response
-            headers: {
-                "Accept": "*/*"
-            },
-            data: getScenarioBody(),
-            timeout: 5000
-        });
-    };
-
-    btnLint.click(function(e) {
-        var thisBtn = $(this);
-        preScenarioNetwork(thisBtn);
-
-        sendScenario(lintUrl, "POST")
-            .done(function(data) {
-                showLintResult(false, data);
-            })
-
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                // In this case, 400 Bar request is technically not an error of communication,
-                // just the indicator of errors in the scenario.
-                if (jqXHR.status == 400) {
-                    var json = JSON.parse(jqXHR.responseText);
-                    showLintResult(true, json);
-                } else {
-                    alert("Error: " + errorThrown);
-                }
-            })
-
-            .always(function() {
-                postScenarioNetwork(thisBtn);
-            })
-            ;
-    });
-
-    btnSave.click(function(e) {
-        var thisBtn = $(this);
-        preScenarioNetwork(thisBtn);
-
-        sendScenario(scenarioUrl, "PUT")
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                alert("Error: " + errorThrown);
-            })
-
-            .always(function() {
-                postScenarioNetwork(thisBtn);
-            })
-            ;
-    });
-
-    // Fetch the scenario body.
-    preScenarioNetwork(null);
-    $.get(scenarioUrl)
-        .done(function( data ) {
-            // Show the scenario in the editor.
-            editor.setValue(data);
-            editor.session.selection.clearSelection();
-            editor.scrollToLine(1, true, true, function () {});
-            editor.gotoLine(1);
-
-            postScenarioNetwork(null);
-        })
-
-        .fail(function(jqXHR, textStatus, errorThrown) {
-            alert("Error: " + errorThrown);
-        })
-        ;
-});
+request() ->
+   do([m_http ||
+      _ /= new("urn:http:request"),
+      _ /= url("http://127.0.0.1:8080/health/peer"),
+      _ /= header("Connection", "keep-alive"),
+      _ /= get(),
+      return(_)
+   ]).
 </script>
 
 </body>
