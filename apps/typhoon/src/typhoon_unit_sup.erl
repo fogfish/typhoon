@@ -18,7 +18,7 @@
 -author('dmitry.kolesnikov@zalando.fi').
 
 -export([
-   start_link/2, init/1
+   start_link/3, init/1
 ]).
 
 -define(CHILD(Type, I),            {I,  {I, start_link,   []}, transient, 5000, Type, dynamic}).
@@ -31,15 +31,15 @@
 %%
 %%-----------------------------------------------------------------------------
 
-start_link(_Vnode, Scenario) ->
-   supervisor:start_link(?MODULE, [Scenario]).
+start_link(_Vnode, Scenario, T) ->
+   supervisor:start_link(?MODULE, [Scenario, T]).
    
-init([Scenario]) ->   
+init([Scenario, T]) ->   
    {ok,
       {
          {one_for_one, 100, 3600},
          [
-            ?CHILD(worker, typhoon_unit, [Scenario])
+            ?CHILD(worker, typhoon_unit, [Scenario, T])
          ]
       }
    }.
