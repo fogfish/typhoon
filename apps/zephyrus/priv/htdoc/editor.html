@@ -264,7 +264,7 @@ run(_Config) ->
 request() ->
    do([m_http ||
       _ /= new("urn:http:request"),
-      _ /= url("http://example.org/"),
+      _ /= url("http://127.0.0.1:8080/health/peer"),
       _ /= header("Connection", "keep-alive"),
       _ /= get(),
       return(_)

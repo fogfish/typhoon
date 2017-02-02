@@ -110,7 +110,7 @@
       {for e in scenario}
          <div class="col-sm-4 col-md-4">
             <div class="thumbnail tile tile-wide tile-green-sea">
-            <a href="/editor/scenario/{e.id}" class="action pull-right">
+            <a href="/dashboard/editor/{e.id}" class="action pull-right">
                <span class="glyphicon glyphicon-edit"></span>
             </a>
             <a href="/{e.id}" class="">
@@ -184,7 +184,7 @@ monad.do([
          d3.select('#scenario-id').classed('failure', false)
          d3.select('.modal').classed('show', false)
          d3.select('#scenario-id').property('value', '')
-         window.open('/editor/scenario/' + id, '_self')
+         window.open('/dashboard/editor/' + id, '_self')
       } else {
          d3.select('#scenario-id').classed('failure', true)
       }
