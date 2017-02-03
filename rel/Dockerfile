@@ -22,8 +22,9 @@ ARG   VSN=
 
 ##
 ## install dependencies required for bundle deployment
-RUN \
-   yum -y install \
+RUN set -e \
+   && yum -y update  \
+   && yum -y install \
       iproute \
       tar  \
       git  \
