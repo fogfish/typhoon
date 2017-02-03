@@ -22,7 +22,7 @@ TEST   ?= ${APP}
 S3     ?=
 VMI    ?= fogfish/erlang
 NET    ?= lo0
-URL    ?= undefined
+URL    ?= registry.opensource.zalan.do/hunt
 LATEST ?= latest
 
 ## rebar version (no spaces at end)
