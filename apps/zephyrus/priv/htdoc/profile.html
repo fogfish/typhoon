@@ -73,7 +73,7 @@
 // create new dialog
 //
 -->
-<div class="modal">
+<div class="modal modal-scenario-create">
    <div class="modal-dialog" role="document">
       <div class="modal-content">
          <div class="modal-header">
@@ -86,6 +86,7 @@
                </div>
                <div class="col-md-10">
                  <input class="form-control" type="text" id="scenario-id">
+                 <div class="error">Scenario ID should be non empty and conform to the following regex: ^[a-z][\w\d_]+$</div>
                </div>
             </div>
          </div>
@@ -155,7 +156,7 @@ monad.do([
          monad.UI(UI.action('.scenario-create-new')),
          function(_)
          {
-            d3.select('.modal').classed('show', true)
+            d3.select('.modal-scenario-create').classed('show', true)
             document.getElementById('scenario-id').focus();
          }
       ])
@@ -170,7 +171,7 @@ monad.do([
    monad.UI(UI.action('.scenario-create-cancel')),
    function(_)
    {
-      d3.select('.modal').classed('show', false)
+      d3.select('.modal-scenario-create').classed('show', false)
    }
 ])
 
@@ -179,14 +180,14 @@ monad.do([
    function(_)
    {
       var id = d3.select('#scenario-id').property('value')
-      if (id.length > 0)
+      if (id.match("^[a-z][\\w\\d_]+$"))
       { 
-         d3.select('#scenario-id').classed('failure', false)
-         d3.select('.modal').classed('show', false)
+         d3.select('.modal-scenario-create').classed('failure', false)
          d3.select('#scenario-id').property('value', '')
          window.open('/dashboard/editor/' + id, '_self')
       } else {
-         d3.select('#scenario-id').classed('failure', true)
+         d3.select('.modal-scenario-create').classed('failure', true)
+         document.getElementById('scenario-id').focus();
       }
    }
 ])
