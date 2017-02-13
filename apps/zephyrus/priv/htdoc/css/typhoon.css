@@ -47,9 +47,19 @@ a.tile
 }
 
 
-.failure
+.modal-scenario-create.failure input
 {
    border: 1px solid red;
+}
+
+.modal-scenario-create .error {
+   color: red;
+   font-size: 0.8em;
+   visibility: hidden;
+}
+
+.modal-scenario-create.failure .error {
+   visibility: visible;
 }
 
 .tile .action
