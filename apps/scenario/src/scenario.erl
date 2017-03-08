@@ -76,6 +76,8 @@ cc_mod(_, []) ->
 
 %%
 %% validate compiled and loaded module is valid typhoon scenario
+-spec t(atom()) -> {ok, _} | {error, _}.
+
 t(Mod) ->
    [$^||
       exports(Mod),
@@ -102,7 +104,9 @@ is_exported(Fun, Arity, Spec) ->
    end.
 
 %%
-%% lint compiled scenario 
+%% lint compiled scenario, returns results of execution and lists of called endpoints.
+-spec lint(atom()) -> {integer(), binary(), [binary()]}.
+
 lint(Mod) ->
    [$. || lint_init(Mod), lint_exec(Mod, _), lint_result(_)].
 
@@ -115,7 +119,7 @@ lint_exec(Mod, Config) ->
 lint_result([Http | State]) ->
    [{Code, _, _, _} | Content] = Http,
    Scope = [Key || {Key, _} <- maps:to_list( maps:get(spec, State) ), is_binary(Key)],
-   {Code, Scope}.
+   {Code, iolist_to_binary(Content), Scope}.
 
 %%%----------------------------------------------------------------------------   
 %%%
