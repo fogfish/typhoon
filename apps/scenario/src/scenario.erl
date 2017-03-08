@@ -20,21 +20,8 @@
 -compile({parse_transform, category}).
 
 -export([start/0]).
--export([c/2,t/1]).
+-export([c/2, t/1, lint/1]).
 
-%% script definition interface
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--export([
-   new/1,
-   method/2,
-   url/2,
-   header/3,
-   payload/2,
-   request/2,
-   request/1,
-   thinktime/2
-]).
 %% script utility interface
 -export([
    lens/1, lens/2,
@@ -95,7 +82,7 @@ t(Mod) ->
       is_exported(title, 0, _),
       is_exported(t, 0, _),
       is_exported(n, 0, _),
-      is_exported(urn, 0, _),
+      % is_exported(urn, 0, _), 
       is_exported(run, 1, _),
       identity(_)
    ].
@@ -113,6 +100,22 @@ is_exported(Fun, Arity, Spec) ->
       _ ->
          {error, {undefined, Fun, Arity}}
    end.
+
+%%
+%% lint compiled scenario 
+lint(Mod) ->
+   [$. || lint_init(Mod), lint_exec(Mod, _), lint_result(_)].
+
+lint_init(Mod) ->
+   catch( hd( (Mod:init())(#{}) ) ).
+
+lint_exec(Mod, Config) ->
+   (Mod:run(Config))(#{}).
+
+lint_result([Http | State]) ->
+   [{Code, _, _, _} | Content] = Http,
+   Scope = [Key || {Key, _} <- maps:to_list( maps:get(spec, State) ), is_binary(Key)],
+   {Code, Scope}.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -289,129 +292,3 @@ text() ->
 
 json(Json) ->
    jsx:encode(Json).
-
-
-%%%----------------------------------------------------------------------------   
-%%%
-%%% http protocol
-%%%
-%%%----------------------------------------------------------------------------   
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--spec new(string()) -> _.
-
-new({urn, <<"http">>, _} = Id) ->
-   #{
-      id     => Id, 
-      method => 'GET', 
-      header => []
-   };
-
-new(Id) ->
-   new( uri:new(scalar:s(Id)) ).
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release 
--spec method(atom() | string() | binary(), _) -> _.
-
-method(Method, #{id := {urn, <<"http">>, _}} = Http) ->
-   % @todo: validate and normalize method
-   Http#{method => Method}.
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release 
--spec url(string() | binary(), _) -> _.
-
-url(Url, #{id := {urn, <<"http">>, _}} = Http) ->
-   Http#{url => uri:new(Url)}.
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--spec header(string(), string(), _) -> _.
- 
-header(Head, Value, #{id := {urn, <<"http">>, _}, header := List} = Http) -> 
-   % @todo: fix htstream to accept various headers
-   Http#{header => [{scalar:atom(Head), scalar:s(Value)} | List]}.
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--spec payload(string() | binary(), _) -> _.
-
-payload(Pckt, #{id := {urn, <<"http">>, _}, header := List} = Http) ->
-   Http#{payload => Pckt, header => [{'Transfer-Encoding', <<"chunked">>} | List]}.
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--spec request(_) -> _.
--spec request([atom()], _) -> _.
-
-request(Ln, #{id := {urn, <<"http">>, _}} = Http) ->
-   fun(IO) ->
-      Pckt = send(IO, Http),
-      Lens = lens(Ln),
-      [lens:get(Lens, jsx:decode(Pckt))|IO]
-   end.
-
-request(#{id := {urn, <<"http">>, _}} = Http) ->
-   fun(IO) -> 
-      [send(IO, Http)|IO]
-   end.
-
-%%
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
--spec thinktime(_, integer()) -> _.
-
-thinktime(X, T) ->
-   fun(_IO) ->
-      timer:sleep(T),
-      X
-   end.
-
-%%%----------------------------------------------------------------------------   
-%%%
-%%% private
-%%%
-%%%----------------------------------------------------------------------------   
-
-%%
-%% send request
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
-send(#{pool := Pool, peer := Peer}, #{id := {urn, <<"http">>, _} = Urn, url := Url, header := Head} = Http) ->
-   NetIO = Pool(Url, Head),
-   {ok, Sock} = pq:lease( NetIO ),
-   Pckt = pipe:call(Sock, {request, Urn, Peer, encode(Http)}, 30000),
-   pq:release(NetIO, Sock),
-   Pckt.
-
-
-%%
-%% build request
-%% @deprecated, 
-%%   'Mio' support is over at 0.10.x release
-encode(#{id := {urn, <<"http">>, _}} = Http) ->
-   lists:flatten([
-      encode_http_req(Http), 
-      encode_http_entity(Http), 
-      encode_http_eof(Http)
-   ]).
-
-encode_http_req(#{method := Mthd, url := Url, header := Head}) ->
-   [{Mthd, Url, Head}].
-
-encode_http_entity(#{payload := Payload}) ->
-   [scalar:s(Payload)];
-encode_http_entity(_) ->
-   [].
-
-encode_http_eof(_) ->
-   [eof].
-
