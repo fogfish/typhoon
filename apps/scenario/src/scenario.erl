@@ -84,7 +84,6 @@ t(Mod) ->
       is_exported(title, 0, _),
       is_exported(t, 0, _),
       is_exported(n, 0, _),
-      % is_exported(urn, 0, _), 
       is_exported(run, 1, _),
       identity(_)
    ].

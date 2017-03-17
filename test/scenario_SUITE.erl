@@ -22,10 +22,7 @@
   ,init_per_suite/1 ,end_per_suite/1
   ,init_per_group/2 ,end_per_group/2
 ]).
-% -export([
-%    context/1, 
-%    http_get/1, http_post/1, http_eval/1
-% ]).
+-export([compile/1, validate/1, lint/1]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -41,8 +38,7 @@ all() ->
 groups() ->
    [
       {scenario, [parallel], [
-         % context,
-         % http_get, http_post, http_eval
+         compile, validate, lint
       ]}
    ].
 
@@ -54,8 +50,9 @@ groups() ->
 
 %%
 init_per_suite(Config) ->
-   % ok = application:start(uid),
-   % ok = application:start(scenario),
+   ok = application:start(uid),
+   ok = application:start(scenario),
+   ok = knet:start(),
    Config.
 
 end_per_suite(_Config) ->
@@ -74,109 +71,36 @@ end_per_group(_, _Config) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-% context(Config) ->
-%    Spec = json(context, Config),
-%    Scenario = scenario:compile(Spec),
-%    {#{}, _} = scenario:eval(Scenario).
+%%
+%%
+compile(Config) ->
+   Scenario = filename:join([?config(data_dir, Config), "unittest.erl"]),
+   {ok, unittest_compile, _} = scenario:c(unittest_compile, Scenario).
 
+%%
+%%
+validate(Config) ->
+   Scenario = filename:join([?config(data_dir, Config), "unittest.erl"]),
+   {ok, unittest_validate, Code} = scenario:c(unittest_validate, Scenario),
+   load_scenario_code(unittest_validate, Code),
+   {ok, _} = scenario:t(unittest_validate).
 
-% http_get(Config) ->
-%    Spec = json(http_get, Config),
-%    Scenario = scenario:compile(Spec),
-
-%    10 = scenario:n(Scenario),  
-%    {0, 1, 0} = scenario:t(Scenario),  
-%    {Req,  _} = scenario:eval(Scenario),
-
-%    #{type := protocol, packet := [Http, eof]} = Req,
-%    %% @todo: make lens based validator (check id)
-
-%    {'GET', Url, Head} = Http,
-%    <<"http://localhost:8888/a">> = uri:s(Url),
-%    <<"typhoon/0.0.0">> = lens:get(lens:pair('User-Agent'), Head),   
-%    <<"*/*">> = lens:get(lens:pair('Accept'), Head),   
-%    <<"xvalue">> = lens:get(lens:pair('X-Header'), Head).
-
-
-% http_post(Config) ->
-%    Spec = json(http_post, Config),
-%    Scenario = scenario:compile(Spec),
-%    10 = scenario:n(Scenario),  
-%    {0, 1, 0} = scenario:t(Scenario),  
-%    {Req,  _} = scenario:eval(Scenario),
-
-%    #{type := protocol, packet := [Http, Chunk, eof]} = Req,
-%    {'POST', Url, Head} = Http,
-%    <<"http://localhost:8888/a">> = uri:s(Url),
-%    <<"typhoon/0.0.0">> = lens:get(lens:pair('User-Agent'), Head),   
-%    <<"*/*">> = lens:get(lens:pair('Accept'), Head),   
-%    <<"xvalue">> = lens:get(lens:pair('X-Header'), Head),
-
-%    <<"0123456789">> = Chunk.
-
-
-% http_eval(Config) ->
-%    Spec = json(http_eval, Config),
-%    Scenario = scenario:compile(Spec),
-%    {Req, _} = scenario:eval(Scenario),
-
-%    #{type := protocol, packet := [Http, Chunk, eof]} = Req,
-%    {'POST', Url, Head} = Http,
-%    [Int, Ascii, Uid] = uri:segments(Url),
-%    true  = is_integer( scalar:i(Int) ),
-%    Ascii = << <<X:8>> || <<X:8>> <= Ascii, is_ascii(X) >>,
-%    Uid   = << <<X:8>> || <<X:8>> <= Uid, is_hex(X) >>,
-
-%    <<"typhoon/", Vsn/binary>> = lens:get(lens:pair('User-Agent'), Head), 
-%    true  = is_integer( scalar:i(Int) ),
-  
-%    Value = lens:get(lens:pair('X-Header'), Head),
-%    Value = << <<X:8>> || <<X:8>> <= Value, is_ascii(X) >>.
+%%
+%%
+lint(Config) ->
+   Scenario = filename:join([?config(data_dir, Config), "unittest.erl"]),
+   {ok, unittest_lint, Code} = scenario:c(unittest_lint, Scenario),
+   load_scenario_code(unittest_lint, Code),
+   {200, _, Spec} = scenario:lint(unittest_lint).
    
 
-% %%%----------------------------------------------------------------------------   
-% %%%
-% %%% private
-% %%%
-% %%%----------------------------------------------------------------------------   
+%%%----------------------------------------------------------------------------   
+%%%
+%%% private
+%%%
+%%%----------------------------------------------------------------------------   
 
-% %%
-% json(Id, Config) ->
-%    File = filename:join([?config(data_dir, Config), scalar:c(Id) ++ ".json"]),
-%    {ok, Json} = file:read_file(File),
-%    jsx:decode(Json).
-
-% %%
-% is_ascii(X)
-%  when X >= $a, X =< $z ->
-%    true;
-% is_ascii(X)
-%  when X >= $A, X =< $Z ->
-%    true;
-% is_ascii(X)
-%  when X >= $0, X =< $9 ->
-%    true;
-% is_ascii(_) ->
-%    false.
-
-% %%
-% is_hex(X)
-%  when X >= $a, X =< $f ->
-%    true;
-% is_hex(X)
-%  when X >= $0, X =< $9 ->
-%    true;
-% is_hex(_) ->
-%    false.
-
-% %%
-% is_text(X)
-%  when X >= $a, X =< $z ->
-%    true;
-% is_text(X)
-%  when X =:= $  ->
-%    true;
-% is_text(_) ->
-%    false.
-
+load_scenario_code(Id, Code) ->
+   code:purge(Id),
+   {module, Id} = code:load_binary(Id, undefined, Code).
 
