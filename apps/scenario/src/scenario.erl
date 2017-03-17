@@ -20,7 +20,7 @@
 -compile({parse_transform, category}).
 
 -export([start/0]).
--export([c/2, t/1, lint/1]).
+-export([c/2, t/1, lint/1, make/2]).
 
 %% script utility interface
 -export([
@@ -119,6 +119,43 @@ lint_result([Http | State]) ->
    [{Code, _, _, _} | Content] = Http,
    Scope = [Key || {Key, _} <- maps:to_list( maps:get(spec, State) ), is_binary(Key)],
    {Code, iolist_to_binary(Content), Scope}.
+
+%%
+%% compiles scenario file and loads it
+-spec make(atom(), binary()) -> {ok, atom()} | {error, _}.
+
+make(Id, Scenario) ->
+   make(Id, filename(Id), Scenario).
+
+make(Id, File, Scenario) ->
+   [$^||
+      filewrite(File, Scenario),
+      compile(Id, File),
+      loadcode(Id, _)
+   ].
+   
+filename(Id) ->
+   Root = opts:val(libdir, "/tmp", scenario),
+   File = filename:join([Root, scalar:c(Id) ++ ".erl"]),
+   ok   = filelib:ensure_dir(File),
+   File.
+
+filewrite(File, Scenario) ->
+   ok = file:write_file(File, Scenario),
+   {ok, undefined}.
+
+compile(Id, File) ->
+   case scenario:c(Id, File) of
+      {ok, Id, Code} -> 
+         {ok, Code};
+      {error, Error, Warn} ->
+         {error, {Error, Warn}}
+   end.
+
+loadcode(Id, Code) ->
+   _ = code:purge(Id),
+   {module, Id} = code:load_binary(Id, undefined, Code),
+   {ok, Id}.
 
 %%%----------------------------------------------------------------------------   
 %%%

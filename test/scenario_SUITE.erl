@@ -22,7 +22,7 @@
   ,init_per_suite/1 ,end_per_suite/1
   ,init_per_group/2 ,end_per_group/2
 ]).
--export([compile/1, validate/1, lint/1]).
+-export([compile/1, validate/1, lint/1, make/1]).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -38,7 +38,7 @@ all() ->
 groups() ->
    [
       {scenario, [parallel], [
-         compile, validate, lint
+         compile, validate, lint, make
       ]}
    ].
 
@@ -92,7 +92,13 @@ lint(Config) ->
    {ok, unittest_lint, Code} = scenario:c(unittest_lint, Scenario),
    load_scenario_code(unittest_lint, Code),
    {200, _, Spec} = scenario:lint(unittest_lint).
-   
+
+%%
+%%
+make(Config) ->
+   Scenario   = filename:join([?config(data_dir, Config), "unittest.erl"]),
+   {ok, Spec} = file:read_file(Scenario),
+   {ok, unittest_make} = scenario:make(unittest_make, Spec).
 
 %%%----------------------------------------------------------------------------   
 %%%
