@@ -39,15 +39,12 @@ start_link(Scenario, T) ->
 
 init([Scenario, T]) ->
    kill_process_at(T),
-   random:seed(os:timestamp()),
-   Peer = typhoon:peer(Scenario),
    erlang:send(self(), request),
    {ok, handle, 
       #{
          scenario  => Scenario,
-         peer      => Peer,
-         config    => config(Scenario, Peer),
-         context   => #{pool => fun netpool/2, peer => Peer}
+         config    => config(Scenario),
+         context   => #{so => [{trace, {{urn, root, Scenario}, aura:adapter()}}]}
       }
    }.
 
@@ -62,7 +59,7 @@ free(_Reason, _) ->
 
 %%
 %%
-handle(request, _, #{scenario := Scenario, peer := Peer, config := Config, context := Context0} = State) ->
+handle(request, _, #{scenario := Scenario, config := Config, context := Context0} = State) ->
    Ta  = os:timestamp(),
    [_|Context1] = ( Scenario:run(hd(Config)) )(Context0),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
@@ -86,37 +83,12 @@ handle(_, _, State) ->
 %%-----------------------------------------------------------------------------
 
 %%
-%% selector of net i/o pool (@todo: re-factor code here)
-netpool(Url, Header) ->
-   case lists:keyfind('Connection', 1, Header) of
-      {'Connection', <<"close">>} ->
-         Id = scalar:atom(uri:s(uri:suburi(<<"disposable">>, Url))),
-         case erlang:whereis(Id) of
-            undefined ->
-               typhoon_net_sup:spawn(Id, disposable, Url),
-               netpool(Url, Header);
-            Pid ->
-               Pid
-         end;
-      
-      _ ->
-         Id = scalar:atom(uri:s(uri:suburi(<<"keep-alive">>, Url))),
-         case erlang:whereis(Id) of
-            undefined ->
-               typhoon_net_sup:spawn(Id, 'keep-alive', Url),
-               netpool(Url, Header);
-            Pid ->
-               Pid
-         end
-   end.
-
-%%
 %% configure scenario execution
-config(Scenario, Peer) ->
+config(Scenario) ->
    case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
       0 ->
          Fun = Scenario:init(),
-         Fun(#{pool => fun netpool/2, peer => Peer});
+         Fun(#{});
 
       _ ->
          [undefined]

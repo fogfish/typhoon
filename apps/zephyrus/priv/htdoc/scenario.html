@@ -351,6 +351,16 @@ var sid = window.location.pathname
 d3.select('.scenario-history')
    .attr('href', '/dashboard/history/' + sid)
 
+String.prototype.hashCode = function() {
+  var hash = 0, i, chr;
+  if (this.length === 0) return hash;
+  for (i = 0; i < this.length; i++) {
+    chr   = this.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+};
 
 var context = null;
 var model = {
@@ -407,7 +417,7 @@ var actionIO = (function()
    self.series = function(id, urn, title) 
    {
       return context.metric(function(start, stop, step, callback) {
-         d3.json("/scenario/" + id + "/cubism/" + urn 
+         d3.json("/scenario/" + id + "/cubism/" + encodeURIComponent(urn) 
             + "/" + start.getTime() / 1000
             + "/" + stop.getTime() / 1000 
             + "?chronon=" + step / 1000, 
@@ -500,7 +510,8 @@ var present = (function()
       model.scenario.title = json.title
       model.scenario.t = json.t
       model.scenario.n = json.n
-      model.scenario.urn = json.urn
+      model.scenario.hosts = json.hosts
+      model.scenario.urls = json.urls
       model.runtime.session  = json.session
       model.runtime.capacity = json.capacity
       model.runtime.latency  = (json.latency / 1000).toFixed(1)
@@ -511,29 +522,48 @@ var present = (function()
    //
    self.sensor = function(model)
    {
-      model.scenario.sensor = model.scenario.urn.map(
-         function(urn)
+      model.scenario.sensor = model.scenario.urls.map(
+         function(url)
          {
             var sid = model.scenario.id
             return {
-               id: urn,
+               id: url,
                series: [
-                  {id: sid, urn: "urn:c:2xx:" + urn.substring(4), title: '2xx'}
-                 ,{id: sid, urn: "urn:c:3xx:" + urn.substring(4), title: '3xx'}
-                 ,{id: sid, urn: "urn:c:4xx:" + urn.substring(4), title: '4xx'}
-                 ,{id: sid, urn: "urn:c:5xx:" + urn.substring(4), title: '5xx'}
-                 ,{id: sid, urn: "urn:g:tcp:" + urn.substring(4), title: 'tcp (μs)'}
-                 ,{id: sid, urn: "urn:g:ssl:" + urn.substring(4), title: 'ssl (μs)'}
-                 ,{id: sid, urn: "urn:g:ttfb:" + urn.substring(4), title: 'ttfb (μs)'}
-                 ,{id: sid, urn: "urn:g:ttmr:" + urn.substring(4), title: 'ttmr (μs)'}
-                 ,{id: sid, urn: "urn:c:pack:" + urn.substring(4), title: 'packet / sec'}
-                 ,{id: sid, urn: "urn:g:pack:" + urn.substring(4), title: 'packet (byte)'}
+                  {id: sid, urn: "urn:c:2xx+" + url, title: '2xx'}
+                 ,{id: sid, urn: "urn:c:3xx+" + url, title: '3xx'}
+                 ,{id: sid, urn: "urn:c:4xx+" + url, title: '4xx'}
+                 ,{id: sid, urn: "urn:c:5xx+" + url, title: '5xx'}
+                 // ,{id: sid, urn: "urn:g:tcp:" + urn.substring(4), title: 'tcp (μs)'}
+                 // ,{id: sid, urn: "urn:g:ssl:" + urn.substring(4), title: 'ssl (μs)'}
+                 ,{id: sid, urn: "urn:g:ttfb+" + url, title: 'ttfb (μs)'}
+                 ,{id: sid, urn: "urn:g:ttmr+" + url, title: 'ttmr (μs)'}
+                 // ,{id: sid, urn: "urn:c:pack:" + urn.substring(4), title: 'packet / sec'}
+                 // ,{id: sid, urn: "urn:g:pack:" + urn.substring(4), title: 'packet (byte)'}
                ]
             }
          }
       )
+
+      model.scenario.sensor = model.scenario.sensor.concat(
+         model.scenario.hosts.map(
+         function(url)
+         {
+            var sid = model.scenario.id
+            return {
+               id: url,
+               series: [
+                  {id: sid, urn: "urn:g:connect+tcp" + url.substring(4), title: 'tcp (μs)'}
+                 ,{id: sid, urn: "urn:g:handshake+ssl" + url.substring(4), title: 'ssl (μs)'}
+                 ,{id: sid, urn: "urn:c:packet+tcp" + url.substring(4), title: 'packet / sec'}
+                 ,{id: sid, urn: "urn:g:packet+tcp" + url.substring(4), title: 'packet (byte)'}
+               ]
+            }
+         }
+         )
+      )
+
       return model
-   }.curry();
+   }.$_();
 
    //
    self.cluster = function(model, json)
@@ -651,16 +681,16 @@ var state = (function()
    self.series = function(model)
    {
       d3.select("#series").selectAll('div')
-         .data(model.scenario.urn)
+         .data(model.scenario.urls.concat(model.scenario.hosts))
          .enter()
             .append('div')
-            .attr('id', function(d){return d.split(':').join('_')})
+            .attr('id', function(d){return "hash-" + d.hashCode()})
             .classed('chronolog', true)
       
       model.scenario.sensor.map(
          function(x)
          {
-            var ui = '#' + x.id.split(':').join('_')
+            var ui = '#hash-' + x.id.hashCode()
             d3.select(ui).selectAll("*").remove();
             d3.select(ui).insert('h2').text(x.id)
 
@@ -835,7 +865,7 @@ var chain = (function()
          state.tiles(),
          state.series(),
          state.history()
-      ])
+      ]).fail(function(x){console.error(x)})
       self.launch()
       self.poll_attributes()
       self.poll_cluster()
@@ -864,8 +894,6 @@ var chain = (function()
          {
             var x = d3.select('#time-series-analysis')
             var h = x[0][0].getBoundingClientRect().top - 60
-            console.log(x)
-            console.log(h)
             x.transition()
                .duration(1000) 
                .tween("scroll", scrollTween(h))

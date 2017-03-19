@@ -18,6 +18,7 @@
 -export([start/0]).
 -export([
    fd/0
+  ,adapter/0
   ,send/3
   ,clue/1
   ,stream/2
@@ -39,6 +40,12 @@ start() ->
 
 fd() ->
    pipe:ioctl(aura_storage, fd).
+
+%%
+%%
+adapter() ->
+   Pids = [erlang:element(2, X) || X <- supervisor:which_children(aura_adapter_sup)],
+   lists:nth( rand:uniform(length(Pids)), Pids ).
 
 %%
 %% send telemetry for processing

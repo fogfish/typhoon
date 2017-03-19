@@ -13,7 +13,7 @@
 %%   See the License for the specific language governing permissions and
 %%   limitations under the License.
 %%
--module(aura_sup).
+-module(aura_adapter_sup).
 -behaviour(supervisor).
 -author('dmitry.kolesnikov@zalando.fi').
 
@@ -38,32 +38,10 @@ init([]) ->
    {ok,
       {
          {one_for_one, 10000, 1},
-         [
-            %% persistence layer
-            ?CHILD(worker,     aura_storage)
-
-            %% transport layer
-           ,?CHILD(supervisor, aura_adapter_sup)
-           ,?CHILD(supervisor, aura_egress_sup)
-           ,?CHILD(supervisor, aura_ingress_sup)
-
-            %% data stream processing 
-           ,?CHILD(supervisor, aura_stream_sup, pts, pts(aura_stream))
-           ,?CHILD(supervisor, aura_sensor_sup, pts, pts(aura_sensor))
-         ]
+         [?CHILD(worker, X, aura_adapter, []) || X <- seq()]
       }
    }.
 
-%%
-%%
-pts(Mod) ->
-   [
-      Mod,
-      [
-         'read-through',
-         {keylen,    inf},
-         {entity,    Mod},
-         {factory,   temporary}
-      ]
-   ].
+seq() ->
+   lists:seq(1, opts:val(adapter, 1, aura)).
 

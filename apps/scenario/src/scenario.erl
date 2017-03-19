@@ -155,7 +155,7 @@ compile(Id, File) ->
 loadcode(Id, Code) ->
    _ = code:purge(Id),
    {module, Id} = code:load_binary(Id, undefined, Code),
-   {ok, Id}.
+   {ok, Code}.
 
 %%%----------------------------------------------------------------------------   
 %%%

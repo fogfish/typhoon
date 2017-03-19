@@ -217,7 +217,7 @@ monad.do([
 -compile({parse_transform, monad}).
 
 %% 
--export([title/0, t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0]).
 -export([init/0, run/1]).
 
 %%
@@ -232,12 +232,6 @@ t() ->
 %% number of concurrent sessions to spawn in the cluster.
 n() ->
    2.
-
-%% identifiers of requests to visualize
-urn() ->
-   [
-      "urn:http:request"
-   ].
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -262,11 +256,11 @@ run(_Config) ->
    ]).
 
 request() ->
-   do([m_http ||
-      _ /= new("urn:http:request"),
-      _ /= url("http://127.0.0.1:8080/health/peer"),
-      _ /= header("Connection", "keep-alive"),
-      _ /= get(),
+   do([k_http ||
+      _ /= new("http://127.0.0.1:8080/health/peer"),
+      _ /= x('GET'),
+      _ /= h("Connection", "keep-alive"),
+      _ /= r(),
       return(_)
    ]).
 </script>

@@ -74,30 +74,16 @@ attribute(latency, Spec) ->
    X.
 
 %%
-urn(Base, Urn) ->
-   uri:join([uri:schema(Urn), uri:path(Urn)], Base).
-
-%%
 %% read http attribute
 http(Code, Spec) ->
    lists:sum(
       lists:map(
          fun(Urn) ->
-            {ok, X} = aura:clue(urn({urn, <<"c">>, Code}, uri:new(Urn))),
+            Uri = uri:new(Urn),
+            Uid = uri:s( uri:schema([Code, uri:schema(Uri)], Uri) ),
+            {ok, X} = aura:clue({urn, <<"c">>, Uid}),
             X
          end,
-         lens:get(lens:pair(urn), Spec)
+         lens:get(lens:pair(urls), Spec)
       )
    ).
-
-
-
-
-
-
-
-
-% 'GET'(_, {_Url, _Head, Env}) ->
-%    Urn = lens:get(lens:pair(<<"urn">>), Env),
-%    {ok, Val} = aura:clue(uri:new(Urn)),
-%    {ok, jsx:encode(Val)}.

@@ -98,7 +98,7 @@ lint(Config) ->
 make(Config) ->
    Scenario   = filename:join([?config(data_dir, Config), "unittest.erl"]),
    {ok, Spec} = file:read_file(Scenario),
-   {ok, unittest_make} = scenario:make(unittest_make, Spec).
+   {ok, _} = scenario:make(unittest_make, Spec).
 
 %%%----------------------------------------------------------------------------   
 %%%
