@@ -5,6 +5,9 @@
 -behaviour(pipe).
 -compile({parse_transform, category}).
 
+%% @todo
+%%   * make permanent naming for adapter component
+
 -export([
    start_link/0
   ,init/1
@@ -33,7 +36,7 @@ free(_Reason, _State) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
-handle({trace, T, _, _, _, {Event, URI}, Value}, Pipe, State) ->
+handle({trace, T, _, _, _, {Event, URI}, Value}, _Pipe, State) ->
    trace(uri:schema(URI), Event, URI, T, Value),
    {next_state, handle, State}.
 
@@ -46,6 +49,9 @@ trace(tcp, connect, URI, T, X) ->
 trace(tcp, packet, URI, T, X) ->
    aura:send({urn, <<"c">>, uid(packet, URI)}, T, 1), %% packet per second
    aura:send({urn, <<"g">>, uid(packet, URI)}, T, X); %% packet size 
+
+trace(ssl, connect, URI, T, X) ->
+   aura:send({urn, <<"g">>, uid(connect, URI)}, T, X);
 
 trace(ssl, handshake, URI, T, X) ->
    aura:send({urn, <<"g">>, uid(handshake, URI)}, T, X);

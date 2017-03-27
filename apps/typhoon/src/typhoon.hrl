@@ -15,22 +15,5 @@
 %%
 
 %%
-%% functions allowed by script
--define(CONFIG_SCRIPT_ALLOWED, 
-   #{'@eval' => 
-      #{
-         'typhoon' => [
-            {uid,    true}
-           ,{int,    true}
-           ,{pareto, true}
-           ,{ascii,  true}
-           ,{text,   true}
-         ]
-      }
-   }
-).
-
-%%
-%%
--define(CONFIG_SCHEMA_ACTION, <<"http://typhoon.zalan.do/schema/action">>).
--define(CONFIG_SCHEMA_HTTP,   <<"http://typhoon.zalan.do/schema/http">>).
+%% default time
+-define(CONFIG_DEFAULT_COOLDOWN,  10000).

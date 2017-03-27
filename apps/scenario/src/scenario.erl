@@ -24,6 +24,7 @@
 
 %% script utility interface
 -export([
+   option/2,
    lens/1, lens/2,
    join/1,
    uid/0,
@@ -164,6 +165,16 @@ loadcode(Id, Code) ->
 %%%----------------------------------------------------------------------------   
 
 %%
+%% executes an option service defined by scenario 
+option(Id, Scenario) ->
+   [$? ||
+      Scenario:module_info(exports),
+      lens:get(lens:pair(Id, undefined), _),
+      fun(_) -> Scenario:Id() end
+   ].
+   
+
+%%
 %% lens is applicable to json only, we ignore other content 
 lens(Ln, Content)
  when is_list(Content) ->
@@ -196,7 +207,7 @@ lens({uniform}) ->
    (Fun,   []) ->
       lens:fmap(fun(_) -> [] end, Fun([]));
    (Fun, List) ->
-      Value = lists:nth(random:uniform(length(List)), List),
+      Value = lists:nth(rand:uniform(length(List)), List),
       lens:fmap(fun(_) -> List end, Fun(Value))
    end;
 
@@ -252,12 +263,12 @@ uid() ->
 
 uniform(N)
  when is_integer(N) ->
-   scalar:s(random:uniform(N));
+   scalar:s(rand:uniform(N));
 uniform(List)
  when is_list(List) ->
    scalar:ls(
       lists:nth(
-         random:uniform(length(List)), 
+         rand:uniform(length(List)), 
          List
       )
    ).
@@ -293,10 +304,10 @@ ascii(N) ->
 ascii() ->
    stream:unfold(
       fun(Seed) ->
-         Head = case random:uniform(3) of
-            1 -> $0 + (random:uniform(10) - 1);
-            2 -> $a + (random:uniform($z - $a) - 1);
-            3 -> $A + (random:uniform($Z - $A) - 1)
+         Head = case rand:uniform(3) of
+            1 -> $0 + (rand:uniform(10) - 1);
+            2 -> $a + (rand:uniform($z - $a) - 1);
+            3 -> $A + (rand:uniform($Z - $A) - 1)
          end,
          {Head, Seed}
       end,

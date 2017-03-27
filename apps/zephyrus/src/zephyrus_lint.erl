@@ -104,44 +104,26 @@ execute(Id) ->
    end.
 
 %%
-%% @deprecated, 'Mio' support is over at 0.10.x release
+%% 
 config(Scenario) ->
-   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
-      0 ->
-         State = #{pool => fun netpool/2, peer => []},
-         [Conf|_] = (Scenario:init())(State),
-         Conf;
-      _ ->
-         undefined
-   end.
+   [$? ||
+      scenario:option(init, Scenario),
+      fmap(_(#{})),
+      fmap(hd(_))
+   ].
 
 %%
-%% @deprecated, 'Mio' support is over at 0.10.x release
+%%
 lint(Scenario, Conf) ->
-   State = #{pool => fun netpool/2, peer => []},
-   case (Scenario:run(Conf))(State) of
+   case (Scenario:run(Conf))(#{}) of
       [[{_, _, _, _}|Data]|_] ->
          jsx:encode(erlang:iolist_to_binary(Data));
 
       [Data|_] ->
          erlang:iolist_to_binary(Data)
-         % jsx:encode(Data)
    end.
 
 %%
 %%
 file(Id) ->
    filename:join([opts:val(libdir, typhoon), scalar:c(Id) ++ ".erl"]).
-
-%%
-%% selector of net i/o pool (hack uses lint pool)
-netpool(Url, Header) ->
-   Id = scalar:atom(uri:s(uri:suburi(<<"lint">>, Url))),
-   case erlang:whereis(Id) of
-      undefined ->
-         typhoon_net_sup:spawn(Id, disposable, Url),
-         netpool(Url, Header);
-      Pid ->
-         Pid
-   end.   
-

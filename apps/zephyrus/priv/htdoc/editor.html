@@ -217,7 +217,7 @@ monad.do([
 -compile({parse_transform, monad}).
 
 %% 
--export([title/0, t/0, n/0]).
+-export([title/0, t/0, n/0, ttl/0]).
 -export([init/0, run/1]).
 
 %%
@@ -232,6 +232,10 @@ t() ->
 %% number of concurrent sessions to spawn in the cluster.
 n() ->
    2.
+
+%% time to live for scenario process
+ttl() ->
+   1000.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -256,7 +260,7 @@ run(_Config) ->
    ]).
 
 request() ->
-   do([k_http ||
+   do([m_http ||
       _ /= new("http://127.0.0.1:8080/health/peer"),
       _ /= x('GET'),
       _ /= h("Connection", "keep-alive"),

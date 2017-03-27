@@ -16,7 +16,7 @@ n() ->
    2.
 
 run(_Config) ->
-   do([k_http ||
+   do([m_http ||
       _ /= new("http://example.com"),
       _ /= x('GET'),
       _ /= h("Connection", "close"),

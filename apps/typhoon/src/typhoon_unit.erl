@@ -19,6 +19,7 @@
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-compile({parse_transform, category}).
 -include("typhoon.hrl").
 
 -export([
@@ -39,6 +40,7 @@ start_link(Scenario, T) ->
 
 init([Scenario, T]) ->
    kill_process_at(T),
+   cooldown_process_at(scenario:option(ttl, Scenario)),
    erlang:send(self(), request),
    {ok, handle, 
       #{
@@ -61,7 +63,7 @@ free(_Reason, _) ->
 %%
 handle(request, _, #{scenario := Scenario, config := Config, context := Context0} = State) ->
    Ta  = os:timestamp(),
-   [_|Context1] = ( Scenario:run(hd(Config)) )(Context0),
+   [_|Context1] = ( Scenario:run(Config) )(Context0),
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
    aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
@@ -70,6 +72,15 @@ handle(request, _, #{scenario := Scenario, config := Config, context := Context0
 
 handle(expired, _, State) ->
    {stop, normal, State};
+
+handle(cooldown, _, #{scenario := Scenario} = State) ->
+   cooldown_process_at(scenario:option(ttl, Scenario)),
+   {next_state, handle, 
+      State#{
+         config  => config(Scenario),
+         context => #{so => [{trace, {{urn, root, Scenario}, aura:adapter()}}]}
+      }
+   };
 
 handle(_, _, State) ->
    %% ignore any side effect from script
@@ -85,14 +96,11 @@ handle(_, _, State) ->
 %%
 %% configure scenario execution
 config(Scenario) ->
-   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
-      0 ->
-         Fun = Scenario:init(),
-         Fun(#{});
-
-      _ ->
-         [undefined]
-   end.
+   [$? ||
+      scenario:option(init, Scenario),
+      fmap(_(#{})),
+      fmap(hd(_))
+   ].
 
 %%
 %%
@@ -104,3 +112,9 @@ kill_process_at(T) ->
          tempus:timer(tempus:sub(T, X), expired)
    end.
 
+%%
+%%
+cooldown_process_at(undefined) ->
+   cooldown_process_at(?CONFIG_DEFAULT_COOLDOWN);
+cooldown_process_at(T) ->
+   erlang:send_after(T, self(), cooldown).
