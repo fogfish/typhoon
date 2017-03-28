@@ -20,7 +20,7 @@
 
 %%
 %% scenario attributes
--export([title/0, t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0]).
 
 %%
 %% scenario actions
@@ -48,15 +48,6 @@ t() ->
 %% number of concurrent session to spawn in the cluster.
 n() ->
    30.
-
-%%
-%% list of request identifiers used at latency visualization
-urn() ->
-   [
-      "urn:http:httpbin:get",
-      "urn:http:httpbin:post"
-   ].
-
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -111,22 +102,24 @@ usecase_b() ->
 
 get_ip() ->
    do([m_http ||
-      _ /= new("urn:http:httpbin:get"),
-      _ /= url("http://127.0.0.1:8888/ip"),
+      _ /= new("http://127.0.0.1:8888/ip"),
+      _ /= method('GET'),
       _ /= header("Connection", "keep-alive"),
-      _ /= get(),
-      _ /= decode(_),
+      _ /= request(),
+      _ =< scenario:decode(_),
       return( scenario:lens([origin], _) )
    ]).
 
 post(IP) ->
    do([m_http ||
-      _ /= new("urn:http:httpbin:post"),
-      _ /= url("http://127.0.0.1:8888/post"),
+      _ /= new("http://127.0.0.1:8888/post"),
+      _ /= method('POST'),
+      _ /= header("Transfer-Encoding", "chunked"),
       _ /= header("Content-Type", "text/plain"),
       _ /= header("Connection", "keep-alive"),
-      _ /= post(IP),
-      _ /= decode(_), 
+      _ /= payload(IP),
+      _ /= request(),
+      _ =< scenario:decode(_), 
       return( scenario:lens([data], _) )
    ]).
 

@@ -32,7 +32,8 @@
    pareto/2,
    ascii/1,
    text/1,
-   json/1
+   json/1,
+   decode/1
 ]).
 
 %%
@@ -343,3 +344,21 @@ text() ->
 
 json(Json) ->
    jsx:encode(Json).
+
+%%
+%% decode payload using protocol content indicators (e.g. Content-Type) 
+-spec decode(_) -> _.
+
+decode([{Code, _, Head, _} | Payload]) ->
+   Type   = lens:get(lens:pair('Content-Type'), Head),
+   http_decode(Code, Type, erlang:iolist_to_binary(Payload));
+
+decode(Payload) ->
+   erlang:iolist_to_binary(Payload).
+
+http_decode(Code, {_, <<"json">>}, Payload)
+ when Code >= 200, Code < 300 ->
+   jsx:decode(Payload);
+http_decode(_, _, Payload) ->
+   Payload.
+
