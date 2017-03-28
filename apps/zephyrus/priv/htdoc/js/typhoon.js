@@ -18,7 +18,6 @@ IO.json = function(url, accept, reject)
 IO.scenario = {}
 IO.scenario.get  = function(id, accept, reject)
 {
-console.log(id)
    d3.xhr('/scenario/' + id)
       .header('Accept', 'application/erlang')
       .get(
@@ -43,7 +42,10 @@ IO.scenario.lint = function(id, data, accept, reject)
          {
             if (error != null)
             {
-               reject({code: error.status, text: error.statusText})
+               var json  = JSON.parse(error.response)
+               json.code = error.status
+               json.text = error.statusText
+               reject(json)
             } else {
                accept(req.response)
             }

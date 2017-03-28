@@ -61,7 +61,6 @@ handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
    ),
    {next_state, handle, State};
 
-
 handle(_, _, State) ->
    {next_state, handle, State}.
 

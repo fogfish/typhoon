@@ -28,6 +28,7 @@
   ,handle/3
 ]).
 
+
 %%%----------------------------------------------------------------------------   
 %%%
 %%% Factory
@@ -38,28 +39,22 @@ start_link(Vnode, Mod, Spec) ->
    pipe:start_link(?MODULE, [Vnode, Mod, Spec], []).
 
 init([Vnode, Mod, Spec]) ->
-   {ok, Code} = compile(Mod, Spec),
+   {ok,  Code} = scenario:make(Mod, Spec),
    {ok, handle, 
       #{
-         vnode => Vnode,
-         mod   => Mod,
-         code  => Code,
-         n     => 0
+         vnode      => Vnode,
+         mod        => Mod,
+         code       => Code,
+         properties => properties(Mod),
+         n          => 0
       }
    }.
 
-free(_, #{mod := Mod}) ->
-   file:delete(file(Mod)).
+free(_, _State) ->
+   ok.
 
-ioctl(attr, #{mod := Scenario, n := Session}) ->
-   [
-      {id,     Scenario},
-      {t,      Scenario:t()},
-      {n,      Scenario:n()},
-      {title,  scalar:s(Scenario:title())},
-      {session,  Session},
-      {urn, [scalar:s(X) || X <- Scenario:urn()]}
-   ].
+ioctl(attr, #{n := N, properties := Properties}) ->
+   [{session, N}|Properties].
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -99,20 +94,25 @@ handle(_Msg, _Tx, State) ->
 %%%----------------------------------------------------------------------------   
 
 %%
-%%
-file(Id) ->
-   filename:join([opts:val(libdir, typhoon), scalar:c(Id) ++ ".erl"]).
+%% cache scenario properties 
+properties(Scenario) ->
+   {_, _, Urls} = scenario:lint(Scenario),
+   [
+      {id,    Scenario}
+     ,{t,     Scenario:t()}
+     ,{n,     Scenario:n()}
+     ,{title, scalar:s(Scenario:title())}
+     ,{hosts, hosts(Urls)}
+     ,{urls,  Urls}
+   ].
 
 %%
-%% compiles specification into binary code
-compile(Id, Scenario) ->
-   File = file(Id),
-   ok = filelib:ensure_dir(File),
-   ok = file:write_file(File, Scenario),
-   {ok, Id, Code} = scenario:c(Id, File),
-   _  = code:purge(Id),
-   {module, Id} = code:load_binary(Id, undefined, Code),
-   {ok, Code}.
+%% 
+hosts(Urls) ->
+   [host(Url) || Url <- Urls].
+
+host(Url) ->
+   uri:s(uri:path(undefined, uri:new(Url))).
 
 
 %%

@@ -15,8 +15,8 @@
 %%
 {application, scenario,
    [
-      {description, "load scenario compiler"},
-      {vsn,         "0.1.0"},
+      {description, "typhoon scenario compiler"},
+      {vsn,         "0.2.0"},
       {modules,     []},
       {registered,  []},
       {applications,[

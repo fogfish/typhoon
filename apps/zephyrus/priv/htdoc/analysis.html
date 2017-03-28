@@ -147,11 +147,13 @@ monad.do([
    function(json)
    {
       d3.select('.scenario-title').text(json.title)
-      model.sensors = json.urn
+      model.urls = json.urls
       availability()
       capacity()
       ttfb()
       ttmr()
+
+      model.hosts = json.hosts
       tcp()
       ssl()
       pps()
@@ -163,13 +165,13 @@ monad.do([
 // capacity
 var capacity = function()
 {
-   model.sensors.reduce(
+   model.urls.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:c:2xx:" + x.substring(4)
+               var id = "urn:c:2xx+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -198,13 +200,13 @@ var capacity = function()
 // availability
 var availability = function()
 {
-   model.sensors.reduce(
+   model.urls.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:c:2xx:" + x.substring(4)
+               var id = "urn:c:2xx+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
             },
             function(series)
@@ -216,7 +218,7 @@ var availability = function()
             },
             function(_)
             {
-               var id = "urn:c:3xx:" + x.substring(4)
+               var id = "urn:c:3xx+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
             },
             function(series)
@@ -228,7 +230,7 @@ var availability = function()
             },
             function(_)
             {
-               var id = "urn:c:4xx:" + x.substring(4)
+               var id = "urn:c:4xx+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
             },
             function(series)
@@ -240,7 +242,7 @@ var availability = function()
             },
             function(_)
             {
-               var id = "urn:c:5xx:" + x.substring(4)
+               var id = "urn:c:5xx+" + + encodeURIComponent(x)
                return monad.IO(IO.scenario.cubism(sid, id, t, t + dur))        
             },
             function(series)
@@ -281,13 +283,13 @@ var availability = function()
 //
 var ttfb = function()
 {
-   model.sensors.reduce(
+   model.urls.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:g:ttfb:" + x.substring(4)
+               var id = "urn:g:ttfb+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -316,13 +318,13 @@ var ttfb = function()
 //
 var ttmr = function()
 {
-   model.sensors.reduce(
+   model.urls.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:g:ttmr:" + x.substring(4)
+               var id = "urn:g:ttmr+" + encodeURIComponent(x)
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -351,13 +353,13 @@ var ttmr = function()
 //
 var tcp = function()
 {
-   model.sensors.reduce(
+   model.hosts.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:g:tcp:" + x.substring(4)
+               var id = "urn:g:connect+tcp" + encodeURIComponent(x.substring(4))
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -386,13 +388,13 @@ var tcp = function()
 //
 var ssl = function()
 {
-   model.sensors.reduce(
+   model.hosts.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:g:ssl:" + x.substring(4)
+               var id = "urn:g:handshake+ssl" + encodeURIComponent(x.substring(4))
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -421,13 +423,13 @@ var ssl = function()
 //
 var pps = function()
 {
-   model.sensors.reduce(
+   model.hosts.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:c:pack:" + x.substring(4)
+               var id = "urn:c:packet+tcp" + encodeURIComponent(x.substring(4))
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)
@@ -456,13 +458,13 @@ var pps = function()
 //
 var pack = function()
 {
-   model.sensors.reduce(
+   model.hosts.reduce(
       function(acc, x)
       {
          return monad.do([acc,
             function(_)
             {
-               var id = "urn:g:pack:" + x.substring(4)
+               var id = "urn:g:packet+tcp" + encodeURIComponent(x.substring(4))
                return monad.IO(IO.scenario.series(sid, id, t, t + dur))        
             },
             function(series)

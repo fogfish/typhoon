@@ -43,6 +43,7 @@ init([]) ->
             ?CHILD(worker,     aura_storage)
 
             %% transport layer
+           ,?CHILD(supervisor, aura_adapter_sup)
            ,?CHILD(supervisor, aura_egress_sup)
            ,?CHILD(supervisor, aura_ingress_sup)
 
