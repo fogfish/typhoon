@@ -47,7 +47,7 @@ free(_, Sock) ->
 
 handle({Peers, {Urn, T, Telemetry}}, _Pipe, Sock) ->
    Pack = aura_protocol:encode(Urn, T, Telemetry),
-   Port = ?PORT + random:uniform(10) - 1,
+   Port = ?PORT + rand:uniform(10) - 1,
    lists:foreach(
       fun(Peer) -> 
          gen_udp:send(Sock, Peer, Port, Pack)

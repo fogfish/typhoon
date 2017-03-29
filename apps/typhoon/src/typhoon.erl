@@ -41,7 +41,6 @@
 
   ,peer/1
   ,run/1
-  ,once/1
   ,unit/1
   ,attr/1
 ]).
@@ -56,7 +55,6 @@
 %%
 %% data types
 -type urn()    :: {urn, _, _}.
--type spec()   :: binary().  %% application/erlang
 -type opts()   :: [_].
 
 
@@ -161,19 +159,8 @@ scenario({urn, user, _} = User, Opts) ->
 run({urn, _, _} = Id) ->
    {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
    Pids = crdts:value(CRDT),
-   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
+   Pid  = lists:nth(rand:uniform(length(Pids)), Pids),
    pipe:call(Pid, run).
-
-%%
-%% test load scenario, run once, the scenario will terminate automatically after timeout
--spec once(urn()) -> ok | {error, _}.
-
-once({urn, _, _} = Id) ->
-   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
-   Pids = crdts:value(CRDT),
-   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
-   pipe:call(Pid, once, 60000).
-
 
 
 
@@ -238,7 +225,7 @@ fd() ->
 
 stream(Id, Gen) ->
    {ok, #entity{vnode = Vnode}} = ambitz:lookup(typhoon, Id, [{r, 3}]),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+   Node  = erlang:node(ek:vnode(peer, lists:nth(rand:uniform(length(Vnode)), Vnode))),
    pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000).
 
 
