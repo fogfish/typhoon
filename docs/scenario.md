@@ -6,6 +6,37 @@ Typhoon uses pure functional expressions to define load scenario. These expressi
 * [Erlang expressions](http://erlang.org/doc/reference_manual/expressions.html)
 
 
+## do-notation
+
+The "do"-notation, so called monadic binding form, is well know in functional programming languages such as [Haskell](https://en.wikibooks.org/wiki/Haskell/do_notation), [Scala](http://docs.scala-lang.org/tutorials/tour/sequence-comprehensions.html) and [Erlang](https://github.com/fogfish/datum/blob/master/doc/monad.md). The workload scenario is a collection of nested `do-notation` in context of a [state monad](https://acm.wustl.edu/functional/state-monad.php). 
+
+The workload scenario defines two computations:
+* `fun init/0` is an optional computation to be executed once by scenario session. the result of computation is feed to main entry point.
+* `fun run/1` executes workload scenario
+
+```erlang
+init() ->
+   do([m_state ||
+      ...
+      return(_)
+   ]).
+
+run(_) ->
+   do([m_state ||
+      ...
+      return(_)
+   ]).
+``` 
+
+The protocol operations (IO actions) are defined using do-notation in context of protocol. The protocol operations are defined using monad utility operations (see `/=` operand).
+```
+request() ->
+   do([m_http ||
+      ...
+      return(_)
+   ]).
+```
+
 ## Make Workload Scenario
 
 Each load scenario is valid Erlang module. The [skeleton scenario](../examples/skeleton.erl) is defined and explained below. See also the [advanced example](../examples/httpbin.erl).
