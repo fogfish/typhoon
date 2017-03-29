@@ -2,7 +2,7 @@
 
 ![typhoon](docs/img/typhoon.png)
 
-**Makes latency assessments of microservices based distributed systems.**
+**Makes latency assessments of distributed systems build from microservices.**
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
