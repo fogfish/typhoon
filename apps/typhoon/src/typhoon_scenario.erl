@@ -62,6 +62,12 @@ ioctl(attr, #{n := N, properties := Properties}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
+handle({code, Code}, _, State) ->
+   {next_state, handle, State#{code => Code}};
+
+handle({properties, Prop}, _, State) ->
+   {next_state, handle, State#{properties => Prop}};
+
 handle(run, Tx, #{mod := Mod, code := Code, n := N0}=State) ->
    drift(Mod, Code),
    history(State),

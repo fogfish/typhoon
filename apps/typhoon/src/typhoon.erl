@@ -34,13 +34,9 @@
   ,profile/2
   ,scenario/2
 
-
-  % ,define/3
-  % ,lookup/2
-  % ,remove/2
-
   ,peer/1
   ,run/1
+  ,abort/1
   ,unit/1
   ,attr/1
 ]).
@@ -143,15 +139,6 @@ scenario({urn, user, _} = User, Opts) ->
    
 
 
-
-%%
-%% remove load scenario from cluster
-% -spec remove(urn(), opts()) -> ok.
-
-% remove({urn, _, _} = Id, Opts) ->
-%    ambitz:free(typhoon, uri:s(Id), Opts).
-
-
 %%
 %% run load scenario, the scenario will terminate automatically after timeout
 -spec run(urn()) -> ok | {error, _}.
@@ -161,6 +148,27 @@ run({urn, _, _} = Id) ->
    Pids = crdts:value(CRDT),
    Pid  = lists:nth(rand:uniform(length(Pids)), Pids),
    pipe:call(Pid, run).
+
+
+%%
+%% abort load scenario
+-spec abort(urn()) -> ok | {error, _}.
+
+abort({urn, _, _} = Id) ->
+   {ok, #entity{val = Val}} = typhoon:get(Id, [{w, 3}]),
+   typhoon:remove(Id, [{w, 3}]),
+   {_, _, [Mod, Spec]} = crdts:value(Val),
+   lists:foreach(
+      fun(Node) ->
+         _ = rpc:call(Node, code, purge, [Mod]),
+         _ = rpc:call(Node, code, delete, [Mod])
+      end,
+      [erlang:node() | erlang:nodes()]
+   ),
+   %% Note: this is not nice but we need to delay re-start of scenario
+   %%       the ultimate fix in the pipeline
+   timer:sleep(5000),
+   typhoon:put(Id, Spec, [{w, 3}]).
 
 
 

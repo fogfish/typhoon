@@ -47,9 +47,9 @@
          <li class="nav-item">
             <a class="nav-link launch">Launch</a>
          </li>
-<!--          <li class="nav-item">
-            <a class="nav-link">Analysis</a>
-         </li> -->
+         <li class="nav-item">
+            <a class="nav-link abort">Abort</a>
+         </li>
          <li class="nav-item">
             <a class="nav-link scenario-history">Analytics</a>
          </li>
@@ -461,6 +461,17 @@ var actionIO = (function()
       )
    }.curry();
 
+   //
+   self.abort = function(id, accept)
+   {
+      d3.json('/scenario/' + id + '/abort',
+         function(json)
+         {
+            accept(json)
+         }
+      )
+   }.curry();
+
    return self;   
 })();
 
@@ -485,6 +496,17 @@ var actionUI = (function()
    self.launch = function(accept)
    {
       d3.selectAll('.launch').on('click',
+         function()
+         {
+            accept('launch')
+         }
+      )
+   }.curry()
+
+   //
+   self.abort = function(accept)
+   {
+      d3.selectAll('.abort').on('click',
          function()
          {
             accept('launch')
@@ -885,6 +907,14 @@ var chain = (function()
       }
 
       monad.do([
+         monad.UI(actionUI.abort),
+         function(_)
+         {
+            return monad.IO(actionIO.abort(model.scenario.id))
+         }
+      ])
+
+      monad.do([
          monad.UI(actionUI.launch),
          function(_)
          {
@@ -927,7 +957,7 @@ var chain = (function()
          present.attributes(model),
          state.tiles(),
          chain.poll_attributes
-      ])
+      ]).fail(function(x){ chain.poll_attributes() })
    }
    
    //

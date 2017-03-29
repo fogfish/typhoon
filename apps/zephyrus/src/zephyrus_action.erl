@@ -47,6 +47,12 @@ content_provided(_Req) ->
          _ = typhoon:run({urn, root, Id}),
          {202, [{'Location',  uri:s(uri:segments([Id], Url))}], <<>>};
 
+      %% 
+      %% abort
+      <<"abort">> ->
+         _ = typhoon:abort({urn, root, Id}),
+         ok;
+
       %%
       %% ping runing workers (concurrent units producing load)
       <<"ping">> ->
