@@ -28,8 +28,7 @@ Each load scenario is valid Erlang module. The [skeleton scenario](../examples/s
 %%  * `title()` a human readable scenario name
 %%  * `t()` time in milliseconds to execute workload
 %%  * `n()` number of concurrent session globally spawned in the cluster
-%%  * `urn()` list of requests identifiers produced by workload scenario
--export([title/0, t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0]).
 
 %% Scenario shall provide actions:
 %%  * `init()` an optional computation to be executed once by scenario session. 
@@ -52,21 +51,15 @@ t() ->
 %% number of concurrent session to spawn in the cluster.
 n() ->
    1.
-
-%% identifiers of requests to visualize
-urn() ->
-   [
-      "urn:http:example"
-   ].
    
 %%
 %% scenario entry-point, IO-monads 
 run(_) ->
-   [{do, 'Mio'} ||       %% define sequence of requests to execute as IO monadic type
+   do([m_state ||        %% define sequence of requests to execute as IO monadic type
       _ <- request(),    %% execute HTTP request and discard results
       A <- request(),    %% execute HTTP request and assign response to variable A
       return(A)          %% it just takes a value A and puts it in a IO context. 
-   ].
+   ]).
 
 %%
 %% The request is an opaque data structure, the developer uses scenario interface to
@@ -75,9 +68,12 @@ run(_) ->
 %% pure functional languages. Thus, identity monad is used to chain configuration actions 
 %% over data structure
 request() ->
-   A = scenario:new("urn:http:example"),         %% create new request and set unique id
-   B = scenario:url("http://example.com/", A),   %% define end-point
-   scenario:request(B).                          %% return request
+   do([m_http ||
+      _ /= new("http://example.com/"),
+      _ /= method('GET'),
+      _ /= request(),
+      return(_)
+   ]).
 ```
 
 ### Validate scenario
@@ -100,7 +96,7 @@ curl -v -XPOST http://192.168.99.100:8080/scenario/example \
    --data-binary @examples/skeleton.erl
 ```
 
-Use web-browser to execute scenario and observe results (http://192.168.99.100:8080/example).
+Use web-browser to execute scenario and observe results (http://localhost:8080/example).
 
 
 
@@ -131,20 +127,6 @@ n() ->
 ```  
 
 
-### identity
-
-`-spec urn() -> [string()].`
-
-The function returns list of requests identifiers produced by workload scenario. These identifiers are used by front-end component to visualize and report latencies. The following example specify a single request identified by `"urn:http:example"` token.
-
-```erlang
-urn() ->
-   [
-      "urn:http:example"
-   ].
-```
-
-
 ## Scenario actions
 
 Actions are composition of functions, each function builds and executes protocol operation (e.g. HTTP request), the result of protocol operation is returned to next function and so on. We are using IO-monad to isolate side-effect and protocol stack from scenario developers.
@@ -152,97 +134,28 @@ Actions are composition of functions, each function builds and executes protocol
 Let's us consider following example. The scenario is build around two use-case A and B. A executes IO operation and returns result to B.
 ```erlang
 run() -> 
-   [{do, 'Mio'} ||
-      A <- usecase_a(),
-      B <- usecase_b(A),
-      return(B)
+   do([m_state ||
+      _ <- usecase_a(),
+      _ <- usecase_b(_),
+      return(_)
    ].
 ```
 
 ### request
 
-The request is pure functional data structure that defined protocol behavior. We are using identity monad to emulate dot-bind notation in Erlang. The request is evaluated into IO action. The request is defined using scenario interface. 
+The request is pure functional data structure that defined protocol behavior. The request is evaluated into IO action.  
 
 ```erlang
 http_post_req() ->
-   [{do, 'Mid'} ||
-      A0 <- scenario:new("urn:http:xxx:zzz"),
-      A1 <- scenario:method('POST', A0),
-      A2 <- scenario:url("http://127.0.0.1:8888/post", A1),
-      A3 <- scenario:header("Content-Type", "text/plain", A2),
-      A4 <- scenario:payload("example", A3),
-      scenario:request(A4)
-   ].
+   do([m_http ||
+      _ /= new("http://127.0.0.1:8888/post"),
+      _ /= method('POST'),
+      _ /= header("Content-Type", "text/plain"),
+      _ /= payload("example"),
+      _ /= request()
+      return(_)
+   ]).
 ```
-
-
-## Scenario interface
-
-
-### new
-
-```erlang
--spec new(string()) -> _.
-```
-
-The function defines new request, it requires a unique request identity that is built after urn syntax, urn schema defines communication protocol. The request data structure is opaque to scenario developer. It shall be used with other scenario methods
-
-
-### method
-
-```erlang
--spec method(atom() | string() | binary(), _) -> _.
-```
-
-The function defines method to request (default value is `'GET'`). One of the following HTTP methods are allowed `'GET'`, `'POST'`, `'PUT'` and `'DELETE'`.
-
-
-### url
-
-```erlang
--spec url(string() | binary(), _) -> _.
-```
-
-The function defines absolute url to request resource
-
-
-### header
-
-```erlang
--spec header(string(), string(), _) -> _.
-```
-
-The function set HTTP header to the request. The first argument is header name, second is header value.
-
-
-### payload
-
-```erlang
--spec payload(string() | binary(), _) -> _.
-```
-
-The function set HTTP payload.
-
-
-### request
-
-```erlang
--spec request(_) -> _.
--spec request([atom()], _) -> _.
-```
-
-The function return IO computation corresponding to the defined request. 
-
-
-### thinktime
-
-```erlang
--spec thinktime(_, integer()) -> _.
-```
-
-The function return IO computation that emulates think-time of terminal.
-
-
 
 ## Scenario utility
 
