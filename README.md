@@ -54,18 +54,18 @@ You can also spawn Typhoon using native platform binaries. See the installation 
 This brings Typhoon up and running. The application uses local IP address 127.0.0.1 and port 8080 to offer services. To double-check, and also make sure the REST API is exposed, use this command:  
 
 ```
-curl http://192.168.99.100:8080/health/peer
+curl http://localhost:8080/health/peer
 ```
 The application should return list of cluster peers `["typhoon@172.17.0.2"]`.   
 
 Next, define a simple workload scenario and publish it to Typhoon:
 ```
-curl -XPUT http://192.168.99.100:8080/scenario/example \
+curl -XPUT http://localhost:8080/scenario/example \
    -H 'Content-Type: application/erlang' \
    --data-binary @examples/skeleton.erl
 ```  
 
-Open the link `http://192.168.99.100:8080/example` in your web browser to manage the workload and analyze the results. The user interface should look similar to this:  
+Open the link `http://localhost:8080/example` in your web browser to manage the workload and analyze the results. The user interface should look similar to this:  
 
 ![User interface screenshot](screenshot.png)
 
@@ -84,7 +84,7 @@ docker run -d -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
 
 Next, the identity of seeder node is needed to spawn other peers. We can use health check api for this 
 ```
-curl http://192.168.99.100:8080/health/peer
+curl http://localhost:8080/health/peer
 ```
 The application should return list of cluster peers `["typhoon@172.17.0.2"]`. This identity shall be passed to other containers within `EK_SEED` environment variable. The following example spawn more cluster peers: 
 ```
@@ -94,7 +94,7 @@ docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.
 
 We can validate that all peers joins the cluster using health check api 
 ```
-curl http://192.168.99.100:8080/health/peer
+curl http://localhost:8080/health/peer
 ```
 The application should return list of cluster peers 
 `["typhoon@172.17.0.2","typhoon@172.17.0.3","typhoon@172.17.0.4"]`.   
