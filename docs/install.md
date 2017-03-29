@@ -28,11 +28,12 @@ make pkg PLAT=Linux
 
 Build and run typhoon in your development console:
 ```
-make run
+make && make run
 ```
 
-The command with boot Erlang virtual machine and opens shell. Now you are able to start typhoon is debug mode. You shall be able to use rest api and open typhoon dashboard in the browser 
-```
+The command with boot Erlang virtual machine and opens shell. Now you are able to start typhoon is debug mode. You shall be able to use rest api and open typhoon dashboard in the browser once these subsystems are launched:
+
+```erlang
 %% start telemetry management subsystem
 aura:start().
 
