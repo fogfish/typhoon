@@ -15,8 +15,7 @@
 %%  * `title()` a human readable scenario name
 %%  * `t()` time in milliseconds to execute workload
 %%  * `n()` number of concurrent sessions globally spawned in the cluster
-%%  * `urn()` list of request identifiers produced by workload scenario
--export([title/0, t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0]).
 
 %% Scenario shall provide actions:
 %%  * `init()` an optional computation to be executed once by scenario session 
@@ -41,13 +40,6 @@ t() ->
 %% number of concurrent sessions to spawn in the cluster.
 n() ->
    2.
-
-%% identifiers of requests to visualize
-urn() ->
-   [
-      "urn:http:zalando:api",
-      "urn:http:zalando:articles"
-   ].
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -79,17 +71,15 @@ run(_Config) ->
 request() ->
    do([m_http ||
       % 1. create new HTTP request
-      _ /= new("urn:http:zalando:api"),
-      
-      % 2. set destination url
-      _ /= url("https://api.zalando.com/"),
+      _ /= new("https://api.zalando.com/"),
+      _ /= method('GET'), 
 
       % 3. set request header 
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "close"),
 
       % 4. build HTTP promise
-      _ /= get(),
+      _ /= request(),
 
       %% 5. return results
       return(_)
@@ -99,21 +89,20 @@ request() ->
 %% create HTTP request using chained function call syntax
 article() ->
    do([m_http ||
-      % 1. create new HTTP request
-      _ /= new("urn:http:zalando:articles"),
+      % 1. create new HTTP request 
+      _ /= new("https://api.zalando.com/articles"),
+      _ /= method('GET'),
       
-      % 2. set destination url     
-      _ /= url("https://api.zalando.com/articles"), 
 
       % 3. set request header
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "close"),
 
       % 4. build HTTP promise and decode result
-      _ /= get(),
-      _ /= decode(_),
+      _ /= request(),
 
-      %% 5. return results
+      % 5. parse and return results
+      _ =< scenario:decode(_),
       return( scenario:lens([content, {uniform}, id], _) )
    ]).
 

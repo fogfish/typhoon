@@ -20,7 +20,7 @@
 
 %%
 %% scenario attributes
--export([title/0, t/0, n/0, urn/0]).
+-export([title/0, t/0, n/0]).
 
 %%
 %% scenario actions
@@ -49,13 +49,6 @@ t() ->
 n() ->
    1.
 
-%%
-%% list of request identifiers used at latency visualization
-urn() ->
-   [
-      "urn:http:socket"
-   ].
-
 %%%----------------------------------------------------------------------------   
 %%%
 %%% actions
@@ -75,10 +68,7 @@ run(_Config) ->
 request() ->
    do([m_sock ||
       %% create new socket i/o handler
-      _ /= new("urn:http:socket"),
-
-      %% set destination host, port and protocol
-      _ /= url("ssl://api.zalando.com"),
+      _ /= new("ssl://api.zalando.com"),
 
       %% use raw socket to send   
       _ /= send(<<"GET / HTTP/1.1\r\n">>),
