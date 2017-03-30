@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href="css/dress-code.min.css" rel="stylesheet">
+<link href="css/typhoon.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Ubuntu:300,500" rel="stylesheet">
+
+<body>
+<div class="dc-page">
+<div class="dc-container">
+
+   <div class="dc-card">
+      <div class="dc-row dc-row--align--middle">
+         <div class="dc-column dc-column--shrink">
+            <div class="dc-column__contents">
+               <img class="t-logo" src="img/typhoon_logo.svg">
+            </div>
+         </div>
+         <div class="dc-column dc-column--small-3">
+            <div class="dc-column__contents">
+               <h1 class="dc-h1">Typhoon</h1>
+               <p class="dc--text-small">
+                  Makes latency assessments of distributed systems build from microservices.
+               </p>
+            </div>
+         </div>
+         <div class="dc-column dc-column--small-1">
+            <div class="dc-column__contents">
+               <h4 class="dc-h4">Nodes</h4>
+               <p class="dc--text"><strong>0</strong></p>
+            </div>
+         </div>
+         <div class="dc-column dc-column--small-1">
+            <div class="dc-column__contents">
+               <h4 class="dc-h4">Sessions</h4>
+               <p class="dc--text"><strong>0</strong></p>
+            </div>
+         </div>
+         <div class="dc-column dc-column--small-1">
+            <div class="dc-column__contents">
+               <h4 class="dc-h4">Traffic</h4>
+               <p class="dc--text"><strong>0</strong></p>
+            </div>
+         </div>
+      </div>
+   </div>
+
+
+   <h1 class="dc-h1">Workload Scenario</h1>
+   <div class="dc-card">
+      <div class="t-item-controls">
+         <button class="dc-btn dc-btn--link t-control">New Scenario</button>
+      </div>
+
+      <table class="dc-table">
+         <thead class="dc-table__thead">
+            <tr class="dc-table__tr">
+               <th class="dc-table__th">ID</th>
+               <th class="dc-table__th">Title</th>
+               <th class="dc-table__th">Sessions (#)</th>
+               <th class="dc-table__th">Capacity (RPS)</th>
+               <th class="dc-table__th">Availability (%)</th>
+               <th class="dc-table__th">Latency (ms)</th>
+               <th class="dc-table__th">Status</th>
+            </tr>
+         </thead>
+         <tbody class="dc-table__tbody js-scenario-thumbnail"></tbody>
+      </table>
+   </div>
+
+   <div class="js-scenario">
+
+
+   <h1 class="dc-h1">Skeleton Workload Scenario</h1>
+   <div class="dc-card">
+      <div class="t-item-controls">
+         <button class="dc-btn dc-btn--link">Launch</button>
+         <button class="dc-btn dc-btn--link">Abort</button>
+         <button class="dc-btn dc-btn--link">Remove</button>
+      </div>
+      <div class="dc-side-revealer">
+
+
+
+
+      <h2 class="dc-h2">Application latency</h2>
+
+      <h4 class="dc-h4">http://127.0.0.1:8080/health/peer</h4>
+      xxx
+
+      <hr class="dc-divider dc-divider--secondary">
+
+      <h4 class="dc-h4">http://127.0.0.1:8888/ip</h4>
+      xxx
+
+      <hr class="dc-divider">
+      <h2 class="dc-h2">Network latency</h2>
+      <h3 class="dc-h3">http://127.0.0.1:8080</h3>
+      xxx
+
+      <input class="dc-side-revealer__toggle dc-icon" type="checkbox" />
+      <div class="dc-side-revealer__content dc-card">
+         <pre class="ace-editor"></pre>
+      </div>
+
+   </div>
+   </div>
+
+   <h2 class="dc-h2">History</h2>
+   <div class="dc-card">
+      <table class="dc-table">
+         <thead class="dc-table__thead">
+            <tr class="dc-table__tr">
+               <th class="dc-table__th">Date</th>
+               <th class="dc-table__th">Duration</th>
+               <th class="dc-table__th">Sessions (#)</th>
+               <th class="dc-table__th">Capacity (RPS)</th>
+               <th class="dc-table__th">Availability (%)</th>
+               <th class="dc-table__th">Latency (ms)</th>
+            </tr>
+         </thead>
+
+         <tbody class="dc-table__tbody">
+            <tr class="dc-table__tr dc-table__tr--interactive">
+               <td class="dc-table__td">Skeleton</td>
+               <td class="dc-table__td">Skeleton Workload Scenario</td>
+               <td class="dc-table__td">2</td>
+               <td class="dc-table__td">20</td>
+               <td class="dc-table__td">100</td>
+               <td class="dc-table__td">54</td>
+            </tr>
+
+            <tr class="dc-table__tr dc-table__tr--interactive">
+               <td class="dc-table__td">Skeleton</td>
+               <td class="dc-table__td">Skeleton Workload Scenario</td>
+               <td class="dc-table__td">2</td>
+               <td class="dc-table__td">20</td>
+               <td class="dc-table__td">100</td>
+               <td class="dc-table__td">54</td>
+            </tr>
+
+         </tbody>
+      </table>
+   </div>
+
+   <h3 class="dc-h3">Capacity</h3>
+   <div class="dc-card">
+   </div>
+
+   </div> <!-- js-scenario -->
+</div>
+</div>
+
+<!-- templates -->
+<script type="text/template" id="scenario-thumbnail">
+   <tr class="dc-table__tr dc-table__tr--interactive" data-scenario="{id}">
+      <td class="dc-table__td">{id}</td>
+      <td class="dc-table__td">{title}</td>
+      <td class="dc-table__td">{sessions}</td>
+      <td class="dc-table__td">{capacity}</td>
+      <td class="dc-table__td">{availability}</td>
+      <td class="dc-table__td">{latency}</td>
+      <td class="dc-table__td">
+         <input type="checkbox" id="c4" class="dc-checkbox dc-checkbox--alt">
+         <label for="c4" class="dc-label">Active</label>
+      </td>
+   </tr>
+</script>
+
+
+<!-- libraries -->
+<script src="js/jquery-3.2.0.min.js"></script>
+<script src="js/whiskers.min.js"></script>
+<script src="js/d3.v3.min.js"></script>
+<script src="js/bullet.js"></script>
+<script src="js/cubism.v1.js"></script>
+<script src="js/monad.js"></script>
+<script src="js/typhoon.js"></script>
+
+</body>
