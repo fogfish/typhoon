@@ -1,0 +1,228 @@
+.group 
+{
+  margin-bottom: 1em;
+}
+
+.axis 
+{
+  font: 10px sans-serif;
+  position: fixed;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.axis text 
+{
+  -webkit-transition: fill-opacity 250ms linear;
+}
+
+.axis path 
+{
+  display: none;
+}
+
+.axis line 
+{
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.axis.top 
+{
+  position: relative;
+  background-image: linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(top, #fff 0%, rgba(255,255,255,0) 100%);
+  top: 0px;
+  padding: 0 0 24px 0;
+}
+
+.axis.bottom 
+{
+  position: relative;
+  background-image: linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -o-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -moz-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -webkit-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  background-image: -ms-linear-gradient(bottom, #fff 0%, rgba(255,255,255,0) 100%);
+  bottom: 0px;
+  padding: 24px 0 0 0;
+}
+
+.horizon 
+{
+  border-bottom: solid 1px #000;
+  overflow: hidden;
+  position: relative;
+}
+
+.horizon 
+{
+  border-top: solid 1px #000;
+  border-bottom: solid 1px #000;
+}
+
+.horizon:hover
+{
+   background: #f8f8f8;
+}
+
+.horizon + .horizon 
+{
+  border-top: none;
+}
+
+.horizon canvas 
+{
+  display: block;
+}
+
+.horizon .title,
+.horizon .value 
+{
+  bottom: 0;
+  /*line-height: 30px;*/
+  margin: 0 6px;
+  position: absolute;
+  text-shadow: 0 1px 4px rgba(255,255,255,.9);
+  white-space: nowrap;
+}
+
+.horizon .title 
+{
+   top: 0;
+   left: 0;
+   font-size: 10px;
+   margin: 0 0 0 0;
+   width: 120px;
+}
+
+
+.horizon .value 
+{
+   right: 0;
+   font-size: 12px;
+   color: black;
+   text-shadow: 0px 0px 10px rgba(255,255,255,1);
+}
+
+.line 
+{
+   background: #000;
+   z-index: 2;
+}
+
+.progress
+{
+   margin: 0px;
+   height: 2px;
+   -webkit-box-shadow: none;
+   box-shadow: none;
+   background-color: #2e8bcc;
+}
+
+.progress-bar
+{
+   background-color: #ff5722;
+}
+
+.chart {
+   font-family: Arial, sans-serif;
+   font-size: 10px;
+}
+
+.axis path, .axis line {
+   fill: none;
+   stroke: #000;
+   shape-rendering: crispEdges;
+}
+
+g.label text
+{
+   font-size: 8px;
+   font-weight: normal;
+}
+
+.bar 
+{
+   fill: #299DE1;
+   stroke-width: 1px;
+   stroke: white
+}
+
+.bar:hover
+{
+   fill: #FF5722;
+}
+
+.d3-tip 
+{
+   line-height: 1;
+   font-size: 10px;
+   padding: 12px;
+   background: rgba(0, 0, 0, 0.8);
+   color: #fff;
+   border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after 
+{
+   display: inline;
+   width: 100%;
+   line-height: 1;
+   color: rgba(0, 0, 0, 0.8);
+   content: "\25BC";
+   position: absolute;
+   text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after 
+{
+   margin: -1px 0 0 0;
+   top: 100%;
+   left: 0;
+}
+
+
+.bullet { font: 10px sans-serif; }
+.bullet .marker { stroke: #000; stroke-width: 2px; }
+.bullet .tick line { stroke: #666; stroke-width: .5px; }
+
+.bullet .title { font-size: 10px; font-weight: 700; }
+.bullet .subtitle { fill: #999; }
+
+.bullet .range.s2 { fill: #ecf0f1; }
+.legend .range-s2 {color: #ecf0f1; }
+.bullet .range.s1 { fill: #bdc3c7; }
+.legend .range-s1 {color: #bdc3c7; }
+.bullet .range.s0 { fill: #95a5a6; }
+.legend .range-s0 {color: #95a5a6; }
+
+
+.bullet .measure.s0 { fill: #c0392b; }
+.legend .measure-s0 {color: #c0392b; }
+.bullet .measure.s1 { fill: #e67e22; }
+.legend .measure-s1 {color: #e67e22; }
+.bullet .measure.s2 { fill: #f39c12; }
+.legend .measure-s2 {color: #f39c12; }
+.bullet .measure.s3 { fill: #ffc40d; }
+.legend .measure-s3 {color: #ffc40d; }
+.bullet .measure.s4 { fill: #F9F0CB; }
+.legend .measure-s4 {color: #F9F0CB; }
+
+.legend span {vertical-align: middle;}
+.legend .rect {font-size: 36px;}
+
+p
+{
+   text-align: justify;
+}
+
+.archive
+{
+   display: none;
+}

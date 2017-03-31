@@ -124,7 +124,8 @@ action.IO.series = function(sid, urn, title)
          + "/" + start.getTime() / 1000
          + "/" + stop.getTime() / 1000 
          + "?chronon=" + step / 1000, 
-         function(data) {
+         function(data) 
+         {
             if (!data) return callback(new Error("unable to load data"));
             callback(null, data.map(function(x){return x[1]}))
          });
@@ -371,6 +372,16 @@ console.log(model.scenario)
 }.$_()
 
 ui.cubism = {}
+ui.cubism.orange = ['#ffefe0','#ffd1a6','#ffba7a','#ffa54e','#ff8e25','#cc711d','#995516','#66380e']
+ui.cubism.gray   = ['#f7f7f7','#ededed','#d1d1d1','#b6b6b6','#9b9b9b','#808080','#646464','#4a4a4a']
+ui.cubism.green  = ['#e7ffd6','#c6ff9e','#acff70','#8bfa3c','#72e620','#65cb1c','#4a9912','#30660a']
+ui.cubism.blue   = ['#e6f4ff','#d1ebff','#a3d9ff','#75c6ff','#26aafe','#1e87cb','#186698','#124365']
+ui.cubism.cyan   = ['#e8fcff','#b5f5ff','#8cf0ff','#61eaff','#24e0fe','#1fb3cb','#1a8899','#145b66']
+ui.cubism.yellow = ['#fff9d9','#fff09e','#ffeb7a','#ffe347','#ffda0a','#ccb116','#99840e','#665705']
+ui.cubism.red    = ['#ffeae6','#ffcabf','#ff9985','#ff6c4f','#ff4a25','#cc3a1d','#992b15','#661d0e']
+ui.cubism.magenta= ['#f7e9f7','#f7c8f7','#f7b2f6','#f296f1','#eb74e9','#bb5cba','#8c458b','#5d2e5c']
+ui.cubism.purple = ['#f4edff','#e1cfff','#c8a6ff','#ac7afd','#9757fd','#7845cb','#5a3498','#3c2365']
+
 ui.cubism.init = function(scenario)
 {
    model.context = cubism.context()
@@ -394,120 +405,23 @@ ui.cubism.init = function(scenario)
 }.$_()
 
 //
-var vmHorizon = function(ui, list)
+ui.cubism.vmHorizon = function(el, list)
 {
    var data = list.map(
       function(x)
       {
-         return action.IO.series(x.id, x.urn, x.title)
+         return action.IO.series(x.id, x.urn, x.title, x.slo)
       }
    );
 
-   // negative: dark -> light
-   // positive: light -> dark
-   var custom_colors = [
-      // '#ef3b2c', '#084594', '#2171b5', '#4292c6', '#6baed6', '#9ecae1', '#c6dbef', '#deebf7', '#f7fbff',
-      // '#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c', '#00441b',
-// orange
-'#ffefe0',
-'#ffd1a6',
-'#ffba7a',
-'#ffa54e',
-'#ff8e25',
-'#cc711d',
-'#995516',
-'#66380e',
-
-// gray
-// '#f7f7f7',
-// '#ededed',
-// '#d1d1d1',
-// '#b6b6b6',
-// '#9b9b9b',
-// '#808080',
-// '#646464',
-// '#4a4a4a'
-
-// green
-// '#e7ffd6',
-// '#c6ff9e',
-// '#acff70',
-// '#8bfa3c',
-// '#72e620',
-// '#65cb1c',
-// '#4a9912',
-// '#30660a'
-
-// blue
-// '#e6f4ff',
-// '#d1ebff',
-// '#a3d9ff',
-// '#75c6ff',
-// '#26aafe',
-// '#1e87cb',
-// '#186698',
-// '#124365'
-
-// cyan
-// '#e8fCff',
-// '#b5f5ff',
-// '#8cf0ff',
-// '#61eaff',
-// '#24e0fe',
-// '#1fb3cb',
-// '#1a8899',
-// '#145b66'
-
-// yellow (+)
-// '#fff9d9',
-// '#fff09e',
-// '#ffeb7a',
-// '#ffe347',
-// '#ffda0a',
-// '#ccb116',
-// '#99840e',
-// '#665705'
-
-// red
-// '#ffeae6',
-// '#ffcabf',
-// '#ff9985',
-// '#ff6c4f',
-// '#ff4a25',
-// '#cc3a1d',
-// '#992b15',
-// '#661d0e'
-
-// magenta
-// '#f7e9f7',
-// '#f7c8f7',
-// '#f7b2f6',
-// '#f296f1',
-// '#eb74e9',
-// '#bb5cba',
-// '#8c458b',
-// '#5d2e5c'
-
-// purple
-'#f4edff',
-'#e1cfff',
-'#c8a6ff',
-'#ac7afd',
-'#9757fd',
-'#7845cb',
-'#5a3498',
-'#3c2365'
-
-   ];
-
-   d3.select(ui).selectAll(".horizon")
+   d3.select(el).selectAll(".horizon")
       .data(data, function(d){return d.toString()})
       .enter()
          .insert("div", ".bottom")
             .attr("class", "horizon")
             .call(
                model.context.horizon()
-                  .colors(custom_colors)
+                  .colors(ui.cubism.orange.reverse().concat(ui.cubism.yellow))
                   .height( height )
                   .format(d3.format("+,.2d"))
             );
@@ -516,7 +430,6 @@ var vmHorizon = function(ui, list)
 //
 ui.cubism.series = function(model)
 {
-console.log(model.scenario)
    d3.select("#series").selectAll('div')
       .data(model.scenario.urls.concat(model.scenario.hosts))
       .enter()
@@ -527,19 +440,19 @@ console.log(model.scenario)
    model.scenario.sensor.map(
       function(x)
       {
-         var ui = '#hash-' + x.id.hashCode()
-         d3.select(ui).selectAll("*").remove();
-         d3.select(ui).insert('h2').text(x.id)
+         var el = '#hash-' + x.id.hashCode()
+         d3.select(el).selectAll("*").remove();
+         d3.select(el).insert('h2').text(x.id)
 
-         d3.select(ui).selectAll(".axis")
+         d3.select(el).selectAll(".axis")
             .data(["top", "bottom"])
             .enter().append("div")
             .attr("class", function(d) {return d + " axis"; })
             .each(function(d) { d3.select(this).call(model.context.axis().ticks(12).orient(d)); });
 
-         vmHorizon(ui, x.series)
+         ui.cubism.vmHorizon(el, x.series)
 
-         d3.select(ui).insert('hr')
+         d3.select(el).insert('hr')
       }
    )
 

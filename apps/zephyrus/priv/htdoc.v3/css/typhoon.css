@@ -97,6 +97,12 @@
    display: none;
 }
 
+.js-scenario-cubism
+{
+   width: 960px;
+}
+
+
 .t-ace-editor
 {
    margin: 0;
@@ -114,6 +120,11 @@
 .dc-card__scenario .dc-side-revealer
 {
    min-height: 75vh;
+}
+
+.dc-side-revealer__content
+{
+   z-index: 1000;
 }
 
 .dc-card__editor
