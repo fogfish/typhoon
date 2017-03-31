@@ -8,6 +8,10 @@
 <body>
 <div class="dc-page">
 <div class="dc-container">
+   <div class="dc-loading-bar">
+      <div class="dc-loading-bar__bar"></div>
+      <div class="dc-loading-bar__fill"></div>
+   </div>
 
    <div class="dc-card">
       <div class="dc-row dc-row--align--middle">
@@ -49,7 +53,7 @@
    <h1 class="dc-h1">Workload Scenario</h1>
    <div class="dc-card">
       <div class="t-item-controls">
-         <button class="dc-btn dc-btn--link t-control">New Scenario</button>
+         <button class="dc-btn dc-btn--link t-control js-action-scenario-new">New Scenario</button>
       </div>
 
       <table class="dc-table">
@@ -57,6 +61,7 @@
             <tr class="dc-table__tr">
                <th class="dc-table__th">ID</th>
                <th class="dc-table__th">Title</th>
+               <th class="dc-table__th">Duration (ms)</th>
                <th class="dc-table__th">Sessions (#)</th>
                <th class="dc-table__th">Capacity (RPS)</th>
                <th class="dc-table__th">Availability (%)</th>
@@ -69,41 +74,27 @@
    </div>
 
    <div class="js-scenario">
-
-
-   <h1 class="dc-h1">Skeleton Workload Scenario</h1>
-   <div class="dc-card">
+   <h1 class="dc-h1 js-scenario-title">No title</h1>
+   <div class="dc-card dc-card__scenario">
       <div class="t-item-controls">
-         <button class="dc-btn dc-btn--link">Launch</button>
-         <button class="dc-btn dc-btn--link">Abort</button>
-         <button class="dc-btn dc-btn--link">Remove</button>
+         <button class="dc-btn dc-btn--link dc-btn--disabled js-action-scenario-spawn">Launch</button>
+         <button class="dc-btn dc-btn--link dc-btn--destroy dc-btn--disabled js-action-scenario-abort">Abort</button>
+         <button class="dc-btn dc-btn--link dc-btn--destroy dc-btn--disabled js-action-scenario-remove">Remove</button>
       </div>
       <div class="dc-side-revealer">
+         <div class="js-scenario-cubism">
+            <h2 class="dc-h2">Application</h2>
+            <div class="js-scenario-cubism-url">No content</div>
 
+            <h2 class="dc-h2">Network</h2>
+            <div class="js-scenario-cubism-host">No content</div>
+         </div>
 
-
-
-      <h2 class="dc-h2">Application latency</h2>
-
-      <h4 class="dc-h4">http://127.0.0.1:8080/health/peer</h4>
-      xxx
-
-      <hr class="dc-divider dc-divider--secondary">
-
-      <h4 class="dc-h4">http://127.0.0.1:8888/ip</h4>
-      xxx
-
-      <hr class="dc-divider">
-      <h2 class="dc-h2">Network latency</h2>
-      <h3 class="dc-h3">http://127.0.0.1:8080</h3>
-      xxx
-
-      <input class="dc-side-revealer__toggle dc-icon" type="checkbox" />
-      <div class="dc-side-revealer__content dc-card">
-         <pre class="ace-editor"></pre>
+         <input class="dc-side-revealer__toggle dc-icon js-scenario-spec" type="checkbox" />
+         <div class="dc-side-revealer__content dc-card dc-card__editor">
+            <pre id="js-ace-editor" class="t-ace-editor"></pre>
+         </div>
       </div>
-
-   </div>
    </div>
 
    <h2 class="dc-h2">History</h2>
@@ -148,15 +139,48 @@
    </div>
 
    </div> <!-- js-scenario -->
+
+
+<div class="dc-msg dc-msg--info">
+   <div class="dc-msg__inner">
+      <div class="dc-msg__icon-frame">
+         <i class="dc-icon dc-msg__icon dc-icon--info"></i>
+      </div>
+
+      <div class="dc-msg__bd">
+         <h1 class="dc-msg__title">Info</h1>
+         <p class="dc-msg__text js-msg-info-text"></p>
+      </div>
+   </div>
+</div>
+
+<div class="dc-msg dc-msg--error">
+   <div class="dc-msg__inner">
+
+      <div class="dc-msg__icon-frame">
+         <i class="dc-icon dc-msg__icon dc-icon--error"></i>
+      </div>
+
+      <div class="dc-msg__bd">
+         <h1 class="dc-msg__title">Error message</h1>
+         <p class="dc-msg__text">
+            <span class="js-msg-error-text"></span>
+            <a href="https://github.com/zalando/typhoon" class="dc-link dc-msg__bd__link" title="tooltip">Open github.com issue on our project!</a>
+         </p>
+      </div>
+   </div>
+</div>
+
 </div>
 </div>
 
 <!-- templates -->
 <script type="text/template" id="scenario-thumbnail">
-   <tr class="dc-table__tr dc-table__tr--interactive" data-scenario="{id}">
+   <tr class="dc-table__tr dc-table__tr--interactive js-action-scenario" data-scenario="{id}">
       <td class="dc-table__td">{id}</td>
       <td class="dc-table__td">{title}</td>
-      <td class="dc-table__td">{sessions}</td>
+      <td class="dc-table__td">{t}</td>
+      <td class="dc-table__td">{n}</td>
       <td class="dc-table__td">{capacity}</td>
       <td class="dc-table__td">{availability}</td>
       <td class="dc-table__td">{latency}</td>
@@ -165,6 +189,77 @@
          <label for="c4" class="dc-label">Active</label>
       </td>
    </tr>
+</script>
+
+<script type="text/template" id="scenario-cubism">
+   {for e in items}
+   <h4 class="dc-h4">{e.title}</h4>
+   xxx
+   {/for}
+</script>
+
+
+
+
+<script type="text/template" id="scenario-new-file">
+%%
+%% @doc
+%%   typhoon scenario file
+%%   see https://github.com/zalando/typhoon/blob/master/docs/scenario.md
+-module().
+-compile({parse_transform, monad}).
+
+%% 
+-export([title/0, t/0, n/0, ttl/0]).
+-export([init/0, run/1]).
+
+%%
+%% human readable scenario title
+title() -> 
+   "{title}".
+
+%% time to execute workload in milliseconds
+t() ->
+   60000.
+
+%% number of concurrent sessions to spawn in the cluster.
+n() ->
+   2.
+
+%% time to live for scenario process
+ttl() ->
+   1000.
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% actions
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% init scenario configuration
+init() ->
+   do([m_state ||
+      _ =< undefined,
+      return(_)
+   ]).
+
+%%
+%% execute scenario, the operation is repeated  until `t()` is expired. 
+run(_Config) ->
+   do([m_state ||
+      _ <- request(),
+      return(_)
+   ]).
+
+request() ->
+   do([m_http ||
+      _ /= new("http://127.0.0.1:8080/health/peer"),
+      _ /= x('GET'),
+      _ /= h("Connection", "keep-alive"),
+      _ /= r(),
+      return(_)
+   ]).
 </script>
 
 
@@ -176,5 +271,9 @@
 <script src="js/cubism.v1.js"></script>
 <script src="js/monad.js"></script>
 <script src="js/typhoon.js"></script>
+
+<script src="js/ace/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ace/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+<script src="js/ace/snippets/erlang.js" type="text/javascript" charset="utf-8"></script>
 
 </body>

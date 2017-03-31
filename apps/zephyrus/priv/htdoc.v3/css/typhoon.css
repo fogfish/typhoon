@@ -87,7 +87,46 @@
    height: 36px;
 }
 
+.dc-loading-bar
+{
+   display: none;
+}
+
 .js-scenario
 {
    display: none;
 }
+
+.t-ace-editor
+{
+   margin: 0;
+   width: 100%;
+   height: 100%;
+   font-family: monospace !important;
+   border: none;
+}
+
+.dc-card__scenario
+{
+   min-height: 75vh;
+}
+
+.dc-card__scenario .dc-side-revealer
+{
+   min-height: 75vh;
+}
+
+.dc-card__editor
+{
+   padding: 1em;
+   min-height: 100%;
+}
+
+.dc-msg
+{
+   display: none;
+   position: fixed;
+   top: 2em;
+   width: 70%;
+}
+
