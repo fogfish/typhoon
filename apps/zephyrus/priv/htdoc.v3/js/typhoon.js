@@ -5,19 +5,35 @@ var action  = {}
 var ui      = {}
 var present = {} 
 
+var width   = 960;
+var height  = 30;
+
 //
 //
 var model = {
    api: 'http://localhost:8080',
    user: 'root',
 
-   // text editor
-   editor: null,
-
    // scenario specification
-   scenario: null
+   scenario: null,
+
+   // text editor (ace)
+   editor: null,
+   
+   // cubism context
+   cubism: null
 }
 
+String.prototype.hashCode = function() {
+  var hash = 0, i, chr;
+  if (this.length === 0) return hash;
+  for (i = 0; i < this.length; i++) {
+    chr   = this.charCodeAt(i);
+    hash  = ((hash << 5) - hash) + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -100,6 +116,20 @@ action.IO.json = function(url, accept, reject)
    .fail(function(xhr){reject(action.IO.fail(xhr))})
 }.$_()
 
+// cubism data series
+action.IO.series = function(sid, urn, title) 
+{
+   return model.context.metric(function(start, stop, step, callback) {
+      d3.json(model.api + "/scenario/" + sid + "/cubism/" + encodeURIComponent(urn) 
+         + "/" + start.getTime() / 1000
+         + "/" + stop.getTime() / 1000 
+         + "?chronon=" + step / 1000, 
+         function(data) {
+            if (!data) return callback(new Error("unable to load data"));
+            callback(null, data.map(function(x){return x[1]}))
+         });
+      }, title);
+}
 
 action.IO.typhoon = {}
 action.IO.typhoon.profile = function(uid)
@@ -296,8 +326,226 @@ ui.scenario.realtime = function(scenario)
    var hosts = {items: scenario.hosts.map(function(x){return {title: x}})}
    $('.js-scenario-cubism-host').replaceWith( ui.scenario.cubism(hosts) )
 
+
+      model.scenario.sensor = model.scenario.urls.map(
+         function(url)
+         {
+            var sid = model.scenario.id
+            return {
+               id: url,
+               series: [
+                  {id: sid, urn: "urn:c:2xx+" + url, title: '2xx'}
+                 ,{id: sid, urn: "urn:c:3xx+" + url, title: '3xx'}
+                 ,{id: sid, urn: "urn:c:4xx+" + url, title: '4xx'}
+                 ,{id: sid, urn: "urn:c:5xx+" + url, title: '5xx'}
+                 ,{id: sid, urn: "urn:g:ttfb+" + url, title: 'ttfb (μs)'}
+                 ,{id: sid, urn: "urn:g:ttmr+" + url, title: 'ttmr (μs)'}
+               ]
+            }
+         }
+      )
+
+      model.scenario.sensor = model.scenario.sensor.concat(
+         model.scenario.hosts.map(
+         function(url)
+         {
+            var sid = model.scenario.id
+            return {
+               id: url,
+               series: [
+                  {id: sid, urn: "urn:g:connect+tcp" + url.substring(4), title: 'tcp (μs)'}
+                 ,{id: sid, urn: "urn:g:handshake+ssl" + url.substring(4), title: 'ssl (μs)'}
+                 ,{id: sid, urn: "urn:c:packet+tcp" + url.substring(4), title: 'packet / sec'}
+                 ,{id: sid, urn: "urn:g:packet+tcp" + url.substring(4), title: 'packet (byte)'}
+               ]
+            }
+         }
+         )
+      )
+
+console.log(model.scenario)
+   ui.cubism.init(scenario)
+   ui.cubism.series(model)
+
    return scenario
 }.$_()
+
+ui.cubism = {}
+ui.cubism.init = function(scenario)
+{
+   model.context = cubism.context()
+      .step(1 * 1000)          // 1 second per value
+      .size(width)
+      .serverDelay(30 * 1000)  // time to collect and process metrics by server
+      .clientDelay( 5 * 1000)
+      .start()
+ 
+   d3.select('.js-scenario-cubism').append("div")
+      .attr("class", "rule")
+      .call(model.context.rule())
+  
+   model.context.on("focus", 
+      function(i) 
+      {
+         d3.selectAll(".value")
+            .style("right", i == null ? null : model.context.size() - i + "px");
+      }
+   )
+}.$_()
+
+//
+var vmHorizon = function(ui, list)
+{
+   var data = list.map(
+      function(x)
+      {
+         return action.IO.series(x.id, x.urn, x.title)
+      }
+   );
+
+   // negative: dark -> light
+   // positive: light -> dark
+   var custom_colors = [
+      // '#ef3b2c', '#084594', '#2171b5', '#4292c6', '#6baed6', '#9ecae1', '#c6dbef', '#deebf7', '#f7fbff',
+      // '#f7fcf5', '#e5f5e0', '#c7e9c0', '#a1d99b', '#74c476', '#41ab5d', '#238b45', '#006d2c', '#00441b',
+// orange
+'#ffefe0',
+'#ffd1a6',
+'#ffba7a',
+'#ffa54e',
+'#ff8e25',
+'#cc711d',
+'#995516',
+'#66380e',
+
+// gray
+// '#f7f7f7',
+// '#ededed',
+// '#d1d1d1',
+// '#b6b6b6',
+// '#9b9b9b',
+// '#808080',
+// '#646464',
+// '#4a4a4a'
+
+// green
+// '#e7ffd6',
+// '#c6ff9e',
+// '#acff70',
+// '#8bfa3c',
+// '#72e620',
+// '#65cb1c',
+// '#4a9912',
+// '#30660a'
+
+// blue
+// '#e6f4ff',
+// '#d1ebff',
+// '#a3d9ff',
+// '#75c6ff',
+// '#26aafe',
+// '#1e87cb',
+// '#186698',
+// '#124365'
+
+// cyan
+// '#e8fCff',
+// '#b5f5ff',
+// '#8cf0ff',
+// '#61eaff',
+// '#24e0fe',
+// '#1fb3cb',
+// '#1a8899',
+// '#145b66'
+
+// yellow (+)
+// '#fff9d9',
+// '#fff09e',
+// '#ffeb7a',
+// '#ffe347',
+// '#ffda0a',
+// '#ccb116',
+// '#99840e',
+// '#665705'
+
+// red
+// '#ffeae6',
+// '#ffcabf',
+// '#ff9985',
+// '#ff6c4f',
+// '#ff4a25',
+// '#cc3a1d',
+// '#992b15',
+// '#661d0e'
+
+// magenta
+// '#f7e9f7',
+// '#f7c8f7',
+// '#f7b2f6',
+// '#f296f1',
+// '#eb74e9',
+// '#bb5cba',
+// '#8c458b',
+// '#5d2e5c'
+
+// purple
+'#f4edff',
+'#e1cfff',
+'#c8a6ff',
+'#ac7afd',
+'#9757fd',
+'#7845cb',
+'#5a3498',
+'#3c2365'
+
+   ];
+
+   d3.select(ui).selectAll(".horizon")
+      .data(data, function(d){return d.toString()})
+      .enter()
+         .insert("div", ".bottom")
+            .attr("class", "horizon")
+            .call(
+               model.context.horizon()
+                  .colors(custom_colors)
+                  .height( height )
+                  .format(d3.format("+,.2d"))
+            );
+}
+
+//
+ui.cubism.series = function(model)
+{
+console.log(model.scenario)
+   d3.select("#series").selectAll('div')
+      .data(model.scenario.urls.concat(model.scenario.hosts))
+      .enter()
+         .append('div')
+         .attr('id', function(d){return "hash-" + d.hashCode()})
+         .classed('chronolog', true)
+   
+   model.scenario.sensor.map(
+      function(x)
+      {
+         var ui = '#hash-' + x.id.hashCode()
+         d3.select(ui).selectAll("*").remove();
+         d3.select(ui).insert('h2').text(x.id)
+
+         d3.select(ui).selectAll(".axis")
+            .data(["top", "bottom"])
+            .enter().append("div")
+            .attr("class", function(d) {return d + " axis"; })
+            .each(function(d) { d3.select(this).call(model.context.axis().ticks(12).orient(d)); });
+
+         vmHorizon(ui, x.series)
+
+         d3.select(ui).insert('hr')
+      }
+   )
+
+   return model;
+}.$_();
+
 
 //-----------------------------------------------------------------------------
 //
@@ -395,11 +643,14 @@ chain.scenario_lint_and_save = function()
       {
          return M.IO(action.IO.typhoon.put(model.scenario))
       },
-      function(_)
+      function(scenario)
       {
-         return ui.scenario.append(model.scenario)
+         return ui.scenario.append(scenario)
       },
       ui.scenario.editor(false),
+      ui.scenario.show,
+      ui.scenario.realtime,
+      ui.scenario.action,
       ui.progressbar(false)
    ]).fail(ui.fail)
 }
