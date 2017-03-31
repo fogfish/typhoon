@@ -34,7 +34,7 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, erlang}].
+   [{'*', '*'}].
 
 %%
 content_accepted(_Req) ->

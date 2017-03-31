@@ -204,7 +204,7 @@ unit({urn, _, _} = Id) ->
    ).
 
 %%
-%% return number of active load units
+%% return static attributes about scenario
 -spec attr(urn()) -> {ok, [_]} | {error, any()}.
 
 attr({urn, _, _} = Id) ->

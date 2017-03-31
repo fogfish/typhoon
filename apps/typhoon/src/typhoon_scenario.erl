@@ -45,7 +45,7 @@ init([Vnode, Mod, Spec]) ->
          vnode      => Vnode,
          mod        => Mod,
          code       => Code,
-         properties => properties(Mod),
+         properties => properties(Mod, Spec),
          n          => 0
       }
    }.
@@ -53,8 +53,8 @@ init([Vnode, Mod, Spec]) ->
 free(_, _State) ->
    ok.
 
-ioctl(attr, #{n := N, properties := Properties}) ->
-   [{session, N}|Properties].
+ioctl(attr, #{properties := Properties}) ->
+   Properties.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -89,12 +89,13 @@ handle(_Msg, _Tx, State) ->
 
 %%
 %% cache scenario properties 
-properties(Scenario) ->
+properties(Scenario, Spec) ->
    {_, _, Urls} = scenario:lint(Scenario),
    [
       {id,    Scenario}
      ,{t,     Scenario:t()}
      ,{n,     Scenario:n()}
+     ,{spec,  Spec}
      ,{title, scalar:s(Scenario:title())}
      ,{hosts, hosts(Urls)}
      ,{urls,  Urls}
@@ -103,7 +104,7 @@ properties(Scenario) ->
 %%
 %% 
 hosts(Urls) ->
-   [host(Url) || Url <- Urls].
+   lists:usort([host(Url) || Url <- Urls]).
 
 host(Url) ->
    uri:s(uri:path(undefined, uri:new(Url))).
