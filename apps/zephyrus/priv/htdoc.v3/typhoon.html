@@ -124,8 +124,11 @@
       <div class="dc-card">
       </div>
       -->
-
+      <div class="js-analytics js-analytics__capacity">
       <h3 class="dc-h3">Capacity</h3>
+      <p class="dc--text-small">
+         The capacity measures the value of successful requests per unit of time. It reflects amount of effective traffic carried through system-under-test.
+      </p>
       <div class="dc-card">
          <div class="dc-card__capacity"></div>
          <p class="dc--text-small">
@@ -140,8 +143,13 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__ttfb">
       <h3 class="dc-h3">Time to First Byte</h3>
+      <p class="dc--text-small">
+         Time to First Byte (TTFB) is the duration from making an request to the first byte of the response being received. This metric assume that the network appears to mobile application as a system that makes it wait. This delay is influenced by request transfer delay, time required by remote host to process request, and delivery time of first byte/packet of the response. TTFB represents initial confirmation that remote host is responding and client application could procedure to rendering. A primary advantage of TTFB is that it concrete, consumer oriented metric easily measurable and is defined independently of underlying solutions or technologies.
+      </p>
       <div class="dc-card">
          <div class="dc-card__ttfb"></div>
          <p class="dc--text-small">
@@ -156,8 +164,13 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__ttmr">
       <h3 class="dc-h3">Time to Response</h3>
+      <p class="dc--text-small">
+         The time to display response is the most valuable metric from consumer perspective. It is influenced by performance of network and client application by itself. The time required for response rendering needs to be excluded from quality assessment due its dependency on user interface technology. Instead, Time to Meaningful Response (TTMR) is defined as network delay required to deliver response to client.
+      </p>
       <div class="dc-card">
          <div class="dc-card__ttmr"></div>
          <p class="dc--text-small">
@@ -172,7 +185,9 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__connect">
       <h3 class="dc-h3">Network Round Trip</h3>
       <div class="dc-card">
          <div class="dc-card__connect"></div>
@@ -188,7 +203,9 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__handshake">
       <h3 class="dc-h3">Protocol Handshake</h3>
       <div class="dc-card dc-card">
          <div class="dc-card__handshake"></div>
@@ -204,7 +221,9 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__pps">
       <h3 class="dc-h3">Packets per Second</h3>
       <div class="dc-card">
          <div class="dc-card__pps"></div>
@@ -220,7 +239,9 @@
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
       </div>
+      </div>
 
+      <div class="js-analytics js-analytics__packet">
       <h3 class="dc-h3">Packets size</h3>
       <div class="dc-card">
          <div class="dc-card__packet"></div>
@@ -235,6 +256,7 @@
             <img src="https://placehold.it/10/ffc40d/000000?text=+"> 80%
             <img src="https://placehold.it/10/F9F0CB/000000?text=+"> 75%
          </p>
+      </div>
       </div>
    </div> <!-- js-history -->
    </div> <!-- js-scenario -->

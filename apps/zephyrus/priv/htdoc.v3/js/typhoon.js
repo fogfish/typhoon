@@ -528,13 +528,16 @@ ui.cubism.series = function(domel, sensors)
 }.$_();
 
 //
-ui.bullet = function(ui, cdfs)
+ui.bullet = function(isA, cdfs)
 {
    if (!cdfs)
    {
-      $('ui').text('No content')
-      return 
-   }
+      $('.js-analytics__' + isA).hide()
+      return
+   } 
+   $('.js-analytics__' + isA).show()
+   var ui = '.dc-card__' + isA 
+
 
    var data = cdfs.map(
       function(stat)
@@ -828,13 +831,13 @@ chain.history_show = function()
          ).bind(
             function(_)
             {
-               ui.bullet('.dc-card__capacity', model.analytics['urn:c:2xx'])
-               ui.bullet('.dc-card__ttfb', model.analytics['urn:g:ttfb'])
-               ui.bullet('.dc-card__ttmr', model.analytics['urn:g:ttmr'])
-               ui.bullet('.dc-card__connect', model.analytics['urn:g:connect'])
-               ui.bullet('.dc-card__handshake', model.analytics['urn:g:handshake'])
-               ui.bullet('.dc-card__pps', model.analytics['urn:c:packet'])
-               ui.bullet('.dc-card__packet', model.analytics['urn:g:packet'])
+               ui.bullet('capacity', model.analytics['urn:c:2xx'])
+               ui.bullet('ttfb', model.analytics['urn:g:ttfb'])
+               ui.bullet('ttmr', model.analytics['urn:g:ttmr'])
+               ui.bullet('connect', model.analytics['urn:g:connect'])
+               ui.bullet('handshake', model.analytics['urn:g:handshake'])
+               ui.bullet('pps', model.analytics['urn:c:packet'])
+               ui.bullet('packet', model.analytics['urn:g:packet'])
             }
          ).fail(ui.fail)
 

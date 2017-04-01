@@ -147,6 +147,11 @@
    overflow: scroll;
 }
 
+.js-analytics
+{
+   display: none;
+}
+
 
 .dc-msg
 {
