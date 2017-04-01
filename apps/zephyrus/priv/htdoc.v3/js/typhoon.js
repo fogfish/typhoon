@@ -85,6 +85,37 @@ present.scenario.spec = function(spec)
    return model.scenario
 }.$_()
 
+// build a time series streams for url
+// identity of time series streams is aligned with aura application
+present.scenario.url2ts = function(sid, url)
+{
+   return {
+      id: url,
+      ts: [
+         {id: sid, urn: "urn:c:2xx+" + url, title: '2xx'}   // HTTP 2xx per second
+        ,{id: sid, urn: "urn:c:3xx+" + url, title: '3xx'}   // HTTP 3xx per second
+        ,{id: sid, urn: "urn:c:4xx+" + url, title: '4xx'}   // HTTP 4xx per second
+        ,{id: sid, urn: "urn:c:5xx+" + url, title: '5xx'}   // HTTP 5xx per second
+        ,{id: sid, urn: "urn:g:ttfb+" + url, title: 'ttfb (μs)'}  // Time To First Byte
+        ,{id: sid, urn: "urn:g:ttmr+" + url, title: 'ttmr (μs)'}  // Time To Meaningful Response
+      ]
+   }
+}.$_()
+
+present.scenario.host2ts = function(sid, host)
+{
+   // host is url (http://www.example.com:80)
+   return {
+      id: host,
+      ts: [
+         {id: sid, urn: "urn:g:connect+tcp" + host.substring(4), title: 'tcp (μs)'}
+        ,{id: sid, urn: "urn:g:handshake+ssl" + host.substring(4), title: 'ssl (μs)'}
+        ,{id: sid, urn: "urn:c:packet+tcp" + host.substring(4), title: 'packet / sec'}
+        ,{id: sid, urn: "urn:g:packet+tcp" + host.substring(4), title: 'packet (byte)'}
+      ]
+   }
+}.$_()
+
 //-----------------------------------------------------------------------------
 //
 // action IO
@@ -186,13 +217,13 @@ action.IO.typhoon.remove = function(scenario, accept, reject)
    .fail(function(xhr){reject(action.IO.fail(xhr))})
 }.$_()
 
-action.IO.typhoon.spawn = function(scenario)
+action.IO.typhoon.spawn = function(sid)
 {
-   return action.IO.json([model.api, 'scenario', scenario.id, 'spawn'].join('/'))
+   return action.IO.json([model.api, 'scenario', sid, 'spawn'].join('/'))
 }
-action.IO.typhoon.abort = function(scenario)
+action.IO.typhoon.abort = function(sid)
 {
-   return action.IO.json([model.api, 'scenario', scenario.id, 'abort'].join('/'))
+   return action.IO.json([model.api, 'scenario', sid, 'abort'].join('/'))
 }
 
 //-----------------------------------------------------------------------------
@@ -234,6 +265,15 @@ action.UI.scenario.spec = function(accept)
 action.UI.scenario.spawn = action.UI.click('.js-action-scenario-spawn')
 action.UI.scenario.abort = action.UI.click('.js-action-scenario-abort')
 action.UI.scenario.remove = action.UI.click('.js-action-scenario-remove')
+action.UI.scenario.shortcut = function(accept)
+{
+   $('.js-scenario-thumbnail').delegate('label', 'click',
+      function(e) {
+        e.stopPropagation();
+        accept($(this).data())    
+      }
+   )  
+}.$_()
 
 //-----------------------------------------------------------------------------
 //
@@ -321,56 +361,19 @@ ui.scenario.editor = function(flag, x)
 
 ui.scenario.realtime = function(scenario)
 {
-   var urls  = {items: scenario.urls.map(function(x){return {title: x}})}
-   $('.js-scenario-cubism-url').replaceWith( ui.scenario.cubism(urls) )
-
-   var hosts = {items: scenario.hosts.map(function(x){return {title: x}})}
-   $('.js-scenario-cubism-host').replaceWith( ui.scenario.cubism(hosts) )
-
-
-      model.scenario.sensor = model.scenario.urls.map(
-         function(url)
-         {
-            var sid = model.scenario.id
-            return {
-               id: url,
-               series: [
-                  {id: sid, urn: "urn:c:2xx+" + url, title: '2xx'}
-                 ,{id: sid, urn: "urn:c:3xx+" + url, title: '3xx'}
-                 ,{id: sid, urn: "urn:c:4xx+" + url, title: '4xx'}
-                 ,{id: sid, urn: "urn:c:5xx+" + url, title: '5xx'}
-                 ,{id: sid, urn: "urn:g:ttfb+" + url, title: 'ttfb (μs)'}
-                 ,{id: sid, urn: "urn:g:ttmr+" + url, title: 'ttmr (μs)'}
-               ]
-            }
-         }
-      )
-
-      model.scenario.sensor = model.scenario.sensor.concat(
-         model.scenario.hosts.map(
-         function(url)
-         {
-            var sid = model.scenario.id
-            return {
-               id: url,
-               series: [
-                  {id: sid, urn: "urn:g:connect+tcp" + url.substring(4), title: 'tcp (μs)'}
-                 ,{id: sid, urn: "urn:g:handshake+ssl" + url.substring(4), title: 'ssl (μs)'}
-                 ,{id: sid, urn: "urn:c:packet+tcp" + url.substring(4), title: 'packet / sec'}
-                 ,{id: sid, urn: "urn:g:packet+tcp" + url.substring(4), title: 'packet (byte)'}
-               ]
-            }
-         }
-         )
-      )
-
-console.log(model.scenario)
    ui.cubism.init(scenario)
-   ui.cubism.series(model)
+
+   $('.js-scenario-cubism-url').text('')
+   ui.cubism.series('.js-scenario-cubism-url', scenario.urls.map(present.scenario.url2ts(scenario.id)))
+
+   $('.js-scenario-cubism-host').text('')
+   ui.cubism.series('.js-scenario-cubism-host', scenario.hosts.map(present.scenario.host2ts(scenario.id)))
 
    return scenario
 }.$_()
 
+//
+//
 ui.cubism = {}
 ui.cubism.orange = ['#ffefe0','#ffd1a6','#ffba7a','#ffa54e','#ff8e25','#cc711d','#995516','#66380e']
 ui.cubism.gray   = ['#f7f7f7','#ededed','#d1d1d1','#b6b6b6','#9b9b9b','#808080','#646464','#4a4a4a']
@@ -428,21 +431,22 @@ ui.cubism.vmHorizon = function(el, list)
 }
 
 //
-ui.cubism.series = function(model)
+ui.cubism.series = function(domel, sensors)
 {
-   d3.select("#series").selectAll('div')
-      .data(model.scenario.urls.concat(model.scenario.hosts))
+   d3.select(domel).selectAll('div')
+      // .data(model.scenario.urls.concat(model.scenario.hosts))
+      .data(sensors)
       .enter()
          .append('div')
-         .attr('id', function(d){return "hash-" + d.hashCode()})
+         .attr('id', function(d){return "hash-" + d.id.hashCode()})
          .classed('chronolog', true)
    
-   model.scenario.sensor.map(
+   sensors.map(
       function(x)
       {
          var el = '#hash-' + x.id.hashCode()
          d3.select(el).selectAll("*").remove();
-         d3.select(el).insert('h2').text(x.id)
+         d3.select(el).insert('h4').classed('dc-h4', true).text(x.id)
 
          d3.select(el).selectAll(".axis")
             .data(["top", "bottom"])
@@ -450,13 +454,11 @@ ui.cubism.series = function(model)
             .attr("class", function(d) {return d + " axis"; })
             .each(function(d) { d3.select(this).call(model.context.axis().ticks(12).orient(d)); });
 
-         ui.cubism.vmHorizon(el, x.series)
-
-         d3.select(el).insert('hr')
+         ui.cubism.vmHorizon(el, x.ts)
       }
    )
 
-   return model;
+   return sensors;
 }.$_();
 
 
@@ -568,6 +570,25 @@ chain.scenario_lint_and_save = function()
    ]).fail(ui.fail)
 }
 
+chain.scenario_shortcut = function()
+{
+   M.do([
+      M.UI(action.UI.scenario.shortcut),
+      function(json)
+      {
+         var klass = '.js-shortcut-' + json.scenario
+         if ( $(klass).prop('checked') )
+         {
+            $(klass).prop('checked', false)
+            return M.IO(action.IO.typhoon.abort(json.scenario))
+         } else {
+            $(klass).prop('checked', true)
+            return M.IO(action.IO.typhoon.spawn(json.scenario))
+         }
+      }
+   ]).fail(ui.fail)
+}
+
 chain.scenario_spawn = function()
 {
    M.do([
@@ -575,7 +596,7 @@ chain.scenario_spawn = function()
       ui.progressbar(true),
       function(_)
       {
-         return M.IO(action.IO.typhoon.spawn(model.scenario))
+         return M.IO(action.IO.typhoon.spawn(model.scenario.id))
       },
       function(_)
       {
@@ -592,7 +613,7 @@ chain.scenario_abort = function()
       ui.progressbar(true),
       function(_)
       {
-         return M.IO(action.IO.typhoon.abort(model.scenario))
+         return M.IO(action.IO.typhoon.abort(model.scenario.id))
       },
       function(_)
       {
@@ -628,11 +649,24 @@ $(document).ready(
       chain.scenario_init()
       chain.scenario_show()
       chain.scenario_lint_and_save()
+      chain.scenario_shortcut()
       chain.scenario_spawn()
       chain.scenario_abort()
       chain.scenario_remove()
 
       chain.request_user_profile()
+
+
+
+// $("TABLE").delegate("tr", 'click',function() {
+//        alert("TR");
+//     });
+
+//     $("TABLE").delegate("label", 'click',function(e) {
+//         e.stopPropagation();
+//         alert("INPUT");    
+//     });  
+
    }
 )
 
