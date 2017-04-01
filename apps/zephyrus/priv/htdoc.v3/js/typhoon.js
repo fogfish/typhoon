@@ -17,6 +17,9 @@ var model = {
    // scenario specification
    scenario: null,
 
+   // analytics
+   analytics: null,   
+
    // text editor (ace)
    editor: null,
    
@@ -115,6 +118,27 @@ present.scenario.host2ts = function(sid, host)
       ]
    }
 }.$_()
+
+// builds cdf
+present.cdf = function(title, series)
+{
+   var x = series.map(function(x){return x[1]}).sort(d3.ascending)
+   return {
+      title: title,
+      min: d3.min(x),
+      mean: d3.mean(x),
+      std: d3.deviation(x),
+      q25: d3.quantile(x, 0.25),
+      q50: d3.quantile(x, 0.50),
+      q75: d3.quantile(x, 0.75),
+      q80: d3.quantile(x, 0.80),
+      q90: d3.quantile(x, 0.90),
+      q95: d3.quantile(x, 0.95),
+      q99: d3.quantile(x, 0.99),
+      max: d3.max(x)
+   }
+}
+
 
 //-----------------------------------------------------------------------------
 //
@@ -231,6 +255,11 @@ action.IO.typhoon.history = function(sid)
    return action.IO.json([model.api, 'scenario', sid, 'history'].join('/'))
 }
 
+action.IO.typhoon.series = function(sid, urn, from, to)
+{
+   return action.IO.json([model.api, 'scenario', sid, 'series', encodeURIComponent(urn), from, to].join('/'))
+}
+
 //-----------------------------------------------------------------------------
 //
 // action UI
@@ -280,6 +309,10 @@ action.UI.scenario.shortcut = function(accept)
       }
    )  
 }.$_()
+
+//
+action.UI.history = {}
+action.UI.history.show = action.UI.click('.js-action-history')
 
 //-----------------------------------------------------------------------------
 //
@@ -494,6 +527,61 @@ ui.cubism.series = function(domel, sensors)
    return sensors;
 }.$_();
 
+//
+ui.bullet = function(ui, cdfs)
+{
+   if (!cdfs)
+   {
+      $('ui').text('No content')
+      return 
+   }
+
+   var data = cdfs.map(
+      function(stat)
+      {
+         return {
+            title: stat.title,
+            subtitle: '',
+            ranges: [stat.min, stat.mean, stat.max],
+            measures: [stat.q75, stat.q80, stat.q90, stat.q95, stat.q99],
+            markers: [stat.q50]
+         }
+      }
+   )
+
+   var margin = {top: 25, right: 40, bottom: 20, left: 120};
+   var width  = 800;
+   var height = 75 - margin.top - margin.bottom;
+
+   var chart = d3.bullet()
+      .width(width)
+      .height(height);
+   
+   d3.select(ui).selectAll('*').remove();
+   var svg = d3.select(ui).selectAll("svg")
+      .data(data)
+      .enter().append("svg")
+         .attr("class", "bullet")
+         .attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+         .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+            .call(chart);
+
+   var title = svg.append("g")
+      .style("text-anchor", "end")
+      .attr("transform", "translate(-6," + height / 2 + ")");
+
+   title.append("text")
+      .attr("class", "title")
+      .text(function(d) { return d.title; });
+
+   title.append("text")
+      .attr("class", "subtitle")
+      .attr("dy", "1em")
+      .text(function(d) { return d.subtitle; });   
+}.$_()
+
 
 //-----------------------------------------------------------------------------
 //
@@ -686,6 +774,75 @@ chain.scenario_remove = function()
    ]).fail(ui.fail)
 }
 
+chain.load_analytics = function(head, url, sensors, a, b)
+{
+   return sensors.ts.reduce(
+      function(acc, x)
+      {
+         return M.do([acc,
+            function(_)
+            {
+               return M.IO(action.IO.typhoon.series(x.id, x.urn, a, b))
+            },
+            function(series)
+            {
+               if (series.length > 0)
+               {
+                  var key  = x.urn.split('+')[0]
+                  if (!(key in model.analytics))
+                     model.analytics[key] = []
+                  model.analytics[key].push(present.cdf(url, series))
+               }
+            }
+         ])
+      },
+      head
+   )
+}
+
+chain.history_show = function()
+{
+   M.do([
+      M.UI(action.UI.history.show),
+      function(history)
+      {
+         var ta = history.t 
+         var tb = history.t + history.duration
+         model.analytics = {}
+         var io = model.scenario.urls.reduce(
+            function(Mio, url)
+            {
+               var x = present.scenario.url2ts(model.scenario.id, url)
+               return chain.load_analytics(Mio, url, x, ta, tb)
+            },
+            M.IO(true)
+         )
+
+         model.scenario.hosts.reduce(
+            function(Mio, url)
+            {
+               var x = present.scenario.host2ts(model.scenario.id, url)
+               return chain.load_analytics(Mio, url, x, ta, tb)
+            },
+            io
+         ).bind(
+            function(_)
+            {
+               ui.bullet('.dc-card__capacity', model.analytics['urn:c:2xx'])
+               ui.bullet('.dc-card__ttfb', model.analytics['urn:g:ttfb'])
+               ui.bullet('.dc-card__ttmr', model.analytics['urn:g:ttmr'])
+               ui.bullet('.dc-card__connect', model.analytics['urn:g:connect'])
+               ui.bullet('.dc-card__handshake', model.analytics['urn:g:handshake'])
+               ui.bullet('.dc-card__pps', model.analytics['urn:c:packet'])
+               ui.bullet('.dc-card__packet', model.analytics['urn:g:packet'])
+            }
+         ).fail(ui.fail)
+
+      }
+   ]).fail(ui.fail)
+}
+
+
 //
 // entry point
 $(document).ready(
@@ -700,6 +857,8 @@ $(document).ready(
       chain.scenario_spawn()
       chain.scenario_abort()
       chain.scenario_remove()
+      chain.history_show()
+
 
       chain.request_user_profile()
    }
