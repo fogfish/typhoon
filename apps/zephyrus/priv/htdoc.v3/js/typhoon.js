@@ -347,7 +347,10 @@ ui.scenario.cubism = whiskers.compile($('#scenario-cubism').html())
 
 ui.scenario.append = function(scenario)
 {
-   $('.js-scenario-thumbnail').prepend( ui.scenario.thumbnail(scenario) )
+   if ($('.dc-table__tr[data-scenario="' + scenario.id + '"]').length == 0)
+   {
+      $('.js-scenario-thumbnail').prepend( ui.scenario.thumbnail(scenario) )
+   }
    return scenario
 }.$_()
 
