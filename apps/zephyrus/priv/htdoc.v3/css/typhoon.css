@@ -136,8 +136,17 @@
 .dc-card__editor
 {
    padding: 1em;
-   min-height: 100%;
+   min-height: 80vh;
+   max-height: 80vh;
 }
+
+.dc-card__history
+{
+   max-height: 60vh;
+   /* TODO: overflow table */
+   overflow: scroll;
+}
+
 
 .dc-msg
 {

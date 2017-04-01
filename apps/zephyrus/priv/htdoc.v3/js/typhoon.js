@@ -169,9 +169,9 @@ action.IO.typhoon.profile = function(uid)
    return action.IO.json([model.api, 'user', uid, 'scenario'].join('/'))
 }
 
-action.IO.typhoon.get = function(id)
+action.IO.typhoon.get = function(sid)
 {
-   return action.IO.json([model.api, 'scenario', id].join('/'))
+   return action.IO.json([model.api, 'scenario', sid].join('/'))
 }
 
 action.IO.typhoon.lint = function(scenario, accept, reject)
@@ -226,6 +226,11 @@ action.IO.typhoon.abort = function(sid)
    return action.IO.json([model.api, 'scenario', sid, 'abort'].join('/'))
 }
 
+action.IO.typhoon.history = function(sid)
+{
+   return action.IO.json([model.api, 'scenario', sid, 'history'].join('/'))
+}
+
 //-----------------------------------------------------------------------------
 //
 // action UI
@@ -262,6 +267,7 @@ action.UI.scenario.spec = function(accept)
    )
 }.$_()
 
+action.UI.scenario.hide  = action.UI.click('.js-action-scenario-hide')
 action.UI.scenario.spawn = action.UI.click('.js-action-scenario-spawn')
 action.UI.scenario.abort = action.UI.click('.js-action-scenario-abort')
 action.UI.scenario.remove = action.UI.click('.js-action-scenario-remove')
@@ -338,6 +344,11 @@ ui.scenario.show = function(scenario)
    return scenario
 }.$_()
 
+ui.scenario.hide = function(_)
+{
+   $('.js-scenario').hide()
+}.$_()
+
 ui.scenario.action = function(flag, scenario)
 {
    if (flag)
@@ -370,6 +381,28 @@ ui.scenario.realtime = function(scenario)
    ui.cubism.series('.js-scenario-cubism-host', scenario.hosts.map(present.scenario.host2ts(scenario.id)))
 
    return scenario
+}.$_()
+
+ui.scenario.history = function(history)
+{
+   
+
+}.$_()
+
+//
+ui.history  = {}
+ui.history.thumbnail = whiskers.compile($('#history-thumbnail').html())
+
+ui.history.show = function(history)
+{
+   history.forEach(
+      function(x)
+      {
+         var d = new Date(x.t * 1000)
+         var h = Object.assign({}, x, {timestamp: d.toUTCString()})
+         $('.js-history-thumbnail').prepend( ui.history.thumbnail(h) )
+      }
+   )
 }.$_()
 
 //
@@ -535,7 +568,20 @@ chain.scenario_show = function()
       },
       ui.scenario.show,
       ui.scenario.realtime,
-      ui.scenario.action
+      ui.scenario.action,
+      function(_)
+      {
+         return M.IO(action.IO.typhoon.history(model.scenario.id))
+      },
+      ui.history.show
+   ]).fail(ui.fail)
+}
+
+chain.scenario_hide = function()
+{
+   M.do([
+      M.UI(action.UI.scenario.hide),
+      ui.scenario.hide
    ]).fail(ui.fail)
 }
 
@@ -648,6 +694,7 @@ $(document).ready(
       chain.init_ace_editor()
       chain.scenario_init()
       chain.scenario_show()
+      chain.scenario_hide()
       chain.scenario_lint_and_save()
       chain.scenario_shortcut()
       chain.scenario_spawn()
@@ -655,18 +702,6 @@ $(document).ready(
       chain.scenario_remove()
 
       chain.request_user_profile()
-
-
-
-// $("TABLE").delegate("tr", 'click',function() {
-//        alert("TR");
-//     });
-
-//     $("TABLE").delegate("label", 'click',function(e) {
-//         e.stopPropagation();
-//         alert("INPUT");    
-//     });  
-
    }
 )
 

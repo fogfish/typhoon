@@ -48,8 +48,11 @@ history(Urn) ->
    B = tempus:sub(A, 30 * 24 * 3600),
    fun(FD) ->
       stream:map(
-         fun({T, X}) -> 
-            [tempus:s(T), X] 
+         fun({T, X}) ->
+            [
+               {t, tempus:s(T)},
+               {duration,    X}
+            ]
          end,
          chronolog:stream(FD, Urn, {A, B})
       )

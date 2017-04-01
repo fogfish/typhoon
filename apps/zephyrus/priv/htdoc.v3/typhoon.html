@@ -78,6 +78,7 @@
    <h1 class="dc-h1 js-scenario-title">No title</h1>
    <div class="dc-card dc-card__scenario">
       <div class="t-item-controls">
+         <button class="dc-btn dc-btn--link js-action-scenario-hide">Hide</button>
          <button class="dc-btn dc-btn--link dc-btn--disabled js-action-scenario-spawn">Launch</button>
          <button class="dc-btn dc-btn--link dc-btn--destroy dc-btn--disabled js-action-scenario-abort">Abort</button>
          <button class="dc-btn dc-btn--link dc-btn--destroy dc-btn--disabled js-action-scenario-remove">Remove</button>
@@ -101,7 +102,7 @@
    </div>
 
    <h2 class="dc-h2">History</h2>
-   <div class="dc-card">
+   <div class="dc-card dc-card__history">
       <table class="dc-table">
          <thead class="dc-table__thead">
             <tr class="dc-table__tr">
@@ -113,27 +114,7 @@
                <th class="dc-table__th">Latency (ms)</th>
             </tr>
          </thead>
-
-         <tbody class="dc-table__tbody">
-            <tr class="dc-table__tr dc-table__tr--interactive">
-               <td class="dc-table__td">Skeleton</td>
-               <td class="dc-table__td">Skeleton Workload Scenario</td>
-               <td class="dc-table__td">2</td>
-               <td class="dc-table__td">20</td>
-               <td class="dc-table__td">100</td>
-               <td class="dc-table__td">54</td>
-            </tr>
-
-            <tr class="dc-table__tr dc-table__tr--interactive">
-               <td class="dc-table__td">Skeleton</td>
-               <td class="dc-table__td">Skeleton Workload Scenario</td>
-               <td class="dc-table__td">2</td>
-               <td class="dc-table__td">20</td>
-               <td class="dc-table__td">100</td>
-               <td class="dc-table__td">54</td>
-            </tr>
-
-         </tbody>
+         <tbody class="dc-table__tbody js-history-thumbnail"></tbody>
       </table>
    </div>
 
@@ -194,11 +175,15 @@
    </tr>
 </script>
 
-<script type="text/template" id="scenario-cubism">
-   {for e in items}
-   <h4 class="dc-h4">{e.title}</h4>
-   xxx
-   {/for}
+<script type="text/template" id="history-thumbnail">
+   <tr class="dc-table__tr dc-table__tr--interactive js-action-history" data-scenario="{t}">
+      <td class="dc-table__td">{timestamp}</td>
+      <td class="dc-table__td">{duration}</td>
+      <td class="dc-table__td">{n}</td>
+      <td class="dc-table__td">{capacity}</td>
+      <td class="dc-table__td">{availability}</td>
+      <td class="dc-table__td">{latency}</td>
+   </tr>
 </script>
 
 
