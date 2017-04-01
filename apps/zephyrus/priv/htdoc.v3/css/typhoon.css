@@ -161,3 +161,11 @@
    width: 70%;
 }
 
+@media print
+{
+   .t-no-print,
+   .t-no-print *
+   {
+      display: none !important;
+   }
+}
