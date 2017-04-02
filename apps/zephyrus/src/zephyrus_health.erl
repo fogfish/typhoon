@@ -18,6 +18,9 @@
 -module(zephyrus_health).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-compile({parse_transform, category}).
+-compile({parse_transform, monad}).
+
 -export([
    allowed_methods/1,
    content_provided/1, 
@@ -37,12 +40,26 @@ content_provided(_Req) ->
 %%
 %%
 'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
-   case lens:get(lens:pair(<<"check">>), Env) of
+   [$^ ||
+      fmap(lens:get(lens:pair(<<"check">>), Env)),
+      health(_),
+      fmap(jsx:encode(_))
+   ].
 
-      %%
-      %% active peers 
-      <<"peer">> ->
-         Peer = [erlang:node() | erlang:nodes()], 
-         {200, jsx:encode([scalar:s(X) || X <- Peer])}
+health(<<"peer">>) ->
+   % active peers 
+   Peer = [erlang:node() | erlang:nodes()],
+   {ok, [scalar:s(X) || X <- Peer]};
 
-   end.
+health(<<"sys">>) ->
+   do([m_either ||
+      Peers <- health(<<"peer">>),
+      IOrps <- aura:clue({urn, <<"c">>, <<"sys:rps">>}),
+      IOcap <- aura:clue({urn, <<"c">>, <<"sys:capacity">>}),
+      Scenario <- aura:clue({urn, <<"c">>, <<"sys:scenario">>}),
+      return([
+         {peers, Peers}, {rps, IOrps}, {failure, IOrps - IOcap}, {scenario, Scenario}
+      ])
+   ]).
+
+

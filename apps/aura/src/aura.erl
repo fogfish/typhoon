@@ -22,6 +22,7 @@
   ,send/3
   ,clue/1
   ,stream/2
+  ,lookup/1
 ]).
 
 %% udp port base
@@ -74,6 +75,15 @@ stream(Urn, Fun) ->
    %% @todo: think about ambit instead of pure rpc
    Node = hd(peer(Urn)),
    pipe:call({aura_storage, Node}, {stream, Fun}, 300000).   
+
+%%
+%%
+-spec lookup(uri:urn()) -> [{_, _}].
+
+lookup(Urn) ->
+   Node = hd(peer(Urn)),
+   pipe:call({aura_storage, Node}, {lookup, Urn}, 300000).
+
 
 
 peer(Urn) ->

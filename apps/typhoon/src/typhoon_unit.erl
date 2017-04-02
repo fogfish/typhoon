@@ -67,6 +67,7 @@ handle(request, _, #{scenario := Scenario, config := Config, context := Context0
    Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
    aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
+   aura:send({urn, <<"c">>, <<"sys:scenario">>}, Tb, 1),
    erlang:send(self(), request),
    {next_state, handle, State#{context => Context1}};
 

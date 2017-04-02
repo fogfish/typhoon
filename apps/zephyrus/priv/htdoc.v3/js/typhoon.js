@@ -260,6 +260,11 @@ action.IO.typhoon.series = function(sid, urn, from, to)
    return action.IO.json([model.api, 'scenario', sid, 'series', encodeURIComponent(urn), from, to].join('/'))
 }
 
+action.IO.system = function()
+{
+   return action.IO.json([model.api, 'health', 'sys'].join('/'))
+}
+
 //-----------------------------------------------------------------------------
 //
 // action UI
@@ -419,11 +424,6 @@ ui.scenario.realtime = function(scenario)
    return scenario
 }.$_()
 
-ui.scenario.history = function(history)
-{
-   
-
-}.$_()
 
 //
 ui.history  = {}
@@ -588,6 +588,14 @@ ui.bullet = function(isA, cdfs)
       .text(function(d) { return d.subtitle; });   
 }.$_()
 
+
+ui.system = function(json)
+{
+   $('.js-system-peers').text(json.peers.length)
+   $('.js-system-rps').text(json.rps)
+   $('.js-system-failure').text(json.failure)
+   $('.js-system-scenario').text(json.scenario)
+}.$_()
 
 //-----------------------------------------------------------------------------
 //
@@ -849,6 +857,29 @@ chain.history_show = function()
 }
 
 
+chain.system_status = function()
+{
+   M.do([
+      M.IO(action.IO.after(5000, 1)),
+      function(_)
+      {
+         return M.IO(action.IO.system())
+      },   
+      ui.system,
+      function(_)
+      {
+         chain.system_status()
+      }
+   ]).fail(
+      function(x)
+      {
+         console.error(x)
+         chain.system_status()
+      }
+   )
+}
+
+
 //
 // entry point
 $(document).ready(
@@ -865,8 +896,9 @@ $(document).ready(
       chain.scenario_remove()
       chain.history_show()
 
-
       chain.request_user_profile()
+
+      chain.system_status()
    }
 )
 

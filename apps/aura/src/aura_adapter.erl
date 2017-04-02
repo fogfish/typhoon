@@ -67,6 +67,7 @@ trace(ssl, peer, _, _, _) ->
 
 trace(http, code, URI, T, Code)
  when Code >= 200, Code < 300 ->
+   aura:send({urn, <<"c">>, <<"sys:capacity">>}, T, 1),
    aura:send({urn, <<"c">>, uid('2xx', URI)}, T, 1);
 
 trace(http, code, URI, T, Code)
@@ -82,6 +83,7 @@ trace(http, code, URI, T, Code)
    aura:send({urn, <<"c">>, uid('5xx', URI)}, T, 1);
 
 trace(http, ttfb, URI, T, X) ->
+   aura:send({urn, <<"c">>, <<"sys:rps">>}, T, 1),
    aura:send({urn, <<"g">>, uid(ttfb, URI)}, T, X);
 
 trace(http, ttmr, URI, T, X) ->
