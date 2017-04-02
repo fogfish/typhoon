@@ -122,6 +122,17 @@ present.scenario.host2ts = function(sid, host)
    }
 }.$_()
 
+present.scenario.user2ts = function(sid)
+{
+   return {
+      id: sid,
+      ts: [
+         {id: sid, urn: "urn:c:scenario:" + sid, title: 'sessions / sec'}
+        ,{id: sid, urn: "urn:g:scenario:" + sid, title: 'latency (μs)'}
+      ]
+   }
+}.$_()
+
 // builds cdf
 present.cdf = function(title, series)
 {
@@ -422,6 +433,9 @@ ui.scenario.editor = function(flag, x)
 ui.scenario.realtime = function(scenario)
 {
    ui.cubism.init(scenario)
+
+   $('.js-scenario-cubism-user').text('')
+   ui.cubism.series('.js-scenario-cubism-user', [present.scenario.user2ts(scenario.id)])
 
    $('.js-scenario-cubism-url').text('')
    ui.cubism.series('.js-scenario-cubism-url', scenario.urls.map(present.scenario.url2ts(scenario.id)))
