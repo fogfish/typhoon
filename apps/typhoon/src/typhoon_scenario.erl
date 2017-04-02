@@ -18,7 +18,9 @@
 -module(typhoon_scenario).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
+
 -include_lib("ambitz/include/ambitz.hrl").
+-compile({parse_transform,   category}).
 
 -export([
    start_link/3
@@ -137,6 +139,6 @@ run(Q, N, T, #{mod := Scenario} = State) ->
 %%
 %% log history
 history(#{mod := Scenario}) ->
-   Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   Urn  = {urn, <<"c">>, <<"history:", (scalar:s(Scenario))/binary>>},
    aura:send(Urn, os:timestamp(), Scenario:t()).
 

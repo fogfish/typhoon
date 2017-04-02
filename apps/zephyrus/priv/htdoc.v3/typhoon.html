@@ -43,7 +43,7 @@
          </div>
          <div class="dc-column dc-column--small-1">
             <div class="dc-column__contents">
-               <h4 class="dc-h4">RPS</h4>
+               <h4 class="dc-h4">Load</h4>
                <p class="dc--text"><strong class="js-system-rps">0</strong></p>
             </div>
          </div>
@@ -57,7 +57,7 @@
    </div>
 
 
-   <h1 class="dc-h1 t-no-print">Workload Scenario</h1>
+   <h1 class="dc-h1 t-no-print">Available Workload Scenarios</h1>
    <div class="dc-card t-no-print">
       <div class="t-item-controls">
          <button class="dc-btn dc-btn--link t-control js-action-scenario-new">New Scenario</button>
@@ -68,11 +68,11 @@
             <tr class="dc-table__tr">
                <th class="dc-table__th">ID</th>
                <th class="dc-table__th">Title</th>
-               <th class="dc-table__th">Duration (ms)</th>
-               <th class="dc-table__th">Sessions (#)</th>
-               <th class="dc-table__th">Capacity (RPS)</th>
-               <th class="dc-table__th">Availability (%)</th>
-               <th class="dc-table__th">Latency (ms)</th>
+               <th class="dc-table__th">Duration <span class="dc--text-small">(ms)</span></th>
+               <th class="dc-table__th">Sessions <span class="dc--text-small">(#)</span></th>
+               <th class="dc-table__th">Capacity <span class="dc--text-small">(RPS)</span></th>
+               <th class="dc-table__th">Availability <span class="dc--text-small">(%)</span></th>
+               <th class="dc-table__th">Latency <span class="dc--text-small">(μs)</span></th>
                <th class="dc-table__th">Status</th>
             </tr>
          </thead>
@@ -81,7 +81,7 @@
    </div>
 
    <div class="js-scenario">
-   <h1 class="dc-h1 js-scenario-title t-no-print">No title</h1>
+   <h1 class="dc-h1 t-no-print">Scenario <q class="js-scenario-title"></q></h1>
    <div class="dc-card dc-card__scenario t-no-print">
       <div class="t-item-controls">
          <button class="dc-btn dc-btn--link js-action-scenario-hide">Hide</button>
@@ -107,17 +107,19 @@
       </div>
    </div>
 
-   <h2 class="dc-h2 t-no-print">History</h2>
+   <h2 class="dc-h2 t-no-print">History of <q class="js-scenario-title"></q></h2>
    <div class="dc-card dc-card__history t-no-print">
       <table class="dc-table">
          <thead class="dc-table__thead">
             <tr class="dc-table__tr">
                <th class="dc-table__th">Date</th>
                <th class="dc-table__th">Duration</th>
+               <!--
                <th class="dc-table__th">Sessions (#)</th>
                <th class="dc-table__th">Capacity (RPS)</th>
                <th class="dc-table__th">Availability (%)</th>
-               <th class="dc-table__th">Latency (ms)</th>
+               <th class="dc-table__th">Latency (μs)</th>
+               -->
             </tr>
          </thead>
          <tbody class="dc-table__tbody js-history-thumbnail"></tbody>
@@ -131,7 +133,12 @@
       </div>
       -->
       <div class="js-analytics js-analytics__capacity">
-      <h3 class="dc-h3">Capacity</h3>
+      <h2 class="dc-h2">Latency analysis of <q class="js-scenario-title"></q></h2>
+      <p class="dc--text-small">
+         End-to-end latency is one of user-oriented characteristics used for quality assessment of distributed software architecture. The ultimate goal is the ability to quantitatively evaluate and trade-off software quality attributes to ensure competitive end-to-end latency of software solutions. This latency analysis is the investigation of a component behavior using information gathered as the service sustain artificial load.
+      </p>
+
+      <h3 class="dc-h3">Capacity (RPS)</h3>
       <p class="dc--text-small">
          The capacity measures the value of successful requests per unit of time. It reflects amount of effective traffic carried through system-under-test.
       </p>
@@ -152,7 +159,7 @@
       </div>
 
       <div class="js-analytics js-analytics__ttfb">
-      <h3 class="dc-h3">Time to First Byte</h3>
+      <h3 class="dc-h3">Time to First Byte (μs)</h3>
       <p class="dc--text-small">
          Time to First Byte (TTFB) is the duration from making an request to the first byte of the response being received. This metric assume that the network appears to mobile application as a system that makes it wait. This delay is influenced by request transfer delay, time required by remote host to process request, and delivery time of first byte/packet of the response. TTFB represents initial confirmation that remote host is responding and client application could procedure to rendering. A primary advantage of TTFB is that it concrete, consumer oriented metric easily measurable and is defined independently of underlying solutions or technologies.
       </p>
@@ -173,7 +180,7 @@
       </div>
 
       <div class="js-analytics js-analytics__ttmr">
-      <h3 class="dc-h3">Time to Response</h3>
+      <h3 class="dc-h3">Time to Response (μs)</h3>
       <p class="dc--text-small">
          The time to display response is the most valuable metric from consumer perspective. It is influenced by performance of network and client application by itself. The time required for response rendering needs to be excluded from quality assessment due its dependency on user interface technology. Instead, Time to Meaningful Response (TTMR) is defined as network delay required to deliver response to client.
       </p>
@@ -194,7 +201,7 @@
       </div>
 
       <div class="js-analytics js-analytics__connect">
-      <h3 class="dc-h3">Network Round Trip</h3>
+      <h3 class="dc-h3">Network Round Trip (μs)</h3>
       <div class="dc-card">
          <div class="dc-card__connect"></div>
          <p class="dc--text-small">
@@ -212,7 +219,7 @@
       </div>
 
       <div class="js-analytics js-analytics__handshake">
-      <h3 class="dc-h3">Protocol Handshake</h3>
+      <h3 class="dc-h3">Protocol Handshake (μs)</h3>
       <div class="dc-card dc-card">
          <div class="dc-card__handshake"></div>
          <p class="dc--text-small">
@@ -248,7 +255,7 @@
       </div>
 
       <div class="js-analytics js-analytics__packet">
-      <h3 class="dc-h3">Packets size</h3>
+      <h3 class="dc-h3">Packets size (bytes)</h3>
       <div class="dc-card">
          <div class="dc-card__packet"></div>
          <p class="dc--text-small">
@@ -308,9 +315,9 @@
       <td class="dc-table__td">{title}</td>
       <td class="dc-table__td">{t}</td>
       <td class="dc-table__td">{n}</td>
-      <td class="dc-table__td">{capacity}</td>
-      <td class="dc-table__td">{availability}</td>
-      <td class="dc-table__td">{latency}</td>
+      <td class="dc-table__td js-scenario-capacity">{capacity}</td>
+      <td class="dc-table__td js-scenario-availability">{availability}</td>
+      <td class="dc-table__td js-scenario-latency">{latency}</td>
       <td class="dc-table__td">
          <input type="checkbox" class="dc-checkbox dc-checkbox--alt js-shortcut-{id}">
          <label class="dc-label" data-scenario="{id}">&nbsp;</label>
@@ -322,10 +329,12 @@
    <tr class="dc-table__tr dc-table__tr--interactive js-action-history" data-t="{t}" data-duration="{duration}">
       <td class="dc-table__td">{timestamp}</td>
       <td class="dc-table__td">{duration}</td>
+      <!-- 
       <td class="dc-table__td">{n}</td>
       <td class="dc-table__td">{capacity}</td>
       <td class="dc-table__td">{availability}</td>
       <td class="dc-table__td">{latency}</td>
+      -->
    </tr>
 </script>
 

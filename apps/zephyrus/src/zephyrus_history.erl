@@ -38,7 +38,7 @@ content_provided(_Req) ->
 %%
 'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
    Id  = lens:get(lens:pair(<<"id">>), Env),
-   Urn = {urn, <<"c">>, <<"scenario:", (scalar:s(Id))/binary>>},
+   Urn = {urn, <<"c">>, <<"history:", (scalar:s(Id))/binary>>},
    {ok, List} = aura:stream(Urn, history(Urn)),
    {ok, jsx:encode(List)}.
 

@@ -161,6 +161,12 @@
    width: 70%;
 }
 
+.dc-table__th .dc--text-small
+{
+   text-transform: none;
+}
+
+
 @media print
 {
    .t-no-print,

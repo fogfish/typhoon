@@ -14,6 +14,9 @@ var model = {
    api: 'http://localhost:8080',
    user: 'root',
 
+   // profile
+   profile: [],
+
    // scenario specification
    scenario: null,
 
@@ -255,6 +258,11 @@ action.IO.typhoon.history = function(sid)
    return action.IO.json([model.api, 'scenario', sid, 'history'].join('/'))
 }
 
+action.IO.typhoon.attr = function(sid)
+{
+   return action.IO.json([model.api, 'scenario', sid, 'attributes'].join('/'))
+}
+
 action.IO.typhoon.series = function(sid, urn, from, to)
 {
    return action.IO.json([model.api, 'scenario', sid, 'series', encodeURIComponent(urn), from, to].join('/'))
@@ -424,6 +432,18 @@ ui.scenario.realtime = function(scenario)
    return scenario
 }.$_()
 
+ui.scenario.attributes = function(attr)
+{
+   $('.dc-table__tr[data-scenario="' + attr.id + '"] .js-scenario-capacity').text(attr.capacity.toFixed(2))
+   $('.dc-table__tr[data-scenario="' + attr.id + '"] .js-scenario-availability').text(attr.availability.toFixed(2))
+   $('.dc-table__tr[data-scenario="' + attr.id + '"] .js-scenario-latency').text(attr.latency.toFixed(2))
+   if (attr.latency > 0)
+      $('.js-shortcut-' + attr.id).prop('checked', true)
+   else
+      $('.js-shortcut-' + attr.id).prop('checked', false)
+
+   return attr
+}.$_()
 
 //
 ui.history  = {}
@@ -647,6 +667,11 @@ chain.request_user_profile = function()
 {
    M.do([
       M.IO(action.IO.typhoon.profile(model.user)),
+      function(list)
+      {
+         model.profile = list
+         return list
+      },
       ui.scenario.list
    ]).fail(ui.fail)
 }
@@ -879,6 +904,27 @@ chain.system_status = function()
    )
 }
 
+chain.scenario_status = function(_)
+{
+   model.profile.reduce(
+      function(acc, x)
+      {
+         return M.do([acc,
+            function()
+            {
+               return M.IO(action.IO.typhoon.attr(x.id))
+            },
+            ui.scenario.attributes
+         ])
+      },
+      M.IO(action.IO.after(5000, 1))
+   ).bind(
+      function(_){ chain.scenario_status() }
+   ).fail(
+      function(_){ chain.scenario_status() }
+   )
+}
+
 
 //
 // entry point
@@ -899,6 +945,7 @@ $(document).ready(
       chain.request_user_profile()
 
       chain.system_status()
+      chain.scenario_status()
    }
 )
 
