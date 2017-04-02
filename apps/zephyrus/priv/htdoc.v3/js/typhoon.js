@@ -400,7 +400,12 @@ ui.scenario.show = function(scenario)
    if (scenario._new)
       $('.js-scenario-spec').prop('checked', true)
 
+   $('.js-scenario-cubism-user').text('No Content')
+   $('.js-scenario-cubism-url').text('No Content')
+   $('.js-scenario-cubism-host').text('No Content')
+
    $('.js-scenario').show()
+   $('html, body').animate({scrollTop: $(".dc-card__scenario").offset().top}, 1000);
    return scenario
 }.$_()
 
@@ -465,6 +470,7 @@ ui.history.thumbnail = whiskers.compile($('#history-thumbnail').html())
 
 ui.history.show = function(history)
 {
+   $('.js-history-thumbnail').empty()
    history.forEach(
       function(x)
       {
