@@ -110,14 +110,13 @@ present.scenario.url2ts = function(sid, url)
 
 present.scenario.host2ts = function(sid, host)
 {
-   // host is url (http://www.example.com:80)
    return {
       id: host,
       ts: [
-         {id: sid, urn: "urn:g:connect+tcp" + host.substring(4), title: 'tcp (μs)'}
-        ,{id: sid, urn: "urn:g:handshake+ssl" + host.substring(4), title: 'ssl (μs)'}
-        ,{id: sid, urn: "urn:c:packet+tcp" + host.substring(4), title: 'packet / sec'}
-        ,{id: sid, urn: "urn:g:packet+tcp" + host.substring(4), title: 'packet (byte)'}
+         {id: sid, urn: "urn:g:connect+" + host, title: 'tcp (μs)'}
+        ,{id: sid, urn: "urn:g:handshake+" + host, title: 'ssl (μs)'}
+        ,{id: sid, urn: "urn:c:packet+" + host, title: 'packet / sec'}
+        ,{id: sid, urn: "urn:g:packet+" + host, title: 'packet (byte)'}
       ]
    }
 }.$_()
