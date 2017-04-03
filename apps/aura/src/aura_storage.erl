@@ -81,6 +81,10 @@ handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
    ),
    {next_state, handle, State};
 
+handle({lookup, Urn}, Pipe, #{fd := FD} = State) ->
+   pipe:ack(Pipe, chronolog:lookup(FD, Urn)),
+   {next_state, handle, State};
+
 handle(_, _, State) ->
    {next_state, handle, State}.
 

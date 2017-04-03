@@ -34,7 +34,7 @@ content_provided(_Req) ->
    [{application, json}].
 
 %%
-'GET'(_Type, _Msg, {Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
    Id  = lens:get(lens:pair(<<"id">>), Env),
    Urn = uri:new( uri:unescape( lens:get(lens:pair(<<"urn">>), Env) ) ),
    A   = t(lens:get(lens:pair(<<"from">>), Env)),

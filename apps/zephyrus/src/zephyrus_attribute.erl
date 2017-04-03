@@ -18,6 +18,8 @@
 -module(zephyrus_attribute).
 -author('dmitry.kolesnikov@zalando.fi').
 
+-compile({parse_transform, monad}).
+
 -export([
    allowed_methods/1,
    content_provided/1, 
@@ -42,48 +44,29 @@ content_provided(_Req) ->
          {303, [{'Location', uri:s(Url)}], <<>>};
       
       {ok,   Spec} ->
-         Json = [
-            {capacity,     attribute(capacity, Spec)}
-           ,{availability, attribute(availability, Spec)}
-           ,{latency,      attribute(latency, Spec)}
-           |Spec
-         ],
-         {ok, jsx:encode(Json)}
+         do([m_either ||
+            Capacity <- capacity(Id),
+            Availability <- availability(Id),
+            Latency <- latency(Id),
+            _    =< Spec,
+            _    =< [{capacity, Capacity} | _], 
+            _    =< [{availability, Availability} | _], 
+            _    =< [{latency, Latency} | _], 
+            return(jsx:encode(_))
+         ])
    end.
 
+capacity(Scenario) ->
+   aura:clue({urn, <<"c">>, <<Scenario/binary, ":capacity">>}).
 
-attribute(capacity, Spec) ->
-   http(<<"2xx">>, Spec);
+availability(Scenario) ->
+   do([m_either || 
+      RPS <- aura:clue({urn, <<"c">>, <<Scenario/binary, ":rps">>}),
+      Cap <- aura:clue({urn, <<"c">>, <<Scenario/binary, ":capacity">>}),
+      _   =< case RPS of X when X > 0 -> Cap / RPS; _ -> 0 end,
+      return(_)  
+   ]).
 
-attribute(availability, Spec) ->
-   Ht200 = http(<<"2xx">>, Spec),
-   Ht400 = http(<<"4xx">>, Spec),
-   Ht500 = http(<<"5xx">>, Spec),
-   case (Ht200 + Ht400 + Ht500) of
-      X when X > 0 -> 
-         100 * Ht200 / X;
-      _ ->
-         0.0
-   end;
+latency(Scenario) ->
+   aura:clue({urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>}).
 
-attribute(latency, Spec) ->
-   Scenario = lens:get(lens:pair(id), Spec),
-   {ok, X}  = aura:clue(
-      {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>}
-   ),
-   X.
-
-%%
-%% read http attribute
-http(Code, Spec) ->
-   lists:sum(
-      lists:map(
-         fun(Urn) ->
-            Uri = uri:new(Urn),
-            Uid = uri:s( uri:schema([Code, uri:schema(Uri)], Uri) ),
-            {ok, X} = aura:clue({urn, <<"c">>, Uid}),
-            X
-         end,
-         lens:get(lens:pair(urls), Spec)
-      )
-   ).

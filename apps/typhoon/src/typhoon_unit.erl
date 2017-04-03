@@ -64,9 +64,14 @@ free(_Reason, _) ->
 handle(request, _, #{scenario := Scenario, config := Config, context := Context0} = State) ->
    Ta  = os:timestamp(),
    [_|Context1] = ( Scenario:run(Config) )(Context0),
-   Urn  = {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   UrnA= {urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
    Tb  = os:timestamp(),
-   aura:send(Urn, Tb, tempus:u(tempus:sub(Tb, Ta))),
+   aura:send(UrnA, Tb, tempus:u(tempus:sub(Tb, Ta))),
+
+   UrnB= {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   aura:send(UrnB, Tb, 1),
+
+   aura:send({urn, <<"c">>, <<"sys:scenario">>}, Tb, 1),
    erlang:send(self(), request),
    {next_state, handle, State#{context => Context1}};
 

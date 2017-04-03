@@ -9,7 +9,9 @@ Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker p
 ```
 git clone https://github.com/zalando/typhoon
 cd typhoon
-make && make pkg
+make
+make test
+make pkg
 ```
 
 The result is bundle tar-ball archive as-is deployable to any host. It contains both a Erlang VM, all required dependencies and the Typhoon application `typhoon-{vsn}.{arch}.{plat}.bundle`.
@@ -17,8 +19,31 @@ The result is bundle tar-ball archive as-is deployable to any host. It contains 
 It is possible to assemble cross-platform packages on MacOS, but this requires a Docker run-time.
 
 ```
-make && make pkg PLAT=Linux 
+make clean
+make
+make pkg PLAT=Linux 
 ```
+
+## Development
+
+Build and run typhoon in your development console:
+```
+make && make run
+```
+
+The command with boot Erlang virtual machine and opens shell. Now you are able to start typhoon is debug mode. You shall be able to use rest api and open typhoon dashboard in the browser once these subsystems are launched:
+
+```erlang
+%% start telemetry management subsystem
+aura:start().
+
+%% start typhoon core subsystem
+typhoon:start().
+
+%% start rest api subsystem
+zephyrus:start().
+```
+
 
 ## Installation
 
@@ -40,7 +65,7 @@ The tool uses Erlang's [config file format](http://www.erlang.org/doc/man/config
 /usr/local/typhoon/releases/x.y.z/sys.config
 ```
 
-The user-configurable options and possible values are defined in the [configuration guidelines](config.md).
+The user-configurable options and possible values are defined in the [configuration guidelines](../rel/sys.config).
 
 ## Running
 
@@ -66,7 +91,7 @@ Generate on-demand an EC2 compute-capacity CloudFCormation template:
 yaml2json < rel/typhoon.aws  > typhoon.json
 ``` 
 
-The output is a valid AWS CloudFormation JSON file. You can use AWS's Console/Cloud Formation service to deploy the stack to the cloud. The automated deployment procedure is optimized from [Amazon Linux distribution](https://aws.amazon.com/amazon-linux-ami). You need to parameter-ize your stack with:
+The output is a valid AWS CloudFormation JSON file. You can use AWS's Console/Cloud Formation service to deploy the stack to the cloud. The automated deployment procedure is optimized from [Amazon Linux distribution](https://aws.amazon.com/amazon-linux-ami). You need to parameterize your stack with:
 * desired AMI
 * deployment subnet
 * SSH key

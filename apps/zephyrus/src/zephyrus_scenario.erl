@@ -19,6 +19,8 @@
 -author('dmitry.kolesnikov@zalando.fi').
 
 -include_lib("ambitz/include/ambitz.hrl").
+-compile({parse_transform, category}).
+-compile({parse_transform, monad}).
 
 -export([
    allowed_methods/1,
@@ -35,7 +37,7 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{application, erlang}].
+   [{application, erlang}, {application, json}].
 
 %%
 content_accepted(_Req) ->
@@ -45,23 +47,22 @@ content_accepted(_Req) ->
 %%
 'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
-   R  = scalar:i(uri:q(<<"r">>, 1, Url)), 
-   {ok, #entity{val = Val}} = typhoon:get({urn, root, Id}, [{r, R}]),
-   case crdts:value(Val) of
-      undefined ->
-         404;
-      
-      {_, _, [_, Spec]} ->
-         {200, Spec}
-   end.
+   _  = scalar:i(uri:q(<<"r">>, 1, Url)),
+   [$^ ||
+      typhoon:attr({urn, root, Id}),
+      fmap(jsx:encode(_)) 
+   ].
 
 %%
 %%
 'PUT'({_, {application, erlang}}, Spec, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),
-   {ok, _} = typhoon:put({urn, root, Id}, Spec, [{w, W}]),
-   created.
+   [$^ ||
+      typhoon:put({urn, root, Id}, erlang:iolist_to_binary(Spec), [{w, W}]),
+      typhoon:attr({urn, root, Id}),
+      fmap(jsx:encode(_)) 
+   ].
 
 %%
 %%
@@ -69,4 +70,4 @@ content_accepted(_Req) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok, _} = typhoon:remove({urn, root, Id}, [{w, W}]),
-   ok.
+   {ok, jsx:encode(Id)}.

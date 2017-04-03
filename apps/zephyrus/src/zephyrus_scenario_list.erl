@@ -33,7 +33,7 @@ content_provided(_Req) ->
 
 %%
 %%
-'GET'(_Type, _Msg, {Url, _Head, Env}) ->
+'GET'(_Type, _Msg, {_Url, _Head, _Env}) ->
    {ok, jsonify( typhoon:scenario({urn, user, <<"root">>}, []) )}.
 
 jsonify({error, _} = Error) ->

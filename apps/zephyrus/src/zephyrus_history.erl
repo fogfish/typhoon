@@ -38,7 +38,7 @@ content_provided(_Req) ->
 %%
 'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
    Id  = lens:get(lens:pair(<<"id">>), Env),
-   Urn = {urn, <<"c">>, <<"scenario:", (scalar:s(Id))/binary>>},
+   Urn = {urn, <<"c">>, <<"history:", (scalar:s(Id))/binary>>},
    {ok, List} = aura:stream(Urn, history(Urn)),
    {ok, jsx:encode(List)}.
 
@@ -48,8 +48,11 @@ history(Urn) ->
    B = tempus:sub(A, 30 * 24 * 3600),
    fun(FD) ->
       stream:map(
-         fun({T, X}) -> 
-            [tempus:s(T), X] 
+         fun({T, X}) ->
+            [
+               {t, tempus:s(T)},
+               {duration,    X}
+            ]
          end,
          chronolog:stream(FD, Urn, {A, B})
       )

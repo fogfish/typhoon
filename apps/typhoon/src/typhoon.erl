@@ -34,14 +34,9 @@
   ,profile/2
   ,scenario/2
 
-
-  % ,define/3
-  % ,lookup/2
-  % ,remove/2
-
   ,peer/1
   ,run/1
-  ,once/1
+  ,abort/1
   ,unit/1
   ,attr/1
 ]).
@@ -56,7 +51,6 @@
 %%
 %% data types
 -type urn()    :: {urn, _, _}.
--type spec()   :: binary().  %% application/erlang
 -type opts()   :: [_].
 
 
@@ -145,15 +139,6 @@ scenario({urn, user, _} = User, Opts) ->
    
 
 
-
-%%
-%% remove load scenario from cluster
-% -spec remove(urn(), opts()) -> ok.
-
-% remove({urn, _, _} = Id, Opts) ->
-%    ambitz:free(typhoon, uri:s(Id), Opts).
-
-
 %%
 %% run load scenario, the scenario will terminate automatically after timeout
 -spec run(urn()) -> ok | {error, _}.
@@ -161,19 +146,29 @@ scenario({urn, user, _} = User, Opts) ->
 run({urn, _, _} = Id) ->
    {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
    Pids = crdts:value(CRDT),
-   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
+   Pid  = lists:nth(rand:uniform(length(Pids)), Pids),
    pipe:call(Pid, run).
 
+
 %%
-%% test load scenario, run once, the scenario will terminate automatically after timeout
--spec once(urn()) -> ok | {error, _}.
+%% abort load scenario
+-spec abort(urn()) -> ok | {error, _}.
 
-once({urn, _, _} = Id) ->
-   {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 1}]),
-   Pids = crdts:value(CRDT),
-   Pid  = lists:nth(random:uniform(length(Pids)), Pids),
-   pipe:call(Pid, once, 60000).
-
+abort({urn, _, _} = Id) ->
+   {ok, #entity{val = Val}} = typhoon:get(Id, [{w, 3}]),
+   typhoon:remove(Id, [{w, 3}]),
+   {_, _, [Mod, Spec]} = crdts:value(Val),
+   lists:foreach(
+      fun(Node) ->
+         _ = rpc:call(Node, code, purge, [Mod]),
+         _ = rpc:call(Node, code, delete, [Mod])
+      end,
+      [erlang:node() | erlang:nodes()]
+   ),
+   %% Note: this is not nice but we need to delay re-start of scenario
+   %%       the ultimate fix in the pipeline
+   timer:sleep(5000),
+   typhoon:put(Id, Spec, [{w, 3}]).
 
 
 
@@ -209,7 +204,7 @@ unit({urn, _, _} = Id) ->
    ).
 
 %%
-%% return number of active load units
+%% return static attributes about scenario
 -spec attr(urn()) -> {ok, [_]} | {error, any()}.
 
 attr({urn, _, _} = Id) ->
@@ -238,7 +233,7 @@ fd() ->
 
 stream(Id, Gen) ->
    {ok, #entity{vnode = Vnode}} = ambitz:lookup(typhoon, Id, [{r, 3}]),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(random:uniform(length(Vnode)), Vnode))),
+   Node  = erlang:node(ek:vnode(peer, lists:nth(rand:uniform(length(Vnode)), Vnode))),
    pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000).
 
 

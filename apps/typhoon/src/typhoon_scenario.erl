@@ -18,7 +18,9 @@
 -module(typhoon_scenario).
 -behaviour(pipe).
 -author('dmitry.kolesnikov@zalando.fi').
+
 -include_lib("ambitz/include/ambitz.hrl").
+-compile({parse_transform,   category}).
 
 -export([
    start_link/3
@@ -45,7 +47,7 @@ init([Vnode, Mod, Spec]) ->
          vnode      => Vnode,
          mod        => Mod,
          code       => Code,
-         properties => properties(Mod),
+         properties => properties(Mod, Spec),
          n          => 0
       }
    }.
@@ -53,8 +55,8 @@ init([Vnode, Mod, Spec]) ->
 free(_, _State) ->
    ok.
 
-ioctl(attr, #{n := N, properties := Properties}) ->
-   [{session, N}|Properties].
+ioctl(attr, #{properties := Properties}) ->
+   Properties.
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -62,24 +64,18 @@ ioctl(attr, #{n := N, properties := Properties}) ->
 %%%
 %%%----------------------------------------------------------------------------   
 
+handle({code, Code}, _, State) ->
+   {next_state, handle, State#{code => Code}};
+
+handle({properties, Prop}, _, State) ->
+   {next_state, handle, State#{properties => Prop}};
+
 handle(run, Tx, #{mod := Mod, code := Code, n := N0}=State) ->
    drift(Mod, Code),
    history(State),
    N1 = length(run(State)),
    pipe:ack(Tx, {ok, N1}),
    {next_state, handle, State#{n => N0 + N1}};
-
-handle(once, Tx, #{mod := Scenario} = State) ->
-   Config   = config(Scenario),
-   UnitTest = [X || {X, 1} <- Scenario:module_info(exports), X =/= init, X =/= module_info],
-   Value    = lists:map(
-      fun(Unit) ->
-         hd( (Scenario:Unit(Config))(#{}) )
-      end,
-      UnitTest
-   ),
-   pipe:ack(Tx, Value),
-   {next_state, handle, State};
 
 handle({'DOWN', _Ref, _Type, _Pid, _Reason}, _, #{n := N} = State) ->
    {next_state, handle, State#{n := N - 1}};
@@ -95,12 +91,13 @@ handle(_Msg, _Tx, State) ->
 
 %%
 %% cache scenario properties 
-properties(Scenario) ->
+properties(Scenario, Spec) ->
    {_, _, Urls} = scenario:lint(Scenario),
    [
       {id,    Scenario}
      ,{t,     Scenario:t()}
      ,{n,     Scenario:n()}
+     ,{spec,  Spec}
      ,{title, scalar:s(Scenario:title())}
      ,{hosts, hosts(Urls)}
      ,{urls,  Urls}
@@ -109,7 +106,7 @@ properties(Scenario) ->
 %%
 %% 
 hosts(Urls) ->
-   [host(Url) || Url <- Urls].
+   lists:usort([host(Url) || Url <- Urls]).
 
 host(Url) ->
    uri:s(uri:path(undefined, uri:new(Url))).
@@ -142,18 +139,6 @@ run(Q, N, T, #{mod := Scenario} = State) ->
 %%
 %% log history
 history(#{mod := Scenario}) ->
-   Urn  = {urn, <<"c">>, <<"scenario:", (scalar:s(Scenario))/binary>>},
+   Urn  = {urn, <<"c">>, <<"history:", (scalar:s(Scenario))/binary>>},
    aura:send(Urn, os:timestamp(), Scenario:t()).
-
-%%
-%% configure scenario execution
-config(Scenario) ->
-   case lens:get(lens:pair(init, undefined), Scenario:module_info(exports)) of
-      0 ->
-         Fun = Scenario:init(),
-         Fun(#{});
-
-      _ ->
-         [undefined]
-   end.
 

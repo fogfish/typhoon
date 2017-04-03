@@ -32,20 +32,27 @@ allowed_methods(_Req) ->
 %%
 %%
 content_provided(_Req) ->
-   [{'application', 'json'}].
+   [{application, json}].
 
 
 %%
 %%
 'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    Id = lens:get(lens:pair(<<"id">>), Env),
+   Hint = uri:s(uri:segments([Id], Url)),
    case lens:get(lens:pair(<<"action">>), Env) of
 
       %%
       %% spawn load scenario 
       <<"spawn">> ->
          _ = typhoon:run({urn, root, Id}),
-         {202, [{'Location',  uri:s(uri:segments([Id], Url))}], <<>>};
+         {202, [{'Location', Hint}], jsx:encode(Hint)};
+
+      %% 
+      %% abort
+      <<"abort">> ->
+         _ = typhoon:abort({urn, root, Id}),
+         {ok, jsx:encode(Hint)};
 
       %%
       %% ping runing workers (concurrent units producing load)

@@ -40,7 +40,6 @@ start_link(Ns, Urn) ->
 
 init([Ns, {urn, _, _} = Urn]) ->
    ok = pns:register(Ns, Urn, self()),
-   random:seed(os:timestamp()),
    {ok, handle,
       #{
          urn  => Urn,
@@ -106,7 +105,7 @@ addr(Vnode) ->
 %% allocate egress socket
 socket() ->
    Socks = [erlang:element(2, X) || X <- supervisor:which_children(aura_egress_sup)],
-   lists:nth( random:uniform(length(Socks)), Socks ).
+   lists:nth( rand:uniform(length(Socks)), Socks ).
 
 
 %%
