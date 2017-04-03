@@ -38,10 +38,10 @@ Install directions with AWS-related details are [here](https://github.com/zaland
 
 ### Running Typhoon
 
-The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest [release version](https://github.com/zalando/typhoon/releases) instead of `x.y.z`:
+The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest [release version](https://github.com/zalando/typhoon/releases):
 
 ```
-docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
+docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
 ```
 
 This A) starts a single Typhoon node as a Docker container and B) exposes services using the REST API on port 8080. By default it is bound to localhost IP address on Mac OS and Linux. If you're using a different platform, please check your Docker configuration.
@@ -66,11 +66,11 @@ Congrats! You have successfully started a Typhoon, written a stress test scenari
 
 ### Running a local Typhoon cluster 
 
-Use docker containers to spawn three node cluster on local environment. The following examples shows how to spawn cluster seeder and other nodes. Use the latest [release version](https://github.com/zalando/typhoon/releases) instead of `x.y.z`
+Use docker containers to spawn three node cluster on local environment. The following examples shows how to spawn cluster seeder and other nodes. Use the latest [release version](https://github.com/zalando/typhoon/releases)
 
 Let's spawn a seeder node, this node is used by other Typhoon peers to discover each other.
 ```
-docker run -d -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:x.y.z
+docker run -d -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
 ``` 
 
 Next, the identity of seeder node is needed to spawn other peers. We can use health check api for this 
@@ -79,8 +79,8 @@ curl http://localhost:8080/health/peer
 ```
 The application should return list of cluster peers `["typhoon@172.17.0.2"]`. This identity shall be passed to other containers within `EK_SEED` environment variable. The following example spawn more cluster peers: 
 ```
-docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:x.y.z
-docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:x.y.z
+docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:latest
+docker run -d -p 8080 -e "EK_SEED=typhoon@172.17.0.2" registry.opensource.zalan.do/hunt/typhoon:latest
 ``` 
 
 We can validate that all peers joins the cluster using health check api 
