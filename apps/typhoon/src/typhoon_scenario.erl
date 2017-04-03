@@ -100,17 +100,47 @@ properties(Scenario, Spec) ->
      ,{spec,  Spec}
      ,{title, scalar:s(Scenario:title())}
      ,{hosts, hosts(Urls)}
-     ,{urls,  Urls}
+     ,{urls,  urls(Urls)}
    ].
 
 %%
 %% 
 hosts(Urls) ->
-   lists:usort([host(Url) || Url <- Urls]).
+   lists:usort([host(uri:new(Url)) || Url <- Urls]).
 
 host(Url) ->
-   uri:s(uri:path(undefined, uri:new(Url))).
+   [$.|| 
+      uri:port(uri:port(Url), Url),
+      uri:schema(host_schema(Url), _), 
+      uri:path(undefined, _), 
+      uri:q(undefined, _),
+      uri:s(_)
+   ].
 
+host_schema(Url) ->
+   case uri:schema(Url) of
+      https -> ssl;
+      http  -> tcp;
+      X     -> X
+   end.
+
+%%
+%%
+urls(Urls) ->
+   lists:usort([url(uri:new(Url)) || Url <- Urls]).
+
+url(Url) ->
+   [$.|| 
+      uri:port(uri:port(Url), Url), 
+      uri:schema(url_schema(Url), _), 
+      uri:s(_)
+   ].
+
+url_schema(Url) ->
+   case uri:schema(Url) of
+      https -> http;
+      X     -> X
+   end.
 
 %%
 %% deploy code to cluster nodes
