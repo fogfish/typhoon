@@ -41,7 +41,7 @@ content_provided(_Req) ->
 'GET'(_Type, _Msg, {Url, _Head, Env}) ->
    case uri:segments(Url) of
       [] ->
-         html(<<"profile">>);
+         html(<<"typhoon">>);
 
       [<<"dashboard">>] -> 
          html(<<"profile">>);
