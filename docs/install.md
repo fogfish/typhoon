@@ -20,7 +20,6 @@ It is possible to assemble cross-platform packages on MacOS, but this requires a
 
 ```
 make clean
-make
 make pkg PLAT=Linux 
 ```
 

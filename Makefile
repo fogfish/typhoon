@@ -134,7 +134,7 @@ _build/dockermake:
 endif
 
 ## build docker image
-docker: rel/Dockerfile
+docker: rel/Dockerfile scm-source.json
 	docker build \
 		--build-arg APP=${APP} \
 		--build-arg VSN=${VSN} \
@@ -213,6 +213,23 @@ rebar3:
 	@echo "==> install rebar (${REBAR})" ;\
 	curl -L -O --progress-bar https://github.com/erlang/rebar3/releases/download/${REBAR}/rebar3 ;\
 	chmod +x $@
+
+
+#####################################################################
+##
+## stups extension
+##
+#####################################################################
+
+
+scm-source.json: FORCE
+	@R=`git rev-parse HEAD`;\
+	U=`git config --get remote.upstream.url || git config --get remote.origin.url`;\
+	S=`git status --porcelain | awk 1 ORS=' '`;\
+	if [ -n "$$S" ]; then R="$$R (locally modified)"; fi; \
+	echo "{\"url\": \"git:$$U\", \"revision\": \"$$R\", \"author\": \"${USER}\", \"status\": \"$$S\"}" > $@
+
+FORCE:
 
 .PHONY: test rel deps all pkg 
 
