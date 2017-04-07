@@ -1,15 +1,19 @@
+## Typhoon
+
 <p align="center">
 <img align="left" width="200" src="docs/img/typhoon.png">
 <ul>
+<br/>
 <li><strong>Source</strong>: https://github.com/zalando/typhoon
 <li><strong>Issues</strong>: https://github.com/zalando/typhoon/issues
 <li><strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
+<br/>
 </ul>
+<strong>Makes latency assessments of distributed systems build from microservices.</strong>
 </p>
 
-## Typhoon
 
-**Makes latency assessments of distributed systems build from microservices.**
+
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon) [![GitHub release](https://img.shields.io/github/release/zalando/typhoon.svg)](https://github.com/zalando/typhoon/releases/latest)
 
