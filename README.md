@@ -2,6 +2,12 @@
 
 <p align="center">
 <img align="left" width="200" src="docs/img/typhoon.png">
+<ul>
+<li><strong>Source</strong>: https://github.com/zalando/typhoon
+<li><strong>Issues</strong>: https://github.com/zalando/typhoon/issues
+<li><strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
+</ul>
+
 <strong>Makes latency assessments of distributed systems build from microservices.</strong>
 </p>
 
