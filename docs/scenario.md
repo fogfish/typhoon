@@ -6,6 +6,18 @@ Typhoon uses pure functional expressions to define load scenario. These expressi
 * [Erlang expressions](http://erlang.org/doc/reference_manual/expressions.html)
 
 
+## scenario management
+
+Typhoon provides REST API for management of workload scenario:
+```
+curl -XPUT http://localhost:8080/scenario/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/skeleton.erl
+```  
+
+Click the `Launch` button to kick off stress testing. Typhoon has a 60-second delay (approximately) before it renders the first result: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
+
+
 ## do-notation
 
 The "do"-notation, so called monadic binding form, is well know in functional programming languages such as [Haskell](https://en.wikibooks.org/wiki/Haskell/do_notation), [Scala](http://docs.scala-lang.org/tutorials/tour/sequence-comprehensions.html) and [Erlang](https://github.com/fogfish/datum/blob/master/doc/monad.md). The workload scenario is a collection of nested `do-notation` in context of a [state monad](https://acm.wustl.edu/functional/state-monad.php). 
@@ -36,6 +48,7 @@ request() ->
       return(_)
    ]).
 ```
+
 
 ## Make Workload Scenario
 

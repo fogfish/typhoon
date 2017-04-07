@@ -6,7 +6,7 @@
 
 [![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
 
-Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating protocols and microservice latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/).  
+Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating protocols and microservices latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/).
 
 ### Key Features and Functionality
 
@@ -41,7 +41,7 @@ Install directions with AWS-related details are [here](https://github.com/zaland
 The easiest way to run a standalone instance is with the Docker container. The option is viable only if you've configured either [Docker Toolbox](https://www.docker.com/products/docker-toolbox) or [the Docker daemon](https://docs.docker.com/engine/reference/commandline/dockerd/). Use the latest [release version](https://github.com/zalando/typhoon/releases):
 
 ```
-docker run -it -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
+docker run -it --name typhoon --rm -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
 ```
 
 This A) starts a single Typhoon node as a Docker container and B) exposes services using the REST API on port 8080. By default it is bound to localhost IP address on Mac OS and Linux. If you're using a different platform, please check your Docker configuration.
@@ -55,12 +55,13 @@ This brings Typhoon up and running. The application uses local IP address 127.0.
 
 Next, define a simple workload scenario and publish it to Typhoon:
 ```
-curl -XPUT http://localhost:8080/scenario/example \
-   -H 'Content-Type: application/erlang' \
-   --data-binary @examples/skeleton.erl
+docker exec -it typhoon tyrl \
+   -i example \
+   -H "Connection: keep-alive" \
+   http://localhost:8080/health/peer
 ```  
 
-Click the `Launch` button to kick off stress testing. Typhoon has a 60-second delay (approximately) before it renders the first result: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
+Open Typhoon dashboard at web browser http://localhost:8080 to analyze measurements: network delay, roundtrip time, TLS handshake, Time to First Byte, and Time to Meaningful Response. It also evaluates protocol overhead at this time by approximating packet metrics, and estimates application performance.
 
 Congrats! You have successfully started a Typhoon, written a stress test scenario, deployed it to a cluster and analyzed your system's behavior.
 
