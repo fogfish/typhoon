@@ -1,8 +1,10 @@
 <p align="center">
 <img align="left" width="200" src="docs/img/typhoon.png">
-<br/>&nsbp;&nsbp;&nsbp;&nsbp;<strong>Source</strong>: https://github.com/zalando/typhoon
-<br/>&nsbp;&nsbp;&nsbp;&nsbp;<strong>Issues</strong>: https://github.com/zalando/typhoon/issues
-<br/>&nsbp;&nsbp;&nsbp;&nsbp;<strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
+<ul>
+<li><strong>Source</strong>: https://github.com/zalando/typhoon
+<li><strong>Issues</strong>: https://github.com/zalando/typhoon/issues
+<li><strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
+</ul>
 </p>
 
 ## Typhoon
