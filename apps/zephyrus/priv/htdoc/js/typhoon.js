@@ -532,7 +532,7 @@ ui.cubism.vmHorizon = function(el, list)
             .attr("class", "horizon")
             .call(
                model.context.horizon()
-                  .colors(ui.cubism.orange.reverse().concat(ui.cubism.yellow))
+                  .colors(ui.cubism.yellow.reverse().concat(ui.cubism.orange))
                   .height( height )
                   .format(d3.format("+,.2d"))
             );

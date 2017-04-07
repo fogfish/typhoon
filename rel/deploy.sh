@@ -58,6 +58,8 @@ ${PREFIX}/${APP}/bin/${APP} \$1
 EOF
    
 chmod ugo+x /etc/init.d/${APP}
+cp ${PREFIX}/${APP}/lib/typhoon-*/priv/tyrl /usr/bin/tyrl
+
 fi
 
 set +u
