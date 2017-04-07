@@ -8,8 +8,8 @@
 <li><strong>Issues</strong>: https://github.com/zalando/typhoon/issues
 <li><strong>Mailing List</strong>: <a href="https://groups.google.com/d/forum/typhoon-users">typhoon-users@googlegroups.com</a>
 <li><strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
-<br/>
 </ul>
+<br/><br/><br/><br/>
 <strong>Makes latency assessments of distributed systems build from microservices.</strong>
 </p>
 
