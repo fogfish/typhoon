@@ -41,7 +41,7 @@ content_provided(_Req) ->
 
 %%
 content_accepted(_Req) ->
-   [{application, erlang}].
+   [{application, erlang}, {application, json}].
 
 %%
 %%
@@ -62,7 +62,19 @@ content_accepted(_Req) ->
       typhoon:put({urn, root, Id}, erlang:iolist_to_binary(Spec), [{w, W}]),
       typhoon:attr({urn, root, Id}),
       fmap(jsx:encode(_)) 
+   ];
+
+'PUT'({_, {application, json}}, Data, {Url, _Head, Env}) ->
+   Id = lens:get(lens:pair(<<"id">>), Env),
+   W  = scalar:i(uri:q(<<"w">>, 1, Url)),
+   Json = [{scalar:atom(Key), Val} || {Key, Val} <- jsx:decode(iolist_to_binary(Data))],
+   Spec = spec([{id, Id} | Json]),
+   [$^ ||
+      typhoon:put({urn, root, Id}, erlang:iolist_to_binary(Spec), [{w, W}]),
+      typhoon:attr({urn, root, Id}),
+      fmap(jsx:encode(_)) 
    ].
+
 
 %%
 %%
@@ -71,3 +83,11 @@ content_accepted(_Req) ->
    W  = scalar:i(uri:q(<<"w">>, 1, Url)),   
    {ok, _} = typhoon:remove({urn, root, Id}, [{w, W}]),
    {ok, jsx:encode(Id)}.
+
+
+%%
+spec(Json) ->
+   {ok, File} = file:read_file(filename:join([code:priv_dir(zephyrus), "typhoon.swirl"])),
+   Fun0 = swirl:f(File),
+   Fun1 = Fun0(undefined),
+   Fun1(Json).

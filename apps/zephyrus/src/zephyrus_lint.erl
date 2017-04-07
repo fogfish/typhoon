@@ -38,7 +38,7 @@ content_provided(_Req) ->
 
 %%
 content_accepted(_Req) ->
-   [{application, erlang}].
+   [{application, erlang}, {application, json}].
 
 %%
 fail({badarg, Reason}, _Req) ->
@@ -46,10 +46,10 @@ fail({badarg, Reason}, _Req) ->
 
 %%
 %%
-'POST'(_, Scenario, {_Url, _Head, Env}) ->
+'POST'({_, Type}, Scenario, {_Url, _Head, Env}) ->
    [$^||
       identity(Env),
-      compile(_, Scenario),
+      compile(_, Type, Scenario),
       install(_),
       scenario:t(_),
       execute(_)
@@ -60,7 +60,15 @@ identity(Env) ->
    {ok, scalar:atom( lens:get(lens:pair(<<"id">>), Env) )}.
 
 %%
-compile(Id, Scenario) ->
+compile(Id, {application, json}, Scenario) ->
+   Json = [{scalar:atom(Key), Val} || {Key, Val} <- jsx:decode(iolist_to_binary(Scenario))],
+   {ok, File} = file:read_file(filename:join([code:priv_dir(zephyrus), "typhoon.swirl"])),
+   Fun0 = swirl:f(File),
+   Fun1 = Fun0(undefined),
+   compile(Id, {application, erlang}, Fun1([{id, Id} | Json]));
+
+
+compile(Id, {application, erlang}, Scenario) ->
    File = file(Id),
    ok = filelib:ensure_dir(File),
    ok = file:write_file(File, Scenario),

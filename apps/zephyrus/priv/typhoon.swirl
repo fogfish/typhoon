@@ -1,0 +1,50 @@
+%%
+%% @doc
+%%   typhoon scenario file
+%%   see https://github.com/zalando/typhoon/blob/master/docs/scenario.md
+-module({id}).
+-compile({parse_transform, monad}).
+
+%% 
+-export([title/0, t/0, n/0, ttl/0, run/1]).
+
+%%
+%% human readable scenario title
+title() -> 
+   "{if title}{title}{else}No title{/if}".
+
+%% time to execute workload in milliseconds
+t() ->
+   {if t}{t}{else}120000{/if}.
+
+%% number of concurrent sessions to spawn in the cluster.
+n() ->
+   {if n}{n}{else}2{/if}.
+
+%% time to live for scenario process
+ttl() ->
+   {if ttl}{ttl}{else}1000{/if}.
+
+%%%----------------------------------------------------------------------------   
+%%%
+%%% actions
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%% execute scenario, the operation is repeated  until `t()` is expired. 
+run(_Config) ->
+   do([m_http ||
+      _ /= new("{url}"),
+      {if method}
+      _ /= x({method}),
+      {/if}
+      {for h in header}
+      _ /= h("{h}"),
+      {/for}
+      {if data}
+      _ /= d("{data}"),
+      {/if}
+      _ /= r(),
+      return(_)
+   ]).

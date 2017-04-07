@@ -1,0 +1,129 @@
+#!/bin/bash
+# set -e
+# set -u
+
+N=
+T=
+TTL=
+MTHD=
+HEAD=()
+DATA=
+ID=
+HOST=localhost:8080
+
+##
+##
+while getopts ":X:H:d:n:t:c:i:h:?" opt ;
+do
+   case $opt in
+      X)
+         MTHD=",\"method\": \"$OPTARG\""
+         ;;
+      h)
+         HOST=$OPTARG
+         ;;
+      H)
+         HEAD+=("\"$OPTARG\"")
+         ;;
+      d)
+         DATA=",\"data\": \"$OPTARG\""
+         ;;
+      n)
+         N=",\"n\": \"$OPTARG\""
+         ;;
+      t)
+         T=",\"t\": \"$OPTARG\""
+         ;;
+      c)
+         TTL=",\"ttl\": \"$OPTARG\""
+         ;;
+      i)
+         ID=$OPTARG
+         ;;
+      ?)
+         echo "$0 [OPTIONS] URL"
+         echo "   tyrl is a tool simulate a simplest workload on URL"
+         echo ""
+         echo ""
+         echo "OPTIONS"
+         echo " -c <milliseconds>"
+         echo "   keep connection open for given amount of milliseconds"
+         echo ""
+         echo " -d <data>"
+         echo "   send specified data in a POST request to HTTP server"
+         echo ""
+         echo " -h <host>"
+         echo "   connect to typhoon host"
+         echo ""
+         echo " -H <header>"
+         echo "   set headers to be included into HTTP request"
+         echo ""
+         echo " -i <identity>"
+         echo "   assign identity for workload"
+         echo ""
+         echo " -n <session>"
+         echo "   run multiple sessions in parallel"
+         echo ""
+         echo " -t <milliseconds>"
+         echo "   execute the load during given amount of milliseconds"
+         echo ""         
+         echo " -X <method>"
+         echo "   set request method"
+         echo ""
+         exit 0
+         ;;
+      \?)
+         echo "Invalid option: -$OPTARG" >&2
+         exit 1
+         ;;
+      :)
+         echo "Option -$OPTARG requires an argument." >&2
+         exit 1
+         ;;
+   esac
+done
+shift $((OPTIND-1))
+URL="\"url\": \"$1\""
+
+test -z "$ID"  && echo "scenario id is not defined"  && exit 1
+test -z "$URL" && echo "scenario target URL is not defined" && exit 1
+
+
+H=$(printf ",%s" "${HEAD[@]}")
+H=",\"header\": [${H:1}]"
+
+JSON="{$URL $MTHD $H $DATA $N $T $TTL}"
+
+
+echo "==> connect to ${HOST}"
+echo "==> lint scenario"
+LINT=$(curl -sw "%{http_code}" -XPOST http://${HOST}/lint/$ID -H 'Content-Type: application/json' -d "${JSON}")
+CODE="${LINT:${#LINT}-3}"
+BODY="${LINT:0:${#LINT}-3}"
+
+if [[ "${CODE}" != "200" ]] ;
+then
+   echo "Invalid scenario definition"
+   exit 1
+fi
+
+echo "==> ${URL}"
+echo "${BODY}"
+
+echo "==> install scenario"
+CODE=$(curl -sw "%{http_code}" -o /dev/null -XPUT http://${HOST}/scenario/$ID -H 'Content-Type: application/json' -d "${JSON}")
+if [[ "${CODE}" != "200" ]] ;
+then
+   echo "Unable to deploy scenario"
+   exit 1
+fi
+
+echo "==> spawn scenario"
+CODE=$(curl -sw "%{http_code}" -o /dev/null http://${HOST}/scenario/$ID/spawn)
+if [[ "${CODE}" != "202" ]] ;
+then
+   echo "Unable to spawn scenario"
+   exit 1
+fi
+
+echo "==> done (open http://${HOST})"
