@@ -1,8 +1,8 @@
 ## Typhoon
 
 <p align="center">
-<img align="left" width="200" src="docs/img/typhoon.png">
-**Makes latency assessments of distributed systems build from microservices.**
+<img align="left" width="200" src="docs/img/typhoon.svg">
+<strong>Makes latency assessments of distributed systems build from microservices.</strong>
 </p>
 
 
