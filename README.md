@@ -1,10 +1,21 @@
 ## Typhoon
 
-![typhoon](docs/img/typhoon.png)
+<p align="center">
+<img align="left" width="200" src="docs/img/typhoon.png">
+<ul>
+<br/>
+<li><strong>Source</strong>: https://github.com/zalando/typhoon
+<li><strong>Issues</strong>: https://github.com/zalando/typhoon/issues
+<li><strong>Mailing List</strong>: <a href="https://groups.google.com/d/forum/typhoon-users">typhoon-users@googlegroups.com</a>
+<li><strong>Philosophy</strong>: <a href="https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/">Latency challenge</a>
+</ul>
+<br/><br/><br/><br/>
+<strong>Makes latency assessments of distributed systems build from microservices.</strong>
+</p>
 
-**Makes latency assessments of distributed systems build from microservices.**
 
-[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon)
+
+[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon) [![GitHub release](https://img.shields.io/github/release/zalando/typhoon.svg)](https://github.com/zalando/typhoon/releases/latest)
 
 Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating protocols and microservices latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/).
 
@@ -139,10 +150,10 @@ If you experience any issues with Typhoon, please let us know via [GitHub issues
 ### Changelog
 
 Typhoon uses [semantic versions](http://semver.org) to identify stable releases. 
- 
+
+* [1.0.0](https://github.com/zalando/typhoon/releases/tag/1.0.0) - Simplify scenario format, New Single Page Application  
 * [0.8.0](https://github.com/zalando/typhoon/releases/tag/0.8.0) - hackweek UI improvments and bug fixes 
 * [0.7.3](https://github.com/zalando/typhoon/releases/tag/0.7.3) - support local clustering
-* [0.6.1](https://github.com/zalando/typhoon/releases/tag/0.6.1) - use pure functional expressions to define load scenarios
   
 
 # License
