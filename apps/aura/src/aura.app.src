@@ -16,7 +16,7 @@
 {application, aura,
    [
       {description, "telemetry i/o and storage layer"},
-      {vsn,         "0.1.1"},
+      {vsn,         "1.0.0"},
       {modules,     []},
       {registered,  []},
       {applications,[

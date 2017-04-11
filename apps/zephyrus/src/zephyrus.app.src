@@ -16,7 +16,7 @@
 {application, zephyrus,
    [
       {description, "distributed stress, load testing rest api"},
-      {vsn,         "0.3.1"},
+      {vsn,         "1.0.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
