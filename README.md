@@ -82,7 +82,7 @@ Use docker containers to spawn three node cluster on local environment. The foll
 
 Let's spawn a seeder node, this node is used by other Typhoon peers to discover each other.
 ```
-docker run -d -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
+docker run -d --name typhoon --rm -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
 ``` 
 
 Next, the identity of seeder node is needed to spawn other peers. We can use health check api for this 
