@@ -489,16 +489,6 @@ ui.scenario.error = function(error)
          }
       )
    )
-
-// console.log(error)
-//    error.forEach(
-//       function(x)
-//       {
-//          [
-            
-//          ])
-//       }
-//    )
 }.$_()
 
 
