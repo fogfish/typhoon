@@ -116,6 +116,7 @@
    height: 100%;
    font-family: monospace !important;
    border: none;
+   position: relative;
 }
 
 .dc-card__scenario
@@ -174,4 +175,10 @@
    {
       display: none !important;
    }
+}
+
+.ace_tooltip 
+{
+   left: 4px !important;
+   top: 4px !important;
 }
