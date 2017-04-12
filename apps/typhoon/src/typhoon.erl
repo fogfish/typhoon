@@ -40,13 +40,6 @@
   ,unit/1
   ,attr/1
 ]).
-%%
-%% data interface
--export([
-   fd/0
-  ,stream/2
-]).
-
 
 %%
 %% data types
@@ -211,30 +204,6 @@ attr({urn, _, _} = Id) ->
    {ok, #entity{val = CRDT}} = ambitz:whereis(typhoon, uri:s(Id), [{r, 3}]),
    Pid = hd( crdts:value(CRDT) ),
    {ok, pipe:ioctl(Pid, attr)}.
-
-
-%%%----------------------------------------------------------------------------   
-%%%
-%%% data interface
-%%%
-%%%----------------------------------------------------------------------------   
-
-%%
-%% file descriptor to time series data-base
--spec fd() -> chronolog:fd().
-
-fd() ->
-   pipe:ioctl(typhoon_peer, fd).
-
-
-%%
-%% takes a generator function and produce telemetry stream
--spec stream(urn(), fun( (chronolog:fd()) -> datum:stream() )) -> {ok, list()} | {error, any()}.
-
-stream(Id, Gen) ->
-   {ok, #entity{vnode = Vnode}} = ambitz:lookup(typhoon, Id, [{r, 3}]),
-   Node  = erlang:node(ek:vnode(peer, lists:nth(rand:uniform(length(Vnode)), Vnode))),
-   pipe:call({typhoon_peer, Node}, {stream, Gen}, 300000).
 
 
 %%%----------------------------------------------------------------------------   

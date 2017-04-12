@@ -23,7 +23,6 @@
    start_link/0
   ,init/1
   ,free/2
-  ,ioctl/2
   ,handle/3
 ]).
 
@@ -38,28 +37,16 @@ start_link() ->
 
 init([]) ->
    {ok, _} = clot:seed(),
-   {ok, handle, #{fd => aura:fd()}}.
+   {ok, handle, #{}}.
 
 free(_, _) ->
    ok.
-
-ioctl(fd, #{fd := FD}) ->
-   FD.
 
 %%%----------------------------------------------------------------------------   
 %%%
 %%% pipe
 %%%
 %%%----------------------------------------------------------------------------   
-
-handle({stream, Gen}, Pipe, #{fd := FD} = State) ->
-   spawn(
-      fun() ->
-         List = stream:list( Gen(FD) ),
-         pipe:ack(Pipe, {ok, List})
-      end
-   ),
-   {next_state, handle, State};
 
 handle(_, _, State) ->
    {next_state, handle, State}.
