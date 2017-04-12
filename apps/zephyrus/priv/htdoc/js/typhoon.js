@@ -74,15 +74,24 @@ present.scenario.spec = function(spec)
    {
       var err = 'scenario id is not defined'
       model.editor.getSession().setAnnotations([
-         {row: 0, column: 0, text: err, type: 'error'}
+         {row: 1, column: 0, text: err, type: 'error'}
       ])
       throw err
    }
+   if (!/^[a-z].*/.test(id))
+   {
+      var err = 'invalid scenario id. it should contain lowercase letters and digits.'
+      model.editor.getSession().setAnnotations([
+         {row: 1, column: 0, text: err, type: 'error'}
+      ])
+      throw err
+   }
+
    if ((model.scenario.id != null) && (model.scenario.id != id))
    {
       var err = 'scenario id is not changeable'
       model.editor.getSession().setAnnotations([
-         {row: 0, column: 0, text: err, type: 'error'}
+         {row: 1, column: 0, text: err, type: 'error'}
       ])
       throw err
    }
@@ -223,7 +232,13 @@ action.IO.typhoon.lint = function(scenario, accept, reject)
       }
    )
    .done(function(json){accept(json)})
-   .fail(function(xhr){reject(action.IO.fail(xhr))})
+   .fail(
+      function(xhr)
+      {
+         var json = JSON.parse(xhr.responseText)
+         var reason = Object.keys(json)         
+         reject({code: xhr.status, text: xhr.statusText, lint: json[reason]})
+      })
 }.$_()
 
 action.IO.typhoon.put = function(scenario, accept, reject)
@@ -364,6 +379,7 @@ ui.progressbar = function(show, x)
    return x
 }.$_()
 
+
 ui.scenario = {}
 ui.scenario.thumbnail = whiskers.compile($('#scenario-thumbnail').html())
 ui.scenario.cubism = whiskers.compile($('#scenario-cubism').html())
@@ -462,6 +478,29 @@ ui.scenario.attributes = function(attr)
 
    return attr
 }.$_()
+
+ui.scenario.error = function(error)
+{
+   model.editor.getSession().setAnnotations(
+      error.map(
+         function(x)
+         {
+            return {row: x.line - 1, column: 0, text: x.message, type: x.type}
+         }
+      )
+   )
+
+// console.log(error)
+//    error.forEach(
+//       function(x)
+//       {
+//          [
+            
+//          ])
+//       }
+//    )
+}.$_()
+
 
 //
 ui.history  = {}
@@ -759,7 +798,15 @@ chain.scenario_lint_and_save = function()
       ui.scenario.realtime,
       ui.scenario.action,
       ui.progressbar(false)
-   ]).fail(ui.fail)
+   ]).fail(
+      function(err)
+      {
+         if ('lint' in err)
+         {
+            ui.scenario.error(err.lint)
+         }
+      }
+   )
 }
 
 chain.scenario_shortcut = function()
