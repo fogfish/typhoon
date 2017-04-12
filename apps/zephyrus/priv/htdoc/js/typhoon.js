@@ -53,7 +53,7 @@ present.scenario.new   = whiskers.compile($('#scenario-new-file').html())
 present.scenario.empty = function(_)
 {
    var scenario =  {
-      id: null,
+      id: 'x' + Math.random().toString(36).substring(2),
       title: 'No title',
       spec: null,
       urls: [],
@@ -72,15 +72,15 @@ present.scenario.spec = function(spec)
    var id = spec.match(/-module\((.*)\)\./i)[1]
    if (!id) 
    {
-      var err = 'scenario id is not defined'
+      var err = 'module id is not defined.\nset a id of your scenario using following directive: -module(test).'
       model.editor.getSession().setAnnotations([
          {row: 1, column: 0, text: err, type: 'error'}
       ])
       throw err
    }
-   if (!/^[a-z].*/.test(id))
+   if (!/^[a-z][a-z0-9]*/.test(id))
    {
-      var err = 'invalid scenario id. it should contain lowercase letters and digits.'
+      var err = 'module id is not invalid.\nthe module id should contain only lowercase letters and digits.'
       model.editor.getSession().setAnnotations([
          {row: 1, column: 0, text: err, type: 'error'}
       ])
