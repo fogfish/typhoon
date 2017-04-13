@@ -345,7 +345,7 @@
 
 
 <script type="text/template" id="scenario-new-file">
--module().
+-module({id}).
 -compile({parse_transform, monad}).
 %%
 %% typhoon scenario file
@@ -357,11 +357,11 @@
 -export([init/0, run/1]).
 
 %%
-%% human readable scenario title
+%% human readable scenario title.
 title() -> 
    "{title}".
 
-%% time to execute workload in milliseconds
+%% time to execute workload in milliseconds.
 t() ->
    60000.
 
@@ -369,7 +369,7 @@ t() ->
 n() ->
    2.
 
-%% time to live for scenario process
+%% time to live for connection spawned by scenario.
 ttl() ->
    1000.
 
