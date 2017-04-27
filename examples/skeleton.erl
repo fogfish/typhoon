@@ -21,7 +21,8 @@
 %%  * `init()` an optional computation to be executed once by scenario session 
 %%             the result of computation is fed to main entry point
 %%  * `run(_)` executes workload scenario 
--export([init/0, run/1]).
+% -export([init/0, run/1]).
+-export([run/1]).
 
 %%%----------------------------------------------------------------------------   
 %%%

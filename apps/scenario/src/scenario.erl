@@ -118,9 +118,13 @@ lint_exec(Mod, Config) ->
    (Mod:run(Config))(#{}).
 
 lint_result([Http | State]) ->
-   [{Code, _, _, _} | Content] = Http,
    Scope = [Key || {Key, _} <- maps:to_list( maps:get(spec, State) ), is_binary(Key)],
-   {Code, iolist_to_binary(Content), Scope}.
+   case Http of
+      [{Code, _, _, _} | Content] ->
+         {Code, iolist_to_binary(Content), Scope};
+      Content ->
+         {200, Content, Scope}
+   end.
 
 %%
 %% compiles scenario file and loads it
