@@ -78,8 +78,12 @@ handle(request, _, #{scenario := Scenario, config := Config, context := Context0
 handle(expired, _, State) ->
    {stop, normal, State};
 
-handle(cooldown, _, #{scenario := Scenario} = State) ->
+handle(cooldown, _, #{scenario := Scenario, context := Context} = State) ->
    cooldown_process_at(scenario:option(ttl, Scenario)),
+   lists:foreach(
+      fun knet:close/1,
+      [Pid || {_, Pid} <- maps:to_list(Context), is_pid(Pid)]
+   ),
    {next_state, handle, 
       State#{
          config  => config(Scenario),
