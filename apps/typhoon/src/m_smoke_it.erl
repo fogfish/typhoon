@@ -90,7 +90,7 @@ request(Timeout) ->
       Data = scenario:decode(Http),
       State2 = [$. || 
          lens:put(code(), Code, State1),
-         lens:put(head(), Head, _),
+         lens:put(head(), [{scalar:s(Key), Val} || {Key, Val} <- Head], _),
          lens:put(data(), Data, _)
       ],
       [Code | State2]
@@ -155,7 +155,7 @@ has(Lens) ->
 spec_to_header(Spec) ->
    %% @todo: use htstream for header parsing
    [H, V] = binary:split(scalar:s(Spec), <<$:>>),
-   Header = scalar:atom(H),
+   Header = scalar:s(H),
    Expect = scalar:decode(hv(V)),
    {Header, Expect}.
 
