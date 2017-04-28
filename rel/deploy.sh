@@ -59,6 +59,7 @@ EOF
    
 chmod ugo+x /etc/init.d/${APP}
 cp ${PREFIX}/${APP}/lib/typhoon-*/priv/tyrl /usr/bin/tyrl
+cp ${PREFIX}/${APP}/lib/typhoon-*/priv/smokeit /usr/bin/smokeit
 
 fi
 
