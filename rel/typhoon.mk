@@ -3,12 +3,14 @@
 ##
 TEST = $(wildcard src/*.erl)
 HTML = $(TEST:.erl=.html)
+URL  = registry.opensource.zalan.do/hunt/typhoon
 
 ##
 ##
 SMOKE = $(FILE:.erl=.html)
 
-all: daemon clean index.html $(HTML)
+
+all: clean daemon index.html $(HTML)
 	@echo "</tbody></table></div>" >> index.html ;\
 	echo "</div></div></body>" >> index.html ;\
 	docker kill smoketest ;\
@@ -44,7 +46,7 @@ daemon:
 	@echo "==> init" ;\
 	export ISFAIL=0  ;\
 	docker kill typhoon ;\
-	docker run -d --rm --name="typhoon" xxx ;\
+	docker run -d --rm --name="typhoon" $(URL) ;\
 	sleep 10
 
 ##
@@ -52,7 +54,7 @@ daemon:
 smoke: $(SMOKE)
 
 $(SMOKE): $(FILE)
-	@docker exec -i typhoon smokeit - < $^ > $@
+	@docker exec -i typhoon /usr/bin/smokeit - < $^ > $@
 
 ##
 ##
