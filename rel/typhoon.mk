@@ -13,7 +13,7 @@ SMOKE = $(FILE:.erl=.html)
 all: clean daemon index.html $(HTML)
 	@echo "</tbody></table></div>" >> index.html ;\
 	echo "</div></div></body>" >> index.html ;\
-	docker kill smoketest ;\
+	docker kill typhoon ;\
 	test -f fail.pid && exit 1 || exit 0
 
 clean:
