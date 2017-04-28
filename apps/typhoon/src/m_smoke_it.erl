@@ -1,7 +1,7 @@
 %%
 %% @doc
 %%   web unit test
--module(m_unit).
+-module(m_smoke_it).
 
 -compile({parse_transform, category}).
 
@@ -29,7 +29,9 @@
 
 return(_) ->
    fun(Status) ->
-      [lens:get(test(), Status)|Status]
+      Id   = lens:get(lens:map(spec), lens:map(id), Status),
+      Test = lens:get(test(), Status),
+      [#{id => Id, checks => Test}|Status]
    end.
 
 %%
@@ -107,7 +109,7 @@ check(status, Expect) ->
    fun(State) ->
       Actual = lens:get(code(), State),
       Units  = lens:get(test(), State),
-      Unit   = #{check => code, pass => Expect =:= Actual, expect => Expect, actual => Actual},
+      Unit   = #{check => status, pass => Expect =:= Actual, expect => Expect, actual => Actual},
       [ok|lens:put(test(), [Unit|Units], State)]      
    end;
 
@@ -116,7 +118,7 @@ check(header, Spec) ->
       {Header, Expect} = spec_to_header(Spec),
       Actual = lens:get(head(Header), State),
       Units  = lens:get(test(), State),
-      Unit   = #{check => head, pass => Expect =:= Actual, expect => Expect, actual => Actual, header => Header},
+      Unit   = #{check => header, pass => Expect =:= Actual, expect => Expect, actual => Actual, lens => [Header]},
       [ok|lens:put(test(), [Unit|Units], State)]
    end.
 
