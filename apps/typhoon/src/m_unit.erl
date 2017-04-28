@@ -14,7 +14,9 @@
    r/0, request/0, request/1
 ]).
 -export([
-   check/2
+   check/2,
+   eq/2, ne/2, le/2, lt/2, ge/2, gt/2,
+   has/1
 ]).
 
 
@@ -118,6 +120,33 @@ check(header, Spec) ->
       [ok|lens:put(test(), [Unit|Units], State)]
    end.
 
+%%
+%%
+eq(Lens, Value) -> check(eq, fun(A, B) -> A =:= B end, Lens, Value).
+ne(Lens, Value) -> check(ne, fun(A, B) -> A =/= B end, Lens, Value).
+le(Lens, Value) -> check(le, fun(A, B) -> A =<  B end, Lens, Value).
+lt(Lens, Value) -> check(lt, fun(A, B) -> A  <  B end, Lens, Value).
+ge(Lens, Value) -> check(ge, fun(A, B) -> A  >= B end, Lens, Value).
+gt(Lens, Value) -> check(gt, fun(A, B) -> A  >  B end, Lens, Value).
+
+check(Check, Fun, Lens, Spec) ->
+   fun(State) ->
+      Expect = spec_to_value(Spec),
+      Actual = scenario:lens(Lens, lens:get(data(), State)),
+      Units  = lens:get(test(), State),
+      Unit   = #{check => Check, pass => Fun(Actual, Expect), expect => Expect, actual => Actual, lens => Lens},
+      [ok|lens:put(test(), [Unit|Units], State)]      
+   end.
+
+%%
+%%
+has(Lens) ->
+   fun(State) ->
+      Actual = scenario:lens(Lens, lens:get(data(), State)),
+      Units  = lens:get(test(), State),
+      Unit   = #{check => has, pass => Actual =/= [], expect => property, actual => Actual =/= [], lens => Lens},
+      [ok|lens:put(test(), [Unit|Units], State)]      
+   end.
 
 %%
 %%
@@ -133,4 +162,12 @@ hv(<<$\t, X/binary>>) -> hv(X);
 hv(<<$\n, X/binary>>) -> hv(X);
 hv(<<$\r, X/binary>>) -> hv(X);
 hv(X) -> X.
+
+%%
+%%
+spec_to_value(X)
+ when is_list(X) ->
+   scalar:s(X);
+spec_to_value(X) ->
+   X.
 
