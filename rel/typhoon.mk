@@ -14,6 +14,7 @@ all: clean daemon index.html $(HTML)
 	@echo "</tbody></table></div>" >> index.html ;\
 	echo "</div></div></body>" >> index.html ;\
 	docker kill typhoon ;\
+	docker rm typhoon ;\
 	test -f fail.pid && exit 1 || exit 0
 
 clean:
@@ -42,19 +43,23 @@ clean:
 	esac;
 
 
-daemon:
+daemon: typhoon.config
 	@echo "==> init" ;\
-	export ISFAIL=0  ;\
 	docker kill typhoon ;\
-	docker run -d --rm --name="typhoon" $(URL) ;\
+	docker rm typhoon ;\
+	docker pull $(URL) ;\
+	docker run -d --name="typhoon" --env-file typhoon.config $(URL) ;\
 	sleep 10
+
+typhoon.config:
+	cat "" > $@
 
 ##
 ## execute single smoke test
 smoke: $(SMOKE)
 
 $(SMOKE): $(FILE)
-	@docker exec -i typhoon /usr/bin/smokeit - < $^ > $@
+	@docker exec -i typhoon /usr/bin/smokeit $^ - < $^ > $@
 
 ##
 ##
