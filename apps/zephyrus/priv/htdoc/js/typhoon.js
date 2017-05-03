@@ -659,6 +659,17 @@ ui.bullet = function(isA, cdfs)
 
 ui.system = function(json)
 {
+   var date = new Date(json.time * 1000)
+   var time = ("0" + date.getHours()).slice(-2) + ':' + ("0" + date.getMinutes()).slice(-2)
+   var diff = Math.abs( ~~(+new Date / 1000) - json.time )
+
+   $('.js-system-time').text(time)
+   if (diff > 300) {
+      $('.js-system-time').addClass("dc-status dc-status--error")      
+   } else {
+      $('.js-system-time').removeClass("dc-status dc-status--error")
+   }
+
    $('.js-system-peers').text(json.peers.length)
    $('.js-system-rps').text(json.rps)
    $('.js-system-failure').text(json.failure)

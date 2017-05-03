@@ -58,7 +58,11 @@ health(<<"sys">>) ->
       IOcap <- aura:clue({urn, <<"c">>, <<"sys:capacity">>}),
       Scenario <- aura:clue({urn, <<"c">>, <<"sys:scenario">>}),
       return([
-         {peers, Peers}, {rps, IOrps}, {failure, IOrps - IOcap}, {scenario, Scenario}
+         {time, tempus:s(os:timestamp())},
+         {peers, Peers},
+         {rps, IOrps}, 
+         {failure, IOrps - IOcap}, 
+         {scenario, Scenario}
       ])
    ]).
 
