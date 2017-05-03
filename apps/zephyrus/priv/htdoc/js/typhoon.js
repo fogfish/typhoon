@@ -226,7 +226,7 @@ action.IO.typhoon.lint = function(scenario, accept, reject)
       {
          url: [model.api, 'lint', scenario.id].join('/'),
          type: 'post',
-         dataType: 'text',
+         dataType: 'json',
          data: scenario.spec,
          headers: {'Content-Type': 'application/erlang'}
       }
@@ -783,7 +783,10 @@ chain.scenario_lint_and_save = function()
       },
       function(lintlog)
       {
-         chain.show_info(2000, lintlog)
+         if (lintlog.code < 300)
+            chain.show_info(2000, lintlog.code + " " + lintlog.text + " " + lintlog.data)
+         else
+            chain.show_error(2000, lintlog.code + " " + lintlog.text + " " + lintlog.data)
          return M.IO(action.IO.typhoon.remove(model.scenario))
       },
       function(_)

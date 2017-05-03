@@ -34,7 +34,7 @@ allowed_methods(_Req) ->
 
 %%
 content_provided(_Req) ->
-   [{'*', '*'}].
+   [{'application', 'json'}].
 
 %%
 content_accepted(_Req) ->
@@ -124,11 +124,16 @@ config(Scenario) ->
 %%
 lint(Scenario, Conf) ->
    case (Scenario:run(Conf))(#{}) of
-      [[{_, _, _, _}|Data]|_] ->
-         jsx:encode(erlang:iolist_to_binary(Data));
-
+      [[{Code, Text, _, _}|Data]|_] ->
+         jsx:encode([
+            {code, Code},
+            {text, Text},
+            {data, erlang:iolist_to_binary(Data)}
+         ]);
       [Data|_] ->
-         erlang:iolist_to_binary(Data)
+         jsx:encode([
+            {data, erlang:iolist_to_binary(Data)}
+         ])
    end.
 
 %%
