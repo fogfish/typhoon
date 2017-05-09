@@ -5,16 +5,19 @@
 
 
 test_articles_api(_) ->
-   do([m_smoke_it ||
-      _ /= new("https://api.zalando.com/articles"),
+   do([m_http_scenario ||
+      _ /= 'Given'(),
+      _ /= url("https://api.zalando.com/articles"),
+
+      _ /= 'When'(),
       _ /= method('GET'),
       _ /= header("Accept-Language", "de-DE"),
       _ /= header("Connection", "close"),
-      _ /= request(),
 
-      _ /= check(status, 400),
-      _ /= check(header, "Connection: close"),
-      _ /= check(header, "Transfer-Encoding: chunked"),
+      _ /= 'Then'(),
+      _ /= match(status, 400),
+      _ /= match(header, "Connection: close"),
+      _ /= match(header, "Transfer-Encoding: chunked"),
       _ /= eq([page], 5),
       _ /= gt(['totalPages'], 10000),
 

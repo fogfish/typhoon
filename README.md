@@ -24,14 +24,15 @@ Typhoon is a stress and load testing tool for distributed systems that simulates
 Typhoon uses [Cubism.js](https://bost.ocks.org/mike/cubism/intro/#0) to visualize latencies. The visualizations help you to make quick decisions on optimal software configuration, the number of servers and concurrent connections you need, and other short-term considerations. Long-term, they can inform how you develop and extend your data and service architecture, choose new technologies, etc.
 
 Typhoon also:
-- provides a [REST API](https://github.com/zalando/typhoon/blob/master/docs/restapi.yaml).
-- uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](https://github.com/zalando/typhoon/blob/master/docs/scenario.md).
+- provides a [REST API](docs/restapi.yaml).
+- uses pure functional expressions to define workload scenarios that don't require any compilation or native package builds; [read more here](docs/scenario.md).
 - scales up to dozens of individual nodes hosted in any cloud environment.
 - uses peer-to-peer clustering, based on consistent hashing, to assemble and orchestrate load toward SUT. It helps to deal with possible network failures, and provides high availability for synthetic load and telemetry collections.
 - approximates network delay, round-trip time, TLS handshakes, Time to First Byte and Time to Meaningful Response.
 - evaluates protocol overhead by approximating packet metrics.
 - estimates application performance.
 - validates system performance and scalability while spawning a huge number of concurrent sessions.
+- acceptance testing; [read more here](docs/testing.md).
 
 You can read more about Typhoon's features in [this blog post](https://tech.zalando.de/blog/end-to-end-latency-challenges-for-microservices/).
 
@@ -45,7 +46,7 @@ Typhoon supplies pre-built releases for Linux/x86_64, MacOS/10.10.x and Docker p
 
 Build the latest version of Typhoon from the `master` branch. The build process requires [Erlang/OTP](http://www.erlang.org/downloads) version 18.0 or later. All development, including new features and bug fixes, take place on the `master` branch using forking and pull requests as described in these [contribution guidelines](docs/contribution.md).
 
-Install directions with AWS-related details are [here](https://github.com/zalando/typhoon/blob/master/docs/install.md).
+Install directions with AWS-related details are [here](docs/install.md).
 
 ### Running Typhoon
 
@@ -107,6 +108,7 @@ The application should return list of cluster peers
 
 * [Understanding Typhoon scenario file](docs/scenario.md)
 * [Typhoon deployment](docs/install.md)
+* [Acceptance testing with Typhoon](docs/testing.md).
 
 ### Contributing/Bugs
 

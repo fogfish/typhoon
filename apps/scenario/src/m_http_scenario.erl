@@ -1,20 +1,24 @@
 %%
 %% @doc
 %%   web unit test
--module(m_smoke_it).
+-module(m_http_scenario).
 
 -compile({parse_transform, category}).
 
 -export([return/1, fail/1, '>>='/2]).
 -export([
-   new/1, new/2, 
-   x/1, method/1, 
-   h/1, h/2, header/2, 
+   'Given'/0,
+   url/1, 
+   url/2,
    d/1, payload/1, 
-   r/0, request/0, request/1
-]).
--export([
-   check/2,
+
+   'When'/0,
+   x/1, method/1, 
+   h/1, h/2, header/2,
+
+   'Then'/0, 
+   r/0, request/0, request/1,
+   match/2,
    eq/2, ne/2, le/2, lt/2, ge/2, gt/2,
    has/1
 ]).
@@ -48,20 +52,54 @@ fail(X) ->
 '>>='(X, Fun) ->
    m_state:'>>='(X, Fun).
 
+%%%----------------------------------------------------------------------------   
+%%%
+%%% Given
+%%%
+%%%----------------------------------------------------------------------------   
+
 %%
 %%
-new(Uri) ->
+'Given'() ->
+   fun(State) -> State end.
+
+%%
+%%
+url(Uri) ->
    m_http:new(Uri).
 
-new(Uri, SOpt) ->
+url(Uri, SOpt) ->
    m_http:new(Uri, SOpt).
+
+%%
+%%
+d(Value) ->
+   m_http:d(Value).
+
+payload(Value) ->
+   m_http:payload(Value).
    
+%%%----------------------------------------------------------------------------   
+%%%
+%%% When
+%%%
+%%%----------------------------------------------------------------------------   
+
+%%
+%%
+'When'() ->
+   fun(State) -> State end.
+
+%%
+%%
 x(Mthd) ->
    m_http:x(Mthd).
 
 method(Mthd) ->
    m_http:method(Mthd).
 
+%%
+%%
 h(Head) ->
    m_http:h(Head).
 
@@ -71,12 +109,20 @@ h(Head, Value) ->
 header(Head, Value) ->
    m_http:header(Head, Value).
 
-d(Value) ->
-   m_http:d(Value).
 
-payload(Value) ->
-   m_http:payload(Value).
+%%%----------------------------------------------------------------------------   
+%%%
+%%% Then
+%%%
+%%%----------------------------------------------------------------------------   
 
+%%
+%%
+'Then'() ->
+   request().
+
+%%
+%%
 r() ->
    request().
 
@@ -96,6 +142,8 @@ request(Timeout) ->
       [Code | State2]
    end.
 
+%%
+%% lens
 code() -> lens:c([lens:map(unit, #{}), lens:map(code,  none)]).
 head() -> lens:c([lens:map(unit, #{}), lens:map(head,    [])]).
 data() -> lens:c([lens:map(unit, #{}), lens:map(data,  none)]).
@@ -105,7 +153,7 @@ head(X) -> lens:c([lens:map(unit, #{}), lens:map(head, []), lens:pair(X, <<>>)])
 
 %%
 %%
-check(status, Expect) ->
+match(status, Expect) ->
    fun(State) ->
       Actual = lens:get(code(), State),
       Units  = lens:get(test(), State),
@@ -113,7 +161,7 @@ check(status, Expect) ->
       [ok|lens:put(test(), [Unit|Units], State)]      
    end;
 
-check(header, Spec) ->
+match(header, Spec) ->
    fun(State) ->
       {Header, Expect} = spec_to_header(Spec),
       Actual = lens:get(head(Header), State),
