@@ -109,7 +109,7 @@ The clause defines actions, specify protocol behavior. It defined HTTP protocol 
 The clause captures the output of HTTP request and observes its correctness through set of assertion methods.
 
 ```erlang
-   _ /= 'Then()',
+   _ /= 'Then'(),
 
    %% Match HTTP protocol conditions to desired value
    _ /= match(status, ...),
@@ -126,3 +126,69 @@ The clause captures the output of HTTP request and observes its correctness thro
    _ /= ge(..., ...),
    _ /= gt(..., ...),
 ```
+
+The scenario is automatically decode content into suitable format using Content-Type of response as hint. However, the current version is JSON centric. It parses JSON to nested set of key-value pairs and offers *lenses* to focus on particular value. 
+
+#### match
+
+The function match a protocol attributes in the response:
+ * match HTTP `status` code to specified value
+ * match HTTP `header` to specified value
+
+```erlang
+   _ /= match(status, 201),
+   _ /= match(header, "Transfer-Encoding: chunked"),
+```
+
+#### has
+
+The function take a *lens* and observe if the focused value exists in response JSON object.
+
+```erlang
+   %% the JSON response has `resources` attribute 
+   _ /= has([resources]),
+
+   %% the JSON response has list of `resources`, the list is not empty
+   _ /= has([resources, 1]),
+
+   %% the JSON response has list of `resources`, the first element of list has attribute volume
+   _ /= has([resources, 1, volume]),
+``` 
+
+#### compare
+
+There is a collection of compare functions that take a *lens* and observe if the focused value matches the declared value:
+* `eq` equal
+* `ne` not equal
+* `le` less
+* `lt` less then
+* `ge` greater
+* `gt` greater then  
+
+```erlang
+   %% the JSON response has list of `resources`, the first element of list has attribute volume
+   %% the volume equal to 1000
+   _ /= eq([resources, 1, volume], 1000),
+
+   %% the volume greater 1000
+   _ /= gt([resources, 1, volume], 1000),
+```
+
+#### lenses
+
+> Lenses, also known as functional references, are a powerful way of looking at, constructing, and using functions on complex data types.
+
+The tool expresses concept of lens as list of key to focus on nested Json object. Each element of list identify a next entity to focus. The tool implement following built-in lenses, which are available for `has` and `compare` functions:
+* `attribute` focuses on attribute value pair of JSON object 
+* `index` focuses on nth element of list value, the enumeration is started with first (1) element
+
+```erlang
+   [resources]
+   [resources, 1]
+   [resources, 1, volume]
+```
+
+
+## Acceptance test management
+
+
