@@ -61,7 +61,7 @@ fail(X) ->
 %%
 %%
 'Given'() ->
-   fun(State) -> State end.
+   fun(State) -> ['Given'|State] end.
 
 %%
 %%
@@ -88,7 +88,7 @@ payload(Value) ->
 %%
 %%
 'When'() ->
-   fun(State) -> State end.
+   fun(State) -> ['When'|State] end.
 
 %%
 %%

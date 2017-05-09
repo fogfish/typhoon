@@ -4,7 +4,7 @@ exec 3>&1
 ID=$(basename $1)
 shift
 
-CODE=$(curl -s -w "%{http_code}" -o >(cat >&3) http://127.0.0.1:8080/smoke/${ID%.erl} -H 'Content-Type: application/erlang' --data-binary @$*)
+CODE=$(curl -s -w "%{http_code}" -o >(cat >&3) http://127.0.0.1:8080/tests/${ID%.erl} -H 'Content-Type: application/erlang' --data-binary @$*)
 
 if [[ "${CODE}" == "200" ]] ; 
 then

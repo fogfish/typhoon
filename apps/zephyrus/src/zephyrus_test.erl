@@ -15,7 +15,7 @@
 %%
 %% @doc
 %%   rest api - validate scenario
--module(zephyrus_smoke_it).
+-module(zephyrus_test).
 -compile({parse_transform, category}).
 
 -author('dmitry.kolesnikov@zalando.fi').

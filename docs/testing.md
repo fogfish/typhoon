@@ -83,7 +83,7 @@ scenario(_) ->
 
 ### Given
 
-The clause defines the context for acceptance scenario. It defines a mandatory **url** and an optional **payload**.
+The clause defines the context for acceptance scenario. It defines a mandatory `url` and an optional `payload`.
 
 ```erlang
    _ /= 'Given'(),
@@ -95,7 +95,7 @@ The clause defines the context for acceptance scenario. It defines a mandatory *
 
 ### When
 
-The clause defines actions, specify protocol behavior. It defined HTTP protocol **method** and **headers**.
+The clause defines actions, specify protocol behavior. It defined HTTP protocol `method` and `header`.
 
 ```erlang
    _ /= 'When'(),
@@ -127,7 +127,7 @@ The clause captures the output of HTTP request and observes its correctness thro
    _ /= gt(..., ...),
 ```
 
-The scenario is automatically decode content into suitable format using Content-Type of response as hint. However, the current version is JSON centric. It parses JSON to nested set of key-value pairs and offers *lenses* to focus on particular value. 
+The scenario decodes content into suitable format using Content-Type of HTTP response as hint. However, the current version is JSON centric. It parses JSON to nested set of key-value pairs and offers *lenses* to focus on particular value. 
 
 #### match
 
@@ -167,6 +167,7 @@ There is a collection of compare functions that take a *lens* and observe if the
 
 ```erlang
    %% the JSON response has list of `resources`, the first element of list has attribute volume
+
    %% the volume equal to 1000
    _ /= eq([resources, 1, volume], 1000),
 
@@ -191,4 +192,20 @@ The tool expresses concept of lens as list of key to focus on nested Json object
 
 ## Acceptance test management
 
+Typhoon provides REST API for execution of acceptance tests. 
+
+Spawn an instance of the tool 
+```
+docker run -it --name typhoon --rm -p 8080:8080 registry.opensource.zalan.do/hunt/typhoon:latest
+```
+
+Execute a feature acceptance testing
+```
+curl -o example.html \
+   http://localhost:8080/tests/example \
+   -H 'Content-Type: application/erlang' \
+   --data-binary @examples/acceptance.erl 
+```
+
+Open example.html with web-browser to see tests results
 
