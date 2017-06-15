@@ -224,10 +224,9 @@ rebar3:
 
 scm-source.json: FORCE
 	@R=`git rev-parse HEAD`;\
-	U=`git config --get remote.upstream.url || git config --get remote.origin.url`;\
 	S=`git status --porcelain | awk 1 ORS=' '`;\
 	if [ -n "$$S" ]; then R="$$R (locally modified)"; fi; \
-	echo "{\"url\": \"git:$$U\", \"revision\": \"$$R\", \"author\": \"${USER}\", \"status\": \"$$S\"}" > $@
+	echo "{\"url\": \"https://github.com/zalando/typhoon.git\", \"revision\": \"$$R\", \"author\": \"${USER}\", \"status\": \"$$S\"}" > $@
 
 FORCE:
 
