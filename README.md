@@ -15,7 +15,7 @@
 
 
 
-[![Build Status](https://secure.travis-ci.org/zalando/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon) [![GitHub release](https://img.shields.io/github/release/zalando/typhoon.svg)](https://github.com/zalando/typhoon/releases/latest)
+[![Build Status](https://secure.travis-ci.org/fogfish/typhoon.svg?branch=master)](http://travis-ci.org/zalando/typhoon) [![GitHub release](https://img.shields.io/github/release/zalando/typhoon.svg)](https://github.com/zalando/typhoon/releases/latest)
 
 Typhoon is a stress and load testing tool for distributed systems that simulates traffic from a test cluster toward a system-under-test (SUT) and visualizes infrastructure-, protocol- and application-related latencies. It provides an out-of-the-box, cross-platform solution for investigating protocols and microservices latencies, and is operable as a standalone application. For scalability and accuracy, its runtime environment is [Erlang](http://www.erlang.org/).
 
