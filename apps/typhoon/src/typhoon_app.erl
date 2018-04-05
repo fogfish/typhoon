@@ -15,7 +15,7 @@
 %%
 -module(typhoon_app).
 -behaviour(application).
--author('dmitry.kolesnikov@zalando.fi').
+-author('dmitry.kolesnikov@gmail.com').
 
 
 -export([
@@ -26,10 +26,11 @@
 %%
 %%
 start(_Type, _Args) ->
-   clue:define(meter, {typhoon, req}, 600000),
-   {ok, Sup} = typhoon_sup:start_link(),
-   typhoon:signup({urn, user, <<"root">>}, [{w, 1}]),
-   {ok, Sup}.
+   % clue:define(meter, {typhoon, req}, 600000),
+   % {ok, Sup} = typhoon_sup:start_link(),
+   % typhoon:signup({urn, user, <<"root">>}, [{w, 1}]),
+   % {ok, Sup}.
+   typhoon_sup:start_link().
 
 %%
 %%

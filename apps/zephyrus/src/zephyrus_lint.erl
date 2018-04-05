@@ -116,8 +116,8 @@ execute(Id) ->
 config(Scenario) ->
    [$? ||
       scenario:option(init, Scenario),
-      fmap(_(#{})),
-      fmap(hd(_))
+      unit(_(#{})),
+      unit(hd(_))
    ].
 
 %%

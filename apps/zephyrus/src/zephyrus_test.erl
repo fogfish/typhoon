@@ -123,8 +123,8 @@ smoketest(Test, Scenario, Config) ->
 config(Scenario) ->
    [option ||
       scenario:option(init, Scenario),
-      fmap(_(#{})),
-      fmap(hd(_))
+      unit(_(#{})),
+      unit(hd(_))
    ].
 
 
@@ -135,13 +135,16 @@ htmlify(Json) ->
    {ok, Html} = file:read_file(File),
    Fun0 = swirl:f(Html),
    Fun1 = Fun0(undefined),
-   case json(Json) of
-      #{fail := 0} = Smoked ->
-         {ok, Fun1(Smoked)};
+   Html = Fun1(json(Json)),
+   file:write_file().
 
-      Smoked ->
-         {error, {unavailable, Fun1(Smoked)}}
-   end.
+   % case json(Json) of
+   %    #{fail := 0} = Smoked ->
+   %       {ok, Fun1(Smoked)};
+
+   %    Smoked ->
+   %       {error, {unavailable, Fun1(Smoked)}}
+   % end.
 
 json(Json) ->
    Check = lists:flatmap(fun(#{checks := X}) -> X end, Json),

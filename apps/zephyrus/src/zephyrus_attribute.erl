@@ -18,7 +18,7 @@
 -module(zephyrus_attribute).
 -author('dmitry.kolesnikov@zalando.fi').
 
--compile({parse_transform, monad}).
+-compile({parse_transform, category}).
 
 -export([
    allowed_methods/1,
@@ -44,28 +44,28 @@ content_provided(_Req) ->
          {303, [{'Location', uri:s(Url)}], <<>>};
       
       {ok,   Spec} ->
-         do([m_either ||
+         [m_either ||
             Capacity <- capacity(Id),
             Availability <- availability(Id),
             Latency <- latency(Id),
-            _    =< Spec,
-            _    =< [{capacity, Capacity} | _], 
-            _    =< [{availability, Availability} | _], 
-            _    =< [{latency, Latency} | _], 
-            return(jsx:encode(_))
-         ])
+            cats:unit(Spec),
+            cats:unit([{capacity, Capacity} | _]), 
+            cats:unit([{availability, Availability} | _]),
+            cats:unit([{latency, Latency} | _]),
+            unit(jsx:encode(_))
+         ]
    end.
 
 capacity(Scenario) ->
    aura:clue({urn, <<"c">>, <<Scenario/binary, ":capacity">>}).
 
 availability(Scenario) ->
-   do([m_either || 
+   [m_either || 
       RPS <- aura:clue({urn, <<"c">>, <<Scenario/binary, ":rps">>}),
       Cap <- aura:clue({urn, <<"c">>, <<Scenario/binary, ":capacity">>}),
-      _   =< case RPS of X when X > 0 -> Cap / RPS; _ -> 0 end,
-      return(_)  
-   ]).
+      cats:unit(case RPS of X when X > 0 -> Cap / RPS; _ -> 0 end),
+      unit(_)  
+   ].
 
 latency(Scenario) ->
    aura:clue({urn, <<"g">>, <<"scenario:", (scalar:s(Scenario))/binary>>}).

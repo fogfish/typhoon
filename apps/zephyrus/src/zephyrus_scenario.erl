@@ -20,7 +20,6 @@
 
 -include_lib("ambitz/include/ambitz.hrl").
 -compile({parse_transform, category}).
--compile({parse_transform, monad}).
 
 -export([
    allowed_methods/1,
@@ -50,7 +49,7 @@ content_accepted(_Req) ->
    _  = scalar:i(uri:q(<<"r">>, 1, Url)),
    [$^ ||
       typhoon:attr({urn, root, Id}),
-      fmap(jsx:encode(_)) 
+      unit(jsx:encode(_)) 
    ].
 
 %%
@@ -61,7 +60,7 @@ content_accepted(_Req) ->
    [$^ ||
       typhoon:put({urn, root, Id}, erlang:iolist_to_binary(Spec), [{w, W}]),
       typhoon:attr({urn, root, Id}),
-      fmap(jsx:encode(_)) 
+      unit(jsx:encode(_)) 
    ];
 
 'PUT'({_, {application, json}}, Data, {Url, _Head, Env}) ->
@@ -72,7 +71,7 @@ content_accepted(_Req) ->
    [$^ ||
       typhoon:put({urn, root, Id}, erlang:iolist_to_binary(Spec), [{w, W}]),
       typhoon:attr({urn, root, Id}),
-      fmap(jsx:encode(_)) 
+      unit(jsx:encode(_)) 
    ].
 
 

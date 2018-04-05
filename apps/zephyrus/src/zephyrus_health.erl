@@ -19,7 +19,6 @@
 -author('dmitry.kolesnikov@zalando.fi').
 
 -compile({parse_transform, category}).
--compile({parse_transform, monad}).
 
 -export([
    allowed_methods/1,
@@ -41,9 +40,9 @@ content_provided(_Req) ->
 %%
 'GET'(_Type, _Msg, {_Url, _Head, Env}) ->
    [$^ ||
-      fmap(lens:get(lens:pair(<<"check">>), Env)),
+      unit(lens:get(lens:pair(<<"check">>), Env)),
       health(_),
-      fmap(jsx:encode(_))
+      unit(jsx:encode(_))
    ].
 
 health(<<"peer">>) ->
@@ -52,18 +51,18 @@ health(<<"peer">>) ->
    {ok, [scalar:s(X) || X <- Peer]};
 
 health(<<"sys">>) ->
-   do([m_either ||
+   [m_either ||
       Peers <- health(<<"peer">>),
       IOrps <- aura:clue({urn, <<"c">>, <<"sys:rps">>}),
       IOcap <- aura:clue({urn, <<"c">>, <<"sys:capacity">>}),
       Scenario <- aura:clue({urn, <<"c">>, <<"sys:scenario">>}),
-      return([
+      unit([
          {time, tempus:s(os:timestamp())},
          {peers, Peers},
          {rps, IOrps}, 
          {failure, IOrps - IOcap}, 
          {scenario, Scenario}
       ])
-   ]).
+   ].
 
 

@@ -16,20 +16,20 @@
 {application, typhoon,
    [
       {description, "distributed stress, load testing tool"},
-      {vsn,         "1.0.0"},
+      {vsn,         "2.0.0"},
       {modules,     []},
       {registered,  []},
       {applications,[
          kernel
         ,stdlib
         ,lager
-        ,pts
-        ,ambit
+        % ,pts
+        % ,ambit
         ,ssl
         ,knet
-        ,chronolog
-        ,clot
-        ,scenario
+        % ,chronolog
+        % ,clot
+        % ,scenario
       ]},
       {mod, {typhoon_app, []}},
       {env, []}
