@@ -89,13 +89,13 @@ usecase_b() ->
       % the use-case executes three HTTP GET requests 
       _ <- get_ip(),
       _ <- get_ip(),
-      X <- get_ip(),
+      _ <- get_ip(),
 
       % the result of last HTTP GET request is fed to HTTP POST request
-      _ <- post(X),
+      _ <- post(_),
 
       % the result of previous HTTP POST request is fed again to HTTP POST request
-      _ <- post(X),
+      _ <- post(_),
       return(_)
    ]).
 
