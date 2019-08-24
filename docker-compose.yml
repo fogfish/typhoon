@@ -1,0 +1,25 @@
+##
+## This Docker Compose file may be modified and distributed under the terms
+## of the MIT license.  See the LICENSE file for details.
+## https://github.com/fogfish/makefile
+##
+## @doc
+##   An example docker compose file to spawn Erlang releases  
+##
+## @version 1.0.0
+version: '3'
+services:
+
+  ##
+  typhoon:
+    build:
+      context: .
+      dockerfile: _build/spawner
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      ## required to reduce Erlang VM memory footprint 
+      - "CODE_LOADING_MODE=interactive"
+

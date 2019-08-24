@@ -18,21 +18,18 @@
 -author('dmitry.kolesnikov@zalando.fi').
 
 
--export([
-   start/2
-  ,stop/1
-]).
+-export([start/2 ,stop/1]).
 
 %%
 %%
 start(_Type, _Args) ->
-   {ok,   _} = kmq:queue(auraq, [
-      opts:get(n,   1, aura),
-      opts:get(in, [], aura),
-      opts:get(mq, [], aura)
-   ]),
-   clue:define(meter, {aura, ingress}, 600000),
-   clue:define(meter, {aura,  egress}, 600000),
+   % {ok,   _} = kmq:queue(auraq, [
+   %    opts:get(n,   1, aura),
+   %    opts:get(in, [], aura),
+   %    opts:get(mq, [], aura)
+   % ]),
+   % clue:define(meter, {aura, ingress}, 600000),
+   % clue:define(meter, {aura,  egress}, 600000),
    aura_sup:start_link().
 
 %%

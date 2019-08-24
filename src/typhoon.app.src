@@ -1,0 +1,18 @@
+{application, typhoon,
+   [
+      {description, "unit and stress and testing of web protocols"},
+      {vsn,         "2.0.0"},
+      {modules,     []},
+      {registered,  []},
+      {applications,[
+         kernel,
+         stdlib,
+         pts,
+         ssl,
+         knet,
+         uid
+      ]},
+      {mod, {typhoon_app, []}},
+      {env, []}
+   ]
+}.  

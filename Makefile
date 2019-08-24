@@ -1,13 +1,11 @@
-##
-## @doc
-##   an example Makefile to build and ship erlang software
-##
-##   APP - identity of the application
-##   ORG - identity of the organization 
-##   URI - identity of the docker repository with last /  
-
 APP = typhoon 
-ORG = fogfish
-URI = 
+# ORG = fogfish
+# URI = 
 
-include erlang.mk
+ENV     ?= dev
+ROLE    ?= arn:aws:iam::189549315145:role/test2-role-lambda
+TIMEOUT ?= 30
+MEMORY  ?= 256
+
+# include erlang.mk
+include serverless.mk

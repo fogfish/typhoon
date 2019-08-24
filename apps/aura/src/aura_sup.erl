@@ -37,33 +37,48 @@ start_link() ->
 init([]) ->   
    {ok,
       {
-         {one_for_one, 10000, 1},
+         {one_for_one, 4, 1800},
          [
-            %% persistence layer
-            ?CHILD(worker,     aura_storage)
+            ?CHILD(supervisor, pts, sensor())
+           %  %% persistence layer
+           %  ?CHILD(worker,     aura_storage)
 
-            %% transport layer
-           ,?CHILD(supervisor, aura_adapter_sup)
-           ,?CHILD(supervisor, aura_egress_sup)
-           ,?CHILD(supervisor, aura_ingress_sup)
+           %  %% transport layer
+           % ,?CHILD(supervisor, aura_adapter_sup)
+           % ,?CHILD(supervisor, aura_egress_sup)
+           % ,?CHILD(supervisor, aura_ingress_sup)
 
-            %% data stream processing 
-           ,?CHILD(supervisor, aura_stream_sup, pts, pts(aura_stream))
-           ,?CHILD(supervisor, aura_sensor_sup, pts, pts(aura_sensor))
+           %  %% data stream processing 
+           % ,?CHILD(supervisor, aura_stream_sup, pts, pts(aura_stream))
+           % ,?CHILD(supervisor, aura_sensor_sup, pts, pts(aura_sensor))
          ]
       }
    }.
 
 %%
 %%
-pts(Mod) ->
+sensor() ->
    [
-      Mod,
+      sensor,
       [
          'read-through',
          {keylen,    inf},
-         {entity,    Mod},
+         {entity,    aura_sensor},
          {factory,   temporary}
       ]
    ].
+
+
+% %%
+% %%
+% pts(Mod) ->
+%    [
+%       Mod,
+%       [
+%          'read-through',
+%          {keylen,    inf},
+%          {entity,    Mod},
+%          {factory,   temporary}
+%       ]
+%    ].
 

@@ -27,6 +27,8 @@
         % ,ambit
         ,ssl
         ,knet
+        ,sketch
+        ,aura
         % ,chronolog
         % ,clot
         % ,scenario
